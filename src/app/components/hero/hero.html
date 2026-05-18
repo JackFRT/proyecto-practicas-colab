@@ -1,0 +1,46 @@
+<section id="hero-section" class="hero-section">
+    <div class="hero-content">
+        <span class="tagline">TRADICIÓN EN AYACUCHO</span>
+            <h1 class="hero-title">Cactus Museum</h1>
+            
+            <p class="hero-subtitle">
+                Un oasis de espinas y café.<br>
+                Explora la colección botánica más diversa de la región mientras disfrutas de un grano de alta calidad traído desde el VRAEM.
+            </p>
+        
+        <div class="hero-schedule">
+            <i class="far fa-clock"></i> <span>Martes a Sábado:</span> 9:00am - 12:30pm | 4:30pm - 7:30pm<br>
+            <i class="far fa-clock"></i> <span>Domingo:</span> 3:30pm - 7:00pm
+        </div>
+        
+        <div class="hero-buttons">
+            <a href="https://cafeayacuchano.com/" target="_blank" class="btn-solid-white btn-cafe-animado">
+                <span class="btn-text">VISITA EL CAFÉ AYACUCHANO</span>
+                <div class="logo-cafe-wrapper">
+                    <img src="../assets/images/museo/logo_cafeteria.png" alt="Logo Café">
+                </div>
+            </a>
+            
+            <div class="map-wrapper-relative">
+                <button class="btn-solid-white" (click)="toggleMapa()">ENCUÉNTRANOS</button>
+                
+                <div id="mapa-liquid" class="mapa-liquid-glass" [class.active]="mapaActivo">
+                    
+                    <a href="https://maps.app.goo.gl/8yZcHLEqetp9gyVS7" target="_blank" class="map-iframe-wrapper">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31061.04285149372!2d-74.23862214482729!3d-13.15414002766023!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91127d75df0709b1%3A0xcb065ec016b8d41a!2sAyacucho!5e0!3m2!1ses!2spe!4v1713835000000!5m2!1ses!2spe" width="100%" height="180" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        <div class="map-overlay-click"></div>
+                    </a>
+                    
+                    <div class="map-text">
+                        <i class="fas fa-map-marker-alt"></i> Jr. San Cristóbal, Ayacucho
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a (click)="irAlCatalogo($event)" class="scroll-down-catalog" style="cursor: pointer;">
+        <span style="font-size: 0.8rem; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px; display: block;">EXPLORAR CATÁLOGO</span>
+        <i class="fas fa-chevron-down"></i>
+    </a>
+</section>

@@ -1,0 +1,429 @@
+<section id="catalogo-section" class="catalog-section">
+    <div class="catalog-container-inner">
+        <div class="catalog-header" style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 40px; color: var(--bg-darker);">
+            <h2 style="font-size: 2.5rem; margin: 0; font-weight: 800; letter-spacing: 2px;">NUESTRO CATÁLOGO</h2>
+            <i class="fas fa-seedling" style="font-size: 2rem;"></i>
+        </div>
+        
+        <div class="catalog-controls-wrapper" style="display: flex; flex-direction: column; gap: 20px; align-items: center; margin-bottom: 40px;">
+            
+            <div class="catalog-switch-container" style="margin-bottom: 0;">
+                <div class="switch-pill">
+                    <button class="switch-btn" [class.active]="tipoActual === 'recuerdo'" [style.background]="tipoActual === 'recuerdo' ? '#4A90E2' : 'transparent'" (click)="cambiarTipo('recuerdo')" title="Ver Recuerdos">🎁</button>
+                    <button class="switch-btn" [class.active]="tipoActual === 'cactus'" [style.background]="tipoActual === 'cactus' ? '#344E41' : 'transparent'" (click)="cambiarTipo('cactus')" title="Ver Cactus">🌵</button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; width: 100%; max-width: 600px; justify-content: center; flex-wrap: wrap;">
+                
+                <div style="flex: 1; min-width: 250px; position: relative;">
+                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.7);"></i>
+                    <input type="text" placeholder="Buscar por nombre..." (input)="onBuscar($event)" [value]="terminoBusqueda"
+                           style="width: 100%; padding: 12px 20px 12px 40px; border-radius: 30px; border: 1px solid rgba(0, 0, 0, 0.3); font-family: 'Outfit'; background: rgba(245, 198, 137, 0.338); color: white; outline: none; backdrop-filter: blur(5px); box-sizing: border-box; font-weight: bold;">
+                </div>
+
+                <div>
+                    <select (change)="cambiarCategoria($event)" [value]="categoriaSeleccionada"
+                            style="padding: 12px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); font-family: 'Outfit'; font-weight: bold; color: white; background: rgba(0,0,0,0.3); outline: none; cursor: pointer; backdrop-filter: blur(5px); height: 100%;">
+                        
+                        <option value="todos" style="color: #333;">
+                            {{ tipoActual === 'cactus' ? 'Todas las familias' : 'Todas las categorías' }}
+                        </option>
+                        
+                        @for (cat of categorias; track cat.id_categoria) {
+                            @if (cat.tipo === tipoActual || !cat.tipo) {
+                                <option [value]="cat.id_categoria" style="color: #333;">{{ cat.nombre }}</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="catalog-carousel-wrapper">
+            <button class="carousel-arrow left" (click)="cambiarPagina(-1)" [disabled]="paginaActual === 1" [style.opacity]="paginaActual === 1 ? '0.3' : '1'">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div class="carousel-grid" id="grid-cactus">
+                @if (productosPaginados.length > 0) {
+                    @for (producto of productosPaginados; track producto.id_cactus) {
+                        <div class="catalog-item product-card" 
+                             [class.item-souvenir]="tipoActual === 'recuerdo'" 
+                             [class.item-cactus]="tipoActual === 'cactus'"
+                             (click)="abrirDetalle(producto)" 
+                             style="cursor: pointer; transition: 0.3s;">
+                            
+                            @if (tipoActual === 'recuerdo') {
+                                <div class="product-badge rare" style="background:#5C88C4;">Recuerdo</div>
+                            } @else if (producto.precio > 40) {
+                                <div class="product-badge rare">Premium</div>
+                            }
+                            
+                            <img [src]="getRutaImagen(producto.imagen_url)" [alt]="producto.nombre_comun" class="img-fit-product">
+                            <div class="catalog-item-title">{{ producto.nombre_comun }}</div>
+                        </div>
+                    }
+                } @else {
+                    <p class="empty-msg" style="grid-column: span 4; text-align: center;">No hay productos en esta categoría.</p>
+                }
+            </div>
+
+            <button class="carousel-arrow right" (click)="cambiarPagina(1)" [disabled]="paginaActual === totalPaginas" [style.opacity]="paginaActual === totalPaginas ? '0.3' : '1'">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        
+        <div id="indicador-paginas" style="text-align: center; margin-top: 20px; font-weight: bold; color: rgba(0,0,0,0.5);">
+            Página {{ paginaActual }} de {{ totalPaginas }}
+        </div>
+    </div>
+</section>
+
+<section class="videos-section">
+    <h2 class="section-title">Aprende y Explora con Nosotros</h2>
+    <div class="video-list-container">
+        
+        <div class="video-row">
+            <div class="video-frame">
+                <iframe src="https://www.instagram.com/p/DXVLIJtDfFg/embed/" width="250" height="400" style="border:none; overflow:hidden; border-radius:15px;" scrolling="no" allowtransparency="true"></iframe>
+            </div>
+            <div class="video-text">
+                <h3>Cactus Museum Ayacucho - Perú</h3>
+                <p>¡Nuestro amigo espinoso te invita! Escucha de primera mano (o primera espina) por qué tienes que visitar el museo del cactus en tu próximo viaje.</p>
+            </div>
+        </div>
+
+        <div class="video-row reverse">
+            <div class="video-frame">
+                <iframe src="https://www.tiktok.com/embed/v2/AQUI_EL_NUMERO_LARGO" width="250" height="400" style="border:none; overflow:hidden; border-radius:15px;" allow="fullscreen" allowfullscreen></iframe>
+            </div>
+            <div class="video-text">
+                <h3>¿Cómo llegar al local?</h3>
+                <p>Te mostramos la ruta exacta para que no te pierdas. Llegar a nuestro oasis en Ayacucho es súper fácil, ¡acompáñanos en este recorrido!</p>
+            </div>
+        </div>
+
+        <div class="video-row">
+            <div class="video-frame">
+                <iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fwatch%2F%3Fv%3D1335661647433559&show_text=false&width=250" width="250" height="400" style="border:none;overflow:hidden;border-radius:15px;" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+            </div>
+            <div class="video-text">
+                <h3>El Mundo del Cactus</h3>
+                <p>Un recorrido visual rápido por nuestras especies más raras, coloridas y exóticas exhibidas en Ayacucho. Sumérgete en la belleza geométrica y las texturas únicas del desierto.</p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@if (modalTienda) {
+    <div class="modal-overlay-glassy" (click)="cerrarModalTienda()">
+        
+        @if (modalTienda === 'detalle' && productoSeleccionado) {
+            <div class="modal-content glass-card producto-modal-layout" (click)="$event.stopPropagation()">
+                
+                <button class="close-modal" (click)="cerrarModalTienda()">&times;</button>
+                
+                <div class="producto-galeria">
+                    <div class="imagen-principal-container">
+                        @if (imagenModalActual) {
+                            <img id="modal-img-main" [src]="getRutaImagen(imagenModalActual)" [alt]="productoSeleccionado.nombre_comun">
+                        } @else {
+                            <div class="img-placeholder"><i class="fas fa-seedling"></i></div>
+                        }
+                    </div>
+                    
+                    @if (imagenesProducto.length > 1) {
+                        <div class="carrusel-miniaturas">
+                            @for (img of imagenesProducto; track img) {
+                                <img [src]="getRutaImagen(img)" 
+                                     class="miniatura" [class.activa]="img === imagenModalActual" 
+                                     (click)="cambiarImagenModal(img)">
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="producto-info-texto">
+                    <h2 class="producto-titulo">{{ productoSeleccionado.nombre_comun }}</h2>
+                    <div class="producto-precio-badge">S/ {{ precioCalculado | number:'1.2-2' }}</div>
+
+                    <div class="info-scroll-area">
+                        @if (productoSeleccionado.cuidados || productoSeleccionado.tipo === 'recuerdo') {
+                            <div class="info-bloque">
+                                <h3><i class="fas" [ngClass]="productoSeleccionado.tipo === 'recuerdo' ? 'fa-info-circle' : 'fa-hand-holding-water'"></i> 
+                                    {{ productoSeleccionado.tipo === 'recuerdo' ? 'Descripción' : 'Guía de Cuidados' }}
+                                </h3>
+                                <p>{{ productoSeleccionado.cuidados || 'Un hermoso ejemplar ideal para tu colección o decoración.' }}</p>
+                            </div>
+                        }
+
+                        @if (productoSeleccionado.detalles_tecnicos) {
+                            <div class="info-bloque">
+                                <h3><i class="fas" [ngClass]="productoSeleccionado.tipo === 'recuerdo' ? 'fa-ruler-combined' : 'fa-microscope'"></i> 
+                                    {{ productoSeleccionado.tipo === 'recuerdo' ? 'Materiales y Tamaño' : 'Detalles Técnicos' }}
+                                </h3>
+                                <p>{{ productoSeleccionado.detalles_tecnicos }}</p>
+                            </div>
+                        }
+                        
+                        @if (productoSeleccionado.tipo === 'recuerdo' && variantesProducto && variantesProducto.length > 0) {
+                            <div class="info-bloque estilo-selector-bloque">
+                                <h3 style="margin-bottom: 10px;"><i class="fas fa-palette"></i> Elegir Variedad <span style="color: #ff6b6b;">*</span></h3>
+                                
+                                <select class="selector-estilo-souvenir" 
+                                        [ngModel]="varianteSeleccionada" 
+                                        (ngModelChange)="onVarianteChange($event)"
+                                        [style.border-color]="!varianteSeleccionada ? '#ff6b6b' : 'rgba(255,255,255,0.2)'">
+                                    
+                                    <option [ngValue]="null" disabled selected>-- Selecciona un modelo/color --</option>
+                                    
+                                    @for (v of variantesProducto; track v.id_variante) {
+                                        <option [ngValue]="v" [disabled]="v.stock <= 0">
+                                            {{ v.nombre_variante }} ({{ v.stock > 0 ? 'Quedan ' + v.stock : 'Agotado' }})
+                                        </option>
+                                    }
+                                </select>
+                                
+                                @if (!varianteSeleccionada) {
+                                    <small style="color: #ff6b6b; display: block; margin-top: 5px; font-weight: bold;">* Obligatorio para comprar</small>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="modal-acciones" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+                        
+                        @if (productoSeleccionado.tipo === 'recuerdo' && variantesProducto && variantesProducto.length > 0 && !varianteSeleccionada) {
+                            <button class="btn-agotado-glass" disabled style="background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); border: 1px dashed rgba(255,255,255,0.2); width: 100%; padding: 15px; border-radius: 12px; font-family: 'Outfit'; font-weight: bold;">
+                                Selecciona una variedad primero
+                            </button>
+                        } 
+                        @else if (stockVariedadActual > 0) {
+                            <div style="display: flex; gap: 15px; width: 100%; align-items: center; flex-wrap: wrap;">
+                                
+                                <div class="contador-vidrio">
+                                    <button type="button" (click)="cambiarCantidad(-1)">-</button>
+                                    <input type="number" readonly [value]="cantidadSeleccionada">
+                                    <button type="button" (click)="cambiarCantidad(1)">+</button>
+                                </div>
+
+                                <button type="button" class="btn-al-carrito-glass" (click)="agregarAlCarrito($event)">
+                                    <i class="fas fa-cart-plus"></i> Al Carrito
+                                </button>
+
+                                <button type="button" class="btn-comprar-directo" (click)="comprarDirecto($event)">
+                                    <i class="fas fa-bolt"></i> Comprar
+                                </button>
+                            </div>
+                            
+                            <div class="stock-disponible-text" style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">
+                                Stock disponible: <strong style="color: white;">{{ stockVariedadActual }}</strong> unidades
+                            </div>
+                        } 
+                        @else {
+                            <button class="btn-agotado-glass" disabled style="width: 100%; padding: 15px; border-radius: 12px; font-family: 'Outfit'; font-weight: bold;">
+                                Agotado por ahora
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (modalTienda === 'carrito') {
+            <div class="glass-cart-sidebar" (click)="$event.stopPropagation()">
+                
+                <div class="cart-header-aesthetic">
+                    <h2><i class="fas fa-shopping-bag"></i> Tu Canasta</h2>
+                    <span (click)="cerrarModalTienda()" class="close-cart-aesthetic">&times;</span>
+                </div>
+
+                <div class="cart-items-aesthetic">
+                    @if (cartService.items.length === 0) {
+                        <div class="empty-cart-aesthetic">
+                            <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                            <p>Tu canasta está vacía.</p>
+                        </div>
+                    } @else {
+                        @for (item of cartService.items; track item.id_cactus; let i = $index) {
+                            <div class="cart-item-aesthetic" style="display: flex; align-items: center; gap: 15px; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <img [src]="getRutaImagen(item.imagen_url)" style="width: 60px; height: 60px; object-fit: cover; border-radius: 10px;">
+                                
+                                <div class="item-info-aesthetic" style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                                    <strong style="color: white; font-size: 1.1rem; line-height: 1.2;">{{ item.nombre_comun }}</strong>
+                                    @if(item.estilo !== 'Estándar') { 
+                                        <span style="color: #FFE066; font-size: 0.85rem; font-weight: bold;"><i class="fas fa-palette"></i> {{ item.estilo }}</span>
+                                    }
+                                    <span style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">{{ item.cantidad }} x S/ {{ item.precio | number:'1.2-2' }}</span>
+                                </div>
+
+                                <div class="item-price-aesthetic" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                    <strong style="color: #A3B18A; font-size: 1.1rem;">S/ {{ item.cantidad * item.precio | number:'1.2-2' }}</strong>
+                                    <button (click)="eliminarDelCarrito(i)" style="background: rgba(255,107,107,0.15); border: 1px solid rgba(255,107,107,0.3); color: #ff6b6b; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#ff6b6b'; this.style.color='white';" onmouseout="this.style.background='rgba(255,107,107,0.15)'; this.style.color='#ff6b6b';">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="cart-footer-aesthetic" style="margin-top: auto; padding-top: 20px;">
+                    <div class="cart-total-aesthetic" style="display: flex; justify-content: space-between; align-items: center; font-size: 1.4rem; font-weight: bold; margin-bottom: 20px;">
+                        <span>Total:</span>
+                        <span style="color: #FFE066;">S/ {{ cartService.getSubtotal() | number:'1.2-2' }}</span>
+                    </div>
+                    <button (click)="irACheckout()" class="btn-pay-aesthetic" [disabled]="cartService.items.length === 0" style="width: 100%; padding: 15px; border-radius: 12px; background: #D65A31; color: white; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s;" [style.opacity]="cartService.items.length === 0 ? '0.5' : '1'">
+                        Proceder al Pago <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        }
+        
+        @if (modalTienda === 'checkout') {
+            <div class="checkout-glass-wrapper" (click)="abrirCarrito()">
+                
+                <div class="checkout-glass-container" (click)="$event.stopPropagation()">
+                    
+                    <button class="btn-cerrar-glass" style="top: 10px; right: 10px; font-size: 1.5rem;" (click)="abrirCarrito()"><i class="fas fa-arrow-left"></i></button>
+
+                    <div class="checkout-glass-body">
+                        
+                        <div class="checkout-panel-left">
+                            <h2 class="panel-title"><i class="fas fa-shopping-basket"></i> Tu Reserva</h2>
+                            
+                            <div class="glass-items-list">
+                                @for (item of cartService.items; track item.id_cactus) {
+                                    <div class="glass-checkout-item">
+                                        <img [src]="getRutaImagen(item.imagen_url)">
+                                        <div class="glass-item-info">
+                                            <h4>{{ item.nombre_comun }}</h4>
+                                            @if(item.estilo !== 'Estándar') { <span><i class="fas fa-palette"></i> {{ item.estilo }}</span> }
+                                            <p>{{ item.cantidad }} x S/ {{ item.precio | number:'1.2-2' }} = <strong>S/ {{ item.cantidad * item.precio | number:'1.2-2' }}</strong></p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="glass-coupon-box">
+                                <label><i class="fas fa-ticket-alt"></i> Cupón Moka</label>
+                                <div class="glass-input-group">
+                                    <input type="text" [(ngModel)]="codigoCupon" placeholder="CÓDIGO" [disabled]="descuentoAplicado > 0">
+                                    <button (click)="aplicarCupon()" [disabled]="descuentoAplicado > 0"><i class="fas fa-check"></i></button>
+                                </div>
+                                @if (descuentoAplicado > 0) {
+                                    <small style="color: #FFE066; display: block; margin-top: 5px;">¡Descuento del {{ descuentoAplicado }}% activado!</small>
+                                }
+                            </div>
+
+                            <div class="glass-total-box">
+                                Total: <span>S/ {{ calcularTotalFinal() | number:'1.2-2' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="checkout-panel-right">
+                            <h2 class="panel-title"><i class="fas fa-qrcode"></i> Pago Rápido</h2>
+                            
+                            <div class="glass-qr-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.2); border-radius: 15px; padding: 25px; margin-bottom: 25px; text-align: center;">
+                                <img src="/assets/images/decoracion/qr_yape.png" alt="QR Yape" style="width: 180px; height: 180px; object-fit: contain; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); margin-bottom: 15px; background: white; padding: 10px;">
+                                <p style="margin: 0; font-size: 1.1rem; color: rgba(255,255,255,0.8);">Yape o Plin al <strong style="color: white; font-size: 1.3rem; display: block; margin-top: 5px; letter-spacing: 2px;">999 888 777</strong></p>
+                            </div>
+
+                            <div class="glass-form-grid">
+                                <div>
+                                    <label>Comprobante</label>
+                                    <select class="glass-input" [(ngModel)]="tipoComprobante">
+                                        <option>Ninguno</option>
+                                        <option>Boleta de Venta</option>
+                                        <option>Factura</option>
+                                    </select>
+                                </div>
+
+                                @if (tipoComprobante !== 'Ninguno') {
+                                    <div>
+                                        <label>{{ tipoComprobante === 'Factura' ? 'RUC *' : 'DNI *' }}</label>
+                                        @if (usuarioActual?.dni && tipoComprobante === 'Boleta de Venta') {
+                                            <div class="saved-data-badge"><i class="fas fa-id-card"></i> Registrado: {{ usuarioActual.dni }}</div>
+                                        } @else {
+                                            <input type="text" class="glass-input" [(ngModel)]="documentoCliente" [placeholder]="tipoComprobante === 'Factura' ? '11 dígitos' : '8 dígitos'">
+                                        }
+                                    </div>
+                                }
+
+                                @if (cartService.getTotalPlantas() >= 4) {
+                                    <div style="grid-column: span 2;">
+                                        <label style="color: #D65A31;"><i class="fab fa-whatsapp"></i> Celular (Coordinación Pedido Grande)</label>
+                                        @if (usuarioActual?.telefono) {
+                                            <div class="saved-data-badge"><i class="fab fa-whatsapp"></i> Registrado: {{ usuarioActual.telefono }}</div>
+                                        } @else {
+                                            <input type="text" class="glass-input" [(ngModel)]="telefonoCliente" placeholder="Tu número de contacto">
+                                        }
+                                    </div>
+                                }
+
+                                <div style="grid-column: span 2;">
+                                    <label style="color: #A3B18A;"><i class="fas fa-camera"></i> Subir Captura *</label>
+                                    <input type="file" class="glass-input" style="padding: 8px;" (change)="onFileSelected($event)" accept="image/*">
+                                </div>
+                            </div>
+
+                            <button class="btn-glass-submit" (click)="procesarPago()" [disabled]="cargandoPago">
+                                <i class="fas fa-bolt"></i> {{ cargandoPago ? 'PROCESANDO...' : 'RESERVAR AHORA' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (modalTienda === 'success') {
+            <div class="success-wrapper" (click)="$event.stopPropagation()">
+                <div class="success-card">
+                    <div class="icon-circle"><i class="fas fa-check"></i></div>
+                    
+                    <h1 style="color: #2b3a2f; margin-bottom: 5px; font-size: 2.2rem; font-family: 'Outfit';">¡Reserva Exitosa!</h1>
+                    <p class="order-number">ORDEN #{{ ordenGeneradaId }}</p>
+                    
+                    <div class="instructions-box">
+                        <p style="margin-bottom: 10px;">Hemos recibido tu comprobante de pago. Se verificará en breve.</p>
+                        <p>Una vez aprobado, podrás recoger tus <strong>{{ totalPlantasCompradas }} plantas</strong> en nuestra cafetería presentando tu documento.</p>
+                    </div>
+
+                    @if (premioLealtad) {
+                        <div class="cupon-box-success">
+                            <h2 style="color: #D65A31; font-size: 1.5rem; margin-bottom: 10px; font-family: 'Outfit';">
+                                <i class="fas fa-crown"></i> ¡Premio de Lealtad!
+                            </h2>
+                            <p style="color: #3b2f2f;">Has completado un ciclo de 4 plantas. Has ganado un <strong>{{ premioLealtad.descuento }}% de descuento</strong> exclusivo para tu próxima visita.</p>
+                            <div class="codigo-texto">{{ premioLealtad.codigo }}</div>
+                            <p style="font-size: 0.85rem; color: #8c7b6d;">*Válido por 2 meses. Código personal e intransferible.</p>
+                        </div>
+                    } @else {
+                        <div class="fidelidad-bar">
+                            <i class="fas fa-seedling" style="font-size: 1.5rem;"></i>
+                            <span>{{ mensajeFidelidad }}</span>
+                        </div>
+                    }
+
+                    <div class="buttons-container-success">
+                        <button class="btn-secondary-success" (click)="cerrarExito()">
+                            <i class="fas fa-store"></i> Volver a la Tienda
+                        </button>
+                        <button class="btn-primary-success" (click)="cerrarExito()">
+                            <i class="fas fa-user-circle"></i> Mi Historial
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (toastMsg) {
+    <div class="toast-notification">
+        {{ toastMsg }}
+    </div>
+}

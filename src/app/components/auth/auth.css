@@ -1,0 +1,70 @@
+.auth-page-wrapper {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: linear-gradient(135deg, rgba(17,17,17,0.92) 0%, rgba(52,78,65,0.85) 100%), 
+                url('/assets/images/img_random/museo.jpg') center/cover fixed;
+}
+
+.auth-glass-card {
+    width: 100%; max-width: 400px; position: relative;
+    background: rgba(20, 20, 20, 0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 25px; padding: 45px 40px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05);
+    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.back-button {
+    position: absolute; top: 25px; left: 25px; color: var(--text-muted);
+    font-size: 1.2rem; transition: 0.3s; text-decoration: none;
+}
+.back-button:hover { color: var(--green-accent); transform: translateX(-3px); }
+
+.auth-header { text-align: center; margin-bottom: 35px; }
+.auth-icon-wrapper {
+    width: 65px; height: 65px; background: var(--terracota-accent); color: white; font-size: 1.8rem;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 15px; box-shadow: 0 10px 20px rgba(214, 90, 49, 0.3); transition: transform 0.3s;
+}
+.auth-glass-card:hover .auth-icon-wrapper { transform: scale(1.05) rotate(5deg); }
+.auth-header h2 { color: white; font-size: 1.8rem; margin: 0 0 8px 0; font-weight: 600; letter-spacing: -0.5px; }
+.auth-header p { color: var(--text-muted); font-size: 0.95rem; margin: 0; }
+
+.auth-form { display: flex; flex-direction: column; gap: 20px; }
+.input-group { position: relative; display: flex; align-items: center; }
+.input-icon { position: absolute; left: 16px; color: var(--text-muted); font-size: 1.1rem; transition: color 0.3s;}
+.input-group input {
+    width: 100%; padding: 15px 15px 15px 48px; background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: white; font-size: 1rem;
+    font-family: var(--font-main); transition: all 0.3s; box-sizing: border-box;
+}
+.input-group input:focus { background: rgba(255, 255, 255, 0.1); border-color: var(--green-accent); outline: none; box-shadow: 0 0 15px rgba(163, 177, 138, 0.2); }
+.input-group input:focus + .input-icon { color: var(--green-accent); }
+.input-group input::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+.slide-down { animation: slideDown 0.3s ease-out forwards; }
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); height: 0; margin-bottom: -20px;}
+    to { opacity: 1; transform: translateY(0); height: auto; margin-bottom: 0;}
+}
+
+.auth-options { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-top: -5px; }
+.forgot-password { color: var(--green-accent); text-decoration: none; transition: 0.3s; }
+.forgot-password:hover { color: white; }
+
+.btn-auth-submit {
+    background: var(--terracota-accent); color: white; border: none; padding: 16px; border-radius: 12px;
+    font-size: 1rem; font-weight: bold; letter-spacing: 1px; cursor: pointer; transition: 0.3s; margin-top: 10px;
+}
+.btn-auth-submit:hover:not([disabled]) { background: #e86a41; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(214, 90, 49, 0.4); }
+.btn-auth-submit[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+.alert-msg { padding: 12px 15px; border-radius: 10px; font-size: 0.9rem; text-align: center; margin-bottom: 20px; animation: fadeIn 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px;}
+.error-msg { background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; }
+.success-msg { background: rgba(46, 213, 115, 0.1); border: 1px solid rgba(46, 213, 115, 0.3); color: #2ed573; }
+
+.auth-footer { text-align: center; margin-top: 30px; font-size: 0.95rem; color: var(--text-muted); }
+.link-toggle { background: transparent; border: none; padding: 0; color: var(--green-accent); font-weight: bold; font-size: 0.95rem; font-family: var(--font-main); cursor: pointer; transition: 0.3s; margin-left: 5px; }
+.link-toggle:hover { color: white; text-decoration: underline; }

@@ -1,0 +1,183 @@
+<div class="admin-glass-wrapper">
+    <header class="admin-header">
+        <div class="logo-area">
+            <h1><i class="fas fa-chess-king text-gold"></i> Panel Supremo</h1>
+        </div>
+        <div class="header-right">
+            <span>Admin: <strong>{{ adminActual?.nombre }}</strong></span>
+            <button class="btn-glass-danger" (click)="cerrarSesion()">Salir</button>
+        </div>
+    </header>
+
+    <div class="admin-grid">
+        <aside class="glass-sidebar-admin">
+            <nav class="admin-nav">
+                <button [class.active]="tabActivo === 'dashboard'" (click)="cambiarTab('dashboard')"><i class="fas fa-tachometer-alt"></i> Simulador & Vista General</button>
+                <button [class.active]="tabActivo === 'usuarios'" (click)="cambiarTab('usuarios')"><i class="fas fa-users"></i> Gestión de Usuarios</button>
+                <button [class.active]="tabActivo === 'ventas'" (click)="cambiarTab('ventas')"><i class="fas fa-chart-line"></i> Reporte de Ventas</button>
+            </nav>
+        </aside>
+
+        <main class="glass-main-content">
+            @if (tabActivo === 'dashboard') {
+                    <section class="fade-in">
+                        <h2 class="section-title"><i class="fas fa-random"></i> Simulador de Vistas</h2>
+                        <div class="god-mode-grid">
+                            <div class="nav-card glass-card clickable" (click)="ir('/')">
+                                <i class="fas fa-store icon-large text-verde"></i>
+                                <h3>Tienda Pública</h3>
+                                <p>Ver catálogo y hablar con Moka</p>
+                            </div>
+                            <div class="nav-card glass-card clickable" (click)="ir('/empleado/dashboard')">
+                                <i class="fas fa-boxes icon-large text-terracota"></i>
+                                <h3>Panel de Empleado</h3>
+                                <p>Aprobar órdenes y stock</p>
+                            </div>
+                            <div class="nav-card glass-card clickable" (click)="ir('/cliente/perfil')">
+                                <i class="fas fa-user-circle icon-large text-gold"></i>
+                                <h3>Mi Perfil Cliente</h3>
+                                <p>Ver mi propia fidelidad</p>
+                            </div>
+                        </div>
+
+                        <h2 class="section-title mt-40"><i class="fas fa-chart-pie"></i> Resumen Rápido</h2>
+                        <div class="stats-grid">
+                            <div class="glass-card stat-box">
+                                <p>Ingresos Netos</p>
+                                <h2>S/ {{ ingresosTotales | number:'1.2-2' }}</h2>
+                            </div>
+                            <div class="glass-card stat-box">
+                                <p>Órdenes Completadas</p>
+                                <h2>{{ ventas.length }}</h2>
+                            </div>
+                            <div class="glass-card stat-box">
+                                <p>Usuarios Registrados</p>
+                                <h2>{{ usuarios.length }}</h2>
+                            </div>
+                        </div>
+                    </section>
+                }
+
+                @if (tabActivo === 'usuarios') {
+                    <section class="fade-in">
+                        <div class="flex-between mb-20">
+                            <h2 class="section-title m-0"><i class="fas fa-users-cog"></i> Control de Cuentas</h2>
+                            <div class="search-box" style="margin: 0; min-width: 300px;">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Buscar por nombre o correo exacto..." class="glass-input" 
+                                       [(ngModel)]="terminoBusquedaUsuario" (input)="filtrarUsuarios()" style="margin:0;">
+                            </div>
+                        </div>
+                        
+                        <div class="glass-table-wrapper">
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Cliente</th>
+                                        <th>Rol</th>
+                                        <th>Visitas</th>
+                                        <th style="text-align: right;">Acciones Protegidas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (user of usuariosFiltrados; track user.id_usuario) {
+                                        <tr>
+                                            <td><strong>#{{ user.id_usuario }}</strong></td>
+                                            <td>
+                                                <div style="font-weight: bold;">{{ user.nombre }}</div>
+                                                <small style="color: rgba(255,255,255,0.5);">{{ ofuscarEmail(user.email) }}</small>
+                                            </td>
+                                            <td>
+                                                <select class="glass-select-small" [value]="user.rol" (change)="cambiarRol(user.id_usuario, $event)">
+                                                    <option value="cliente" style="color: black;">Cliente</option>
+                                                    <option value="empleado" style="color: black;">Empleado</option>
+                                                    <option value="admin" style="color: black;">Admin</option>
+                                                </select>
+                                            </td>
+                                            <td><span class="badge-visitas">{{ user.visitas_presenciales }}</span></td>
+                                            <td style="text-align: right;">
+                                                <button class="btn-action-glass text-gold" (click)="resetearRuleta(user.id_usuario)" title="Requiere Contraseña">
+                                                    <i class="fas fa-dharmachakra"></i> Reset Ruleta
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                    @if(usuariosFiltrados.length === 0) {
+                                        <tr><td colspan="5" style="text-align: center; padding: 20px;">No se encontraron usuarios.</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                }
+
+                @if (tabActivo === 'ventas') {
+                    <section class="fade-in">
+                        <div class="flex-between mb-20">
+                            <h2 class="section-title m-0"><i class="fas fa-receipt"></i> Historial de Ventas Completadas</h2>
+                            <select class="glass-input" style="margin: 0; width: 200px;" [(ngModel)]="filtroTiempoVentas" (change)="aplicarFiltrosVentas()">
+                                <option value="todos" style="color: black;">Histórico Total</option>
+                                <option value="mes" style="color: black;">Últimos 30 días</option>
+                                <option value="semana" style="color: black;">Últimos 7 días</option>
+                                <option value="dia" style="color: black;">Hoy</option>
+                            </select>
+                        </div>
+
+                        <div class="grid-2 mb-20">
+                            <div class="glass-card">
+                                <h3><i class="fas fa-user-tie text-gold"></i> Desempeño de Empleados</h3>
+                                <hr style="border-color: rgba(255,255,255,0.1);">
+                                @for (emp of statsEmpleados; track emp.nombre) {
+                                    <div class="flex-between mb-10">
+                                        <span>{{ emp.nombre }}</span>
+                                        <strong>{{ emp.total_ventas }} órdenes (S/ {{ emp.ingresos | number:'1.2-2' }})</strong>
+                                    </div>
+                                }
+                                @if(statsEmpleados.length === 0) { <p class="text-muted">No hay datos en este periodo.</p> }
+                            </div>
+                            
+                            <div class="glass-card">
+                                <h3><i class="fas fa-leaf text-verde"></i> Top 5 Productos</h3>
+                                <hr style="border-color: rgba(255,255,255,0.1);">
+                                @for (prod of statsProductos; track prod.nombre) {
+                                    <div class="flex-between mb-10">
+                                        <span>{{ prod.nombre }}</span>
+                                        <span class="badge-comprobante" style="background: rgba(163, 177, 138, 0.2);">{{ prod.cantidad }} unds</span>
+                                    </div>
+                                }
+                                @if(statsProductos.length === 0) { <p class="text-muted">No hay datos en este periodo.</p> }
+                            </div>
+                        </div>
+
+                        <div class="glass-table-wrapper">
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>Orden</th>
+                                        <th>Fecha de Entrega</th>
+                                        <th>Cliente</th>
+                                        <th>Atendido por</th>
+                                        <th style="text-align: right;">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (venta of ventasFiltradas; track venta.id_reserva) {
+                                        <tr>
+                                            <td><strong>#{{ venta.id_reserva }}</strong></td>
+                                            <td>{{ venta.fecha_reserva | date:'short' }}</td>
+                                            <td>{{ venta.cliente || 'Usuario Eliminado' }}</td>
+                                            <td><span style="font-size: 0.85rem; color: #ccc;"><i class="fas fa-headset"></i> {{ venta.empleado_nombre || 'Web' }}</span></td>
+                                            <td style="text-align: right; font-weight: bold; color: #A3B18A;">S/ {{ venta.total_pagado | number:'1.2-2' }}</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                }
+        </main>
+    </div>
+</div>
+
+@if (toastMsg) { <div class="toast-notification">{{ toastMsg }}</div> }

@@ -1,1 +1,38 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --bg-darker: #111111;
+    --bg-dark: #1a1a1a;
+    --text-light: #f5f5f5;
+    --text-muted: #a0a0a0;
+    --green-accent: #A3B18A; 
+    --green-dark: #344E41;   
+    --terracota-accent: #D65A31;
+    --color-catalogo: #A3B18A; 
+    --bubble-color: #ffb6c1;
+    --font-main: 'Outfit', sans-serif;
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+html { scroll-behavior: smooth; }
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-darker);
+    color: var(--text-light);
+    margin: 0; padding: 0;
+    overflow-x: hidden;
+}
+
+.modal-overlay { z-index: 999999 !important; }
+.modal-content, .admin-modal-content, #modal-ruleta, #modal-carrito { z-index: 1000000 !important; }
+
+.toast-container {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    background: var(--green-accent); color: var(--bg-darker); padding: 12px 25px;
+    border-radius: 30px; font-weight: bold; font-size: 0.95rem; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    z-index: 9999; display: none; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; text-align: center;
+}
+
+@keyframes bounceDown { 
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 
+    40% { transform: translateY(-10px); } 
+    60% { transform: translateY(-5px); } 
+}

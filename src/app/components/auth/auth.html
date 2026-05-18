@@ -1,0 +1,100 @@
+<div class="auth-page-wrapper">
+    <div class="auth-glass-card">
+        
+        <a routerLink="/" class="back-button" title="Volver al Museo"><i class="fas fa-arrow-left"></i></a>
+
+        <div class="auth-header">
+            <div class="auth-icon-wrapper">
+                <i class="fas" [ngClass]="isRecuperarMode ? 'fa-key' : 'fa-seedling'"></i>
+            </div>
+            <h2>
+                @if (isRecuperarMode) { Recuperar Acceso }
+                @else if (isLoginMode) { Bienvenido al Oasis }
+                @else { Únete al Museo }
+            </h2>
+            <p>
+                @if (isRecuperarMode) { Te ayudaremos a crear una nueva contraseña }
+                @else if (isLoginMode) { Inicie sesión para vivir la experiencia completa }
+                @else { Crea tu cuenta para obtener beneficios }
+            </p>
+        </div>
+
+        @if (mensajeError) {
+            <div class="alert-msg error-msg"><i class="fas fa-exclamation-circle"></i> {{ mensajeError }}</div>
+        }
+        @if (mensajeExito) {
+            <div class="alert-msg success-msg"><i class="fas fa-check-circle"></i> {{ mensajeExito }}</div>
+        }
+
+        <form (ngSubmit)="onSubmit()" class="auth-form">
+            
+            @if (isRecuperarMode) {
+                <div class="input-group">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" name="email" [(ngModel)]="email" placeholder="Ingresa tu correo registrado" [disabled]="pasoRecuperacion === 2" required>
+                </div>
+                
+                @if (pasoRecuperacion === 2) {
+                    <div class="input-group slide-down">
+                        <i class="fas fa-hashtag input-icon"></i>
+                        <input type="text" name="codigo" [(ngModel)]="codigoRecuperacion" placeholder="Código de 6 dígitos" required>
+                    </div>
+                    <div class="input-group slide-down">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" name="nueva_password" [(ngModel)]="password" placeholder="Tu nueva contraseña" required>
+                    </div>
+                }
+            } @else {
+                @if (!isLoginMode) {
+                    <div class="input-group slide-down">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" name="nombre" [(ngModel)]="nombre" placeholder="Nombres completos" required>
+                    </div>
+                }
+                
+                <div class="input-group">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" name="email" [(ngModel)]="email" placeholder="Correo" required>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" name="password" [(ngModel)]="password" placeholder="Contraseña" required>
+                </div>
+
+                @if (isLoginMode) {
+                    <div class="auth-options">
+                        <label class="remember-me"><input type="checkbox"> Recuérdame</label>
+                        <a href="#" class="forgot-password" (click)="abrirRecuperacion($event)">¿Olvidaste tu contraseña?</a>
+                    </div>
+                }
+            }
+
+            <button type="submit" class="btn-auth-submit" [disabled]="cargando">
+                @if (cargando) {
+                    <i class="fas fa-spinner fa-spin"></i> Procesando...
+                } @else {
+                    @if (isRecuperarMode) {
+                        {{ pasoRecuperacion === 1 ? 'ENVIAR CÓDIGO' : 'CAMBIAR CONTRASEÑA' }}
+                    } @else {
+                        {{ isLoginMode ? 'ENTRAR AL MUSEO' : 'CREAR MI CUENTA' }}
+                    }
+                }
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>
+                @if (isRecuperarMode) {
+                    ¿Recordaste tu contraseña? 
+                    <button type="button" class="link-toggle" (click)="volverLogin()">Inicia Sesión</button>
+                } @else {
+                    {{ isLoginMode ? '¿No tienes cuenta?' : '¿Ya eres parte del museo?' }}
+                    <button type="button" class="link-toggle" (click)="toggleMode()">
+                        {{ isLoginMode ? 'Regístrate aquí' : 'Inicia Sesión' }}
+                    </button>
+                }
+            </p>
+        </div>
+    </div>
+</div>

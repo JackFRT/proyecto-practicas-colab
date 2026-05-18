@@ -1,0 +1,588 @@
+<div class="dashboard-wrapper">
+    <header class="dash-header">
+        <h1 class="dash-header-title">Barra de atención | <strong>HOLA, {{ nombreEmpleado }}</strong></h1>
+        <img src="/assets/images/mascota_cactus/mascota.jpg" alt="Mascota" class="mascot-header">
+    </header>
+
+    <div class="dash-layout">
+        <aside class="sidebar-menu">
+            <button class="perfil-nav-btn" [class.active]="tabActivo === 'ordenes'" (click)="cambiarTab('ordenes')">
+                NOTIFICACIONES @if(num_notificaciones > 0) { <span class="notification-badge">{{ num_notificaciones }}</span> }
+            </button>
+            <button class="perfil-nav-btn" [class.active]="tabActivo === 'inventario'" (click)="cambiarTab('inventario')">INVENTARIO</button>
+            <button class="perfil-nav-btn" [class.active]="tabActivo === 'fidelidad'" (click)="cambiarTab('fidelidad')">FIDELIDAD</button>
+            <button class="perfil-nav-btn" [class.active]="tabActivo === 'marketing'" (click)="cambiarTab('marketing')">MARKETING</button>
+            <button class="perfil-nav-btn" [class.active]="tabActivo === 'ruleta'" (click)="cambiarTab('ruleta')">RULETA</button>
+            <button class="perfil-nav-btn" [class.active]="tabActivo === 'perfil'" (click)="cambiarTab('perfil')">MI PERFIL</button>
+        </aside>
+
+        <main class="main-content-area">
+            
+            @if (tabActivo === 'ordenes') {
+                <div class="tab-content">
+                    <div class="section-header flex-between mb-20">
+                        <h2><i class="fas fa-clipboard-list"></i> Gestión de Pedidos</h2>
+                    </div>
+                    
+                    <div class="order-grid">
+                        @if (cargando) {
+                            <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Conectando con la base de datos...</p></div>
+                        } @else if (reservas_activas.length === 0) {
+                            <div class="empty-state"><i class="fas fa-leaf"></i><p>Todo tranquilo por ahora.</p></div>
+                        } @else {
+                            @for (reserva of reservas_activas; track reserva.id_reserva) {
+                                <div class="order-card" [class.esperando]="reserva.estado === 'esperando_recojo'">
+                                    <div class="order-card-header flex-between" (click)="toggleOrden(reserva.id_reserva)" style="cursor: pointer;">
+                                        <h3>
+                                            <i class="fas fa-chevron-right rotar-icono" [class.rotado]="ordenesExpandidas.has(reserva.id_reserva)"></i>
+                                            <i class="fas" [class.fa-file-invoice-dollar]="reserva.tipo_comprobante === 'factura'" [class.fa-receipt]="reserva.tipo_comprobante !== 'factura'" style="margin-left: 8px;"></i> 
+                                            Orden #{{ reserva.id_reserva }}
+                                        </h3>
+                                        <span class="badge-estado">{{ reserva.estado === 'esperando_recojo' ? 'LISTO PARA RECOJO' : 'PAGO PENDIENTE' }}</span>
+                                    </div>
+                                    
+                                    @if (ordenesExpandidas.has(reserva.id_reserva)) {
+                                        <div class="order-card-body grid-2 mt-15">
+                                            <div class="client-info">
+                                                <p><strong><i class="fas fa-user"></i> Cliente:</strong> {{ reserva.cliente }}</p>
+                                                <p><strong><i class="fas fa-id-card"></i> Doc:</strong> {{ reserva.dni_opcional?.split(' | ')[0] || 'Sin documento' }}</p>
+                                                <p><strong><i class="fab fa-whatsapp text-success"></i> Cel:</strong> {{ reserva.dni_opcional?.split('Cel/Wsp: ')[1] || 'No provisto' }}</p>
+                                                @if (reserva.comprobante_pago) { <button class="btn-captura mt-15" (click)="abrirModal('comprobante', reserva.comprobante_pago)"><i class="fas fa-image"></i> Ver Captura</button> }
+                                            </div>
+                                            <div class="order-details">
+                                                <span class="order-details-title">Total Pagado: S/ {{ reserva.total_pagado }}</span>
+                                                <ul style="list-style: none; padding-left: 0; margin: 0;">
+                                                    @for (item of reserva.detalles; track item.nombre_comun) {
+                                                        <li style="margin-bottom: 10px; color: #444;">
+                                                            <strong>{{ item.cantidad }}x:</strong> {{ item.nombre_comun }}
+                                                            @if (item.estilo_seleccionado && item.estilo_seleccionado !== 'Estándar' && item.estilo_seleccionado !== 'Principal') {
+                                                                <br><span class="text-terracota" style="font-size: 0.85rem; margin-left: 20px; font-weight: bold;">
+                                                                    <i class="fas fa-palette"></i> Estilo: {{ item.estilo_seleccionado }}
+                                                                </span>
+                                                            }
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="order-card-actions">
+                                            @if (reserva.estado === 'pendiente') {
+                                                <button class="btn-primary" style="background: var(--verde-oliva);" (click)="ejecutarAccionOrden(reserva.id_reserva, 'aprobar')"><i class="fas fa-check"></i> Aprobar</button>
+                                                <button class="btn-secondary text-danger" (click)="ejecutarAccionOrden(reserva.id_reserva, 'cancelar')"><i class="fas fa-times"></i> Rechazar</button>
+                                                <button class="btn-secondary text-danger" style="background: #ff6b6b; color: white;" (click)="ejecutarAccionOrden(reserva.id_reserva, 'reportar', reserva.id_usuario)"><i class="fas fa-ban"></i> Reportar</button>
+                                            } @else {
+                                                <button class="btn-secondary" (click)="abrirPDF(reserva.id_reserva)"><i class="fas fa-print"></i> Ver / Imprimir</button>
+                                                
+                                                @if (reserva.dni_opcional?.includes('Cel/Wsp: ')) {
+                                                    <button class="btn-secondary text-success" (click)="enviarWhatsApp(reserva.dni_opcional?.split('Cel/Wsp: ')[1], reserva.cliente, reserva.total_pagado)">
+                                                        <i class="fab fa-whatsapp"></i> Avisar
+                                                    </button>
+                                                }
+                                                
+                                                <button class="btn-primary" style="background: var(--verde-oscuro);" (click)="ejecutarAccionOrden(reserva.id_reserva, 'completar')"><i class="fas fa-box-open"></i> Entregar</button>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (tabActivo === 'inventario') {
+                <div class="tab-content">
+                    <div class="section-header flex-between mb-20">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <h2><i class="fas fa-boxes"></i> Inventario</h2>
+                            <div class="toggle-filtros">
+                                <button [class.active]="vistaInventario === 'cactus'" (click)="cambiarVistaInventario('cactus')">🌵 Cactus</button>
+                                <button [class.active]="vistaInventario === 'recuerdo'" (click)="cambiarVistaInventario('recuerdo')">🛍️ Recuerdos</button>
+                            </div>
+                        </div>
+                        <button class="btn-nuevo" (click)="abrirModal('producto')"><i class="fas fa-plus"></i> Añadir {{ vistaInventario === 'cactus' ? 'Cactus' : 'Recuerdo' }}</button>
+                    </div>
+
+                    <div class="flex-between mb-20" style="gap: 15px;">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Buscar producto por nombre..." (input)="onBuscar($event)" [value]="terminoBusqueda">
+                        </div>
+                        
+                        @if (vistaInventario === 'cactus') {
+                            <select class="form-input" style="width: 250px; margin-bottom: 0;" (change)="onFiltrarCategoria($event)">
+                                <option value="todas" [selected]="categoriaFiltro === 'todas'">Todas las categorías</option>
+                                @for (cat of categorias; track cat.id_categoria) {
+                                    <option [value]="cat.nombre" [selected]="categoriaFiltro === cat.nombre">{{ cat.nombre }}</option>
+                                }
+                            </select>
+                        }
+                    </div>
+                    
+                    <table class="admin-table">
+                        <thead><tr><th>Foto</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr></thead>
+                        <tbody>
+                            @for (item of inventarioFiltrado; track item.id_cactus) {
+                                <tr>
+                                    <td>@if(item.imagen_url) { <img [src]="getRutaImagen(item.imagen_url)" class="table-thumbnail"> }</td>
+                                    <td><strong>{{ item.nombre_comun }}</strong> <br> <small style="color:gray;">{{ item.nombre_cientifico }}</small></td>
+                                    <td><span class="badge">{{ item.nombre_categoria || 'Otros' }}</span></td>
+                                    <td>S/ {{ item.precio }}</td>
+                                    <td><span [style.color]="item.stock == 0 ? 'red' : 'inherit'">{{ item.stock }}</span></td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <button class="btn-circle btn-edit-icon" (click)="abrirModal('producto', item)"><i class="fas fa-edit"></i></button>
+                                            <button class="btn-circle btn-delete-icon" (click)="ejecutarAccion('eliminar_producto', {id_cactus: item.id_cactus})"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (tabActivo === 'fidelidad') {
+                <div class="tab-content">
+                    <h2><i class="fas fa-heart"></i> Control de Fidelidad</h2>
+                    <p style="color: gray; margin-bottom: 20px;">Registra las visitas presenciales a la cafetería/museo para que tus clientes suban de nivel de socio.</p>
+                    
+                    <div class="card-white form-card" style="max-width: 500px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; color: var(--cafe-oscuro);">Buscar Cliente (Nombre, Correo o DNI)</label>
+                        
+                        <div style="position: relative;">
+                            <div class="search-box" style="margin-bottom: 0;">
+                                <i class="fas fa-search" [style.color]="clienteSeleccionado ? 'var(--verde-pino)' : 'gray'"></i>
+                                <input type="text" placeholder="Ej: Juan Perez o 76543210" 
+                                       class="form-input" style="margin-bottom: 0;"
+                                       (input)="buscarClientes($event)" [value]="terminoFidelidad">
+                            </div>
+                            
+                            @if (sugerenciasClientes.length > 0) {
+                                <div style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); z-index: 100; max-height: 250px; overflow-y: auto; margin-top: 5px;">
+                                    @for (cliente of sugerenciasClientes; track cliente.id_usuario) {
+                                        <div (click)="seleccionarCliente(cliente)" 
+                                             style="padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s;" 
+                                             onmouseover="this.style.background='#f0f5ed'" onmouseout="this.style.background='white'">
+                                            <strong style="color: var(--verde-pino); display: block;">{{ cliente.nombre }}</strong>
+                                            <span style="font-size: 0.85rem; color: gray;">
+                                                <i class="fas fa-envelope"></i> {{ cliente.email }} 
+                                                @if(cliente.dni) { | <i class="fas fa-id-card"></i> {{ cliente.dni }} }
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <button class="btn-primary w-100 mt-15" 
+                                [style.background]="clienteSeleccionado ? 'var(--verde-oscuro)' : 'gray'"
+                                (click)="registrarVisita()" [disabled]="!clienteSeleccionado">
+                            <i class="fas" [ngClass]="clienteSeleccionado ? 'fa-check-circle' : 'fa-lock'"></i> 
+                            {{ clienteSeleccionado ? 'Confirmar Visita Presencial' : 'Selecciona un cliente' }}
+                        </button>
+                    </div>
+                </div>
+            }
+
+            @if (tabActivo === 'marketing') {
+                <div class="tab-content">
+                    <div class="section-header flex-between mb-20">
+                        <h2><i class="fas fa-ticket-alt"></i> Cupones Públicos</h2>
+                        <button class="btn-nuevo" (click)="abrirModal('cupon')"><i class="fas fa-plus"></i> Nuevo Cupón</button>
+                    </div>
+                    
+                    <table class="admin-table">
+                        <thead><tr><th>Código</th><th>Dcto</th><th>Usos</th><th>Acción</th></tr></thead>
+                        <tbody>
+                            @for (cupon of cupones; track cupon.codigo) {
+                                <tr>
+                                    <td><strong class="text-terracota">{{ cupon.codigo }}</strong></td>
+                                    <td>{{ cupon.descuento_porcentaje }}%</td>
+                                    <td>{{ cupon.usos_actuales }} / {{ cupon.limite_usos }}</td>
+                                    <td><button class="btn-circle btn-delete-icon" (click)="ejecutarAccion('eliminar_cupon', {codigo: cupon.codigo})"><i class="fas fa-trash"></i></button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <hr style="border: none; border-top: 2px dashed #ddd; margin: 30px 0;">
+
+                    <div class="section-header flex-between mb-20">
+                        <div>
+                            <h2><i class="fas fa-newspaper"></i> Boletín / Carrusel</h2>
+                            <p style="color: gray; font-size: 0.85rem; margin-top: 5px;">Arrastra las noticias para cambiar su orden de prioridad.</p>
+                        </div>
+                        <button class="btn-nuevo" (click)="abrirModal('noticia')"><i class="fas fa-plus"></i> Nueva Publicación</button>
+                    </div>
+                    
+                    <div class="grid-news">
+                        @for (noticia of noticias; track noticia.id_noticia; let idx = $index) {
+                            <div class="card-white news-card" 
+                                 draggable="true" 
+                                 (dragstart)="onDragStartNews(idx)" 
+                                 (dragover)="onDragOverNews($event)" 
+                                 (drop)="onDropNews(idx)"
+                                 [class.drag-over]="draggedNewsIndex !== null && draggedNewsIndex !== idx"
+                                 [style.opacity]="noticia.estado == 0 ? '0.6' : '1'"> <div class="news-card-img" [style.background-image]="'url(' + getRutaImagen(noticia.imagen_url, 'news') + ')'">
+                                    <span style="position: absolute; top: 10px; left: 10px; background: var(--verde-oliva); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem;">#{{ idx + 1 }}</span>
+                                    
+                                    @if (noticia.estado == 0) {
+                                        <span style="position: absolute; top: 10px; right: 10px; background: #dc2626; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem;"><i class="fas fa-eye-slash"></i> Oculto</span>
+                                    }
+                                </div>
+                                <div class="news-card-body">
+                                    <h4 style="margin: 0 0 5px 0;">{{ noticia.titulo }}</h4>
+                                    <p style="font-size: 0.85rem; color: #555; margin: 0 0 15px 0; flex: 1;">{{ noticia.descripcion }}</p>
+                                    
+                                    <div class="flex-end border-top pt-15" style="gap: 8px;">
+                                        <button class="btn-circle" 
+                                                [ngStyle]="{'background': noticia.estado == 1 ? '#e2e8f0' : '#fecaca', 'color': noticia.estado == 1 ? '#475569' : '#dc2626'}" 
+                                                (click)="ejecutarAccion('toggle_noticia', { id_noticia: noticia.id_noticia, estado_actual: noticia.estado })"
+                                                title="{{ noticia.estado == 1 ? 'Ocultar noticia' : 'Mostrar noticia' }}">
+                                            <i class="fas" [ngClass]="noticia.estado == 1 ? 'fa-eye' : 'fa-eye-slash'"></i>
+                                        </button>
+                                        
+                                        <button class="btn-circle btn-edit-icon" (click)="abrirModal('noticia', noticia)"><i class="fas fa-edit"></i></button>
+                                        <button class="btn-circle btn-delete-icon" (click)="ejecutarAccion('eliminar_noticia', {id_noticia: noticia.id_noticia})"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (tabActivo === 'perfil') {
+                <div class="tab-content">
+                    <h2><i class="fas fa-chart-line"></i> Mi Rendimiento</h2>
+                    <div class="grid-2 mb-20">
+                        <div class="card-white stats-card">
+                            <i class="fas fa-box-open" style="font-size: 3rem; color: var(--verde-pino); margin-bottom: 10px;"></i>
+                            <h1 style="font-size: 3.5rem; margin: 0; color: var(--cafe-oscuro);">{{ historial_atendidas.length }}</h1>
+                            <p style="color: #444; font-weight: bold;">Órdenes Entregadas</p>
+                        </div>
+                        <div class="card-white quote-card">
+                            <p style="color: #444; font-style: italic; font-size: 1.2rem;">"El buen servicio es la raíz de un negocio fuerte."<br><br>- <strong style="color: var(--cafe-oscuro);">Cactus Cool</strong></p>
+                        </div>
+                    </div>
+
+                    <h3 style="color: var(--verde-pino); border-bottom: 2px solid #eee; padding-bottom: 10px;">Historial de Entregas</h3>
+                    <table class="admin-table mt-15">
+                        <thead><tr><th>Orden</th><th>Fecha</th><th>Total</th><th>Acción</th></tr></thead>
+                        <tbody>
+                            @for (h of historial_atendidas; track h.id_reserva) {
+                                <tr>
+                                    <td><strong>#{{ h.id_reserva }}</strong></td>
+                                    <td>{{ h.fecha_reserva | date:'short' }}</td>
+                                    <td>S/ {{ h.total_pagado }}</td>
+                                    <td><button class="btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;" (click)="abrirPDF(h.id_reserva)"><i class="fas fa-print"></i> Imprimir</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (tabActivo === 'ruleta') {
+                <div class="tab-content">
+                    <div class="section-header flex-between mb-20">
+                        <h2><i class="fas fa-chart-pie"></i> Editor Visual de Ruleta</h2>
+                    </div>
+
+                    <div class="card-white grid-ruleta">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <p style="color: gray; margin-bottom: 15px; font-size: 0.9rem;">Arrastra los círculos blancos para ajustar los tamaños.</p>
+                            <div class="ruleta-container">
+                                <div style="position: absolute; top: 50%; left: -25px; transform: translateY(-50%); font-size: 2.5rem; color: var(--terracota); z-index: 10;"><i class="fas fa-caret-right"></i></div>
+                                <svg id="ruleta-svg" width="300" height="300" viewBox="0 0 300 300" class="interactive-pie" [class.dragging]="draggingIndex !== null">
+                                    @for (premio of premios_ruleta; track premio.id_premio) {
+                                        <path [attr.d]="crearPath(premio.startPct, premio.endPct)" 
+                                              [attr.fill]="premio.color_seccion" 
+                                              stroke="white" stroke-width="3"
+                                              style="transition: fill 0.3s; cursor: pointer;"
+                                              (dblclick)="abrirModal('premio_ruleta', premio)"> </path>
+                                    }
+                                    @for (premio of premios_ruleta | slice:0:-1; track premio.id_premio; let i = $index) {
+                                        <circle [attr.cx]="getCoordinatesForPercent(premio.endPct).x" [attr.cy]="getCoordinatesForPercent(premio.endPct).y" r="10" class="drag-handle" (pointerdown)="onPointerDown(i, $event)"></circle>
+                                    }
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 style="margin-top: 0; color: var(--cafe-oscuro);">Probabilidades Exactas</h3>
+                            <p style="font-size: 0.85rem; color: gray;">Los valores se ajustan automáticamente.</p>
+                            <div class="ruleta-list mb-20">
+                                @for (premio of premios_ruleta; track premio.id_premio) {
+                                    <div class="flex-between" style="padding: 12px; border-bottom: 1px solid #eee;">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div [style.background]="premio.color_seccion" style="width: 15px; height: 15px; border-radius: 4px;"></div>
+                                            <strong style="color: var(--cafe-oscuro);">{{ premio.titulo }}</strong>
+                                        </div>
+                                        <span style="font-size: 1.1rem; font-weight: bold; color: var(--verde-pino);">{{ premio.probabilidad | number:'1.1-1' }}%</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="flex-between pt-15" style="border-top: 2px solid #eee;">
+                                <span class="text-terracota" style="font-size: 1.1rem;">Total: 100%</span>
+                                <button class="btn-primary" (click)="guardarProbabilidades()"><i class="fas fa-save"></i> Guardar Tamaños</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </main>
+    </div>
+
+    <nav class="dash-footer-nav">
+        <div style="display: flex; gap: 15px;">
+            <button class="btn-footer" (click)="irTienda()"><i class="fas fa-store"></i> TIENDA</button>
+            @if (rolEmpleado === 'admin') {
+                <button class="btn-footer" (click)="irPanelAdmin()"><i class="fas fa-user-shield"></i> PANEL ADMIN</button>
+            }
+        </div>
+        <button class="btn-footer danger" (click)="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> CERRAR SESIÓN</button>
+    </nav>
+</div>
+
+@if (toastMsg) {
+    <div class="toast-notification">
+        <i class="fas fa-check-circle"></i> {{ toastMsg }}
+    </div>
+}
+
+@if (modalAbierto) {
+    <div class="modal-overlay modal-scrollable" (click)="cerrarModales()">
+        <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+            <span class="close-modal" (click)="cerrarModales()">&times;</span>
+            
+            @if (modalAbierto === 'comprobante') {
+                <h2 style="color: var(--verde-pino); margin-top: 0;"><i class="fas fa-image"></i> Captura de Pago</h2>
+                <div style="text-align: center; margin-top: 20px;">
+                    <img [src]="getRutaImagen(itemEditando, 'comprobantes')" style="max-width: 100%; max-height: 70vh; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                </div>
+            }
+
+            @if (modalAbierto === 'producto') {
+                <h2 style="color: var(--verde-pino); margin-top: 0;">
+                    <i class="fas" [ngClass]="vistaInventario === 'cactus' ? 'fa-leaf' : 'fa-gift'"></i> 
+                    {{ itemEditando ? 'Editar' : 'Añadir' }} {{ vistaInventario === 'cactus' ? 'Cactus' : 'Recuerdo' }}
+                </h2>
+                
+                <form (submit)="procesarFormulario($event, 'guardar_producto')" class="form-modal">
+                    <input type="hidden" name="tipo_producto" [value]="vistaInventario">
+                    
+                    <div class="grid-2">
+                        <div [style.grid-column]="vistaInventario === 'recuerdo' ? 'span 2' : 'auto'">
+                            <label>Nombre Común *</label>
+                            <input type="text" name="nombre_comun" class="form-input" [value]="itemEditando?.nombre_comun || ''" required>
+                        </div>
+                        
+                        @if (vistaInventario === 'cactus') {
+                            <div>
+                                <label>Nombre Científico</label>
+                                <input type="text" name="nombre_cientifico" class="form-input" [value]="itemEditando?.nombre_cientifico || ''">
+                            </div>
+                        }
+                    </div>
+
+                    <div class="grid-2">
+                        <div>
+                            <div class="flex-between">
+                                <label>Categoría *</label>
+                                <span class="text-terracota" style="font-size: 0.85rem; cursor: pointer;" (click)="abrirModalCategorias()">
+                                    <i class="fas fa-cog"></i> Gestionar
+                                </span>
+                            </div>
+                            <select name="id_categoria" class="form-input">
+                                <option value="">Selecciona...</option>
+                                @for (cat of categorias; track cat.id_categoria) { 
+                                    @if (cat.tipo === vistaInventario || !cat.tipo) {
+                                        <option [value]="cat.id_categoria" [selected]="itemEditando?.id_categoria === cat.id_categoria">{{ cat.nombre }}</option> 
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label>Precio (S/) *</label>
+                            <input type="number" step="0.01" name="precio" class="form-input" [value]="itemEditando?.precio_base || itemEditando?.precio || ''" required>
+                        </div>
+                    </div>
+
+                    <label>{{ vistaInventario === 'cactus' ? 'Guía de Cuidados' : 'Descripción General' }} *</label>
+                    <textarea name="cuidados" class="form-input" rows="3">{{ itemEditando?.cuidados || '' }}</textarea>
+                    
+                    <label>{{ vistaInventario === 'cactus' ? 'Detalles Técnicos' : 'Materiales y Tamaño' }} *</label>
+                    <textarea name="detalles_tecnicos" class="form-input" rows="3">{{ itemEditando?.detalles_tecnicos || '' }}</textarea>
+                    
+                    <h4 style="color: var(--verde-pino); border-bottom: 1px dashed #ccc; padding-bottom: 5px; margin-top: 15px;">
+                        <i class="fas fa-layer-group"></i> Variantes y Stock
+                    </h4>
+                    
+                    @if (vistaInventario === 'cactus') {
+                        <div style="margin-bottom: 15px;">
+                            <label>Stock General *</label>
+                            <input type="number" name="stock" class="form-input" [value]="itemEditando?.stock || 0" required>
+                        </div>
+                    } 
+                    
+                    @if (vistaInventario === 'recuerdo') {
+                        <div class="estilos-alert" style="margin-bottom: 15px;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--terracota); font-weight: bold;">
+                                <input type="checkbox" name="tiene_estilos" [checked]="tieneEstilos" (change)="toggleEstilos($event)"> 
+                                Este recuerdo tiene múltiples variantes (Ej: Colores, Tallas)
+                            </label>
+                        </div> 
+                        
+                        @if (!tieneEstilos) { 
+                            <div style="margin-bottom: 15px;">
+                                <label>Stock General *</label>
+                                <input type="number" name="stock" class="form-input" [value]="itemEditando?.stock || 0" required>
+                            </div> 
+                        } @else {
+                            <div style="background: rgba(0,0,0,0.02); border: 1px solid #eee; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                                <div class="flex-between mb-10">
+                                    <label style="margin: 0;">Lista de Variantes con Fotos</label>
+                                    <button type="button" class="btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" (click)="agregarVariante()"><i class="fas fa-plus"></i> Añadir Variante</button>
+                                </div>
+
+                                @for (variante of variantesDinamicas; track $index) {
+                                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center; background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                                        <div style="flex: 1;">
+                                            <label style="font-size: 0.8rem;">Nombre Variante</label>
+                                            <input type="text" name="nombres_variantes[]" class="form-input" style="margin-bottom: 10px;" placeholder="Ej: Maceta Rosa" [ngModel]="variante.nombre_variante" [ngModelOptions]="{standalone: true}" (ngModelChange)="variante.nombre_variante = $event">
+                                            
+                                            <label style="font-size: 0.8rem;">Stock</label>
+                                            <input type="number" name="stocks_variantes[]" class="form-input" style="margin-bottom: 0;" placeholder="Stock" [ngModel]="variante.stock" [ngModelOptions]="{standalone: true}" (ngModelChange)="variante.stock = $event">
+                                        </div>
+
+                                        <div style="flex: 1.5;">
+                                            <label style="font-size: 0.8rem;">Foto Específica de esta variante</label>
+                                            <input type="hidden" name="antiguas_fotos_variantes[]" [value]="variante.ruta_imagen || ''">
+                                            
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                @if (variante.ruta_imagen) {
+                                                    <img [src]="getRutaImagen(variante.ruta_imagen, 'var')" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; border: 1px solid #ccc;">
+                                                }
+                                                <input type="file" name="fotos_variantes[]" class="form-input" style="margin-bottom: 0; padding: 5px;" accept="image/*">
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="btn-circle btn-delete-icon" style="width: 40px; height: 40px; flex-shrink: 0;" (click)="eliminarVariante($index)"><i class="fas fa-times"></i></button>
+                                    </div>
+                                }
+                                @if(variantesDinamicas.length === 0) { <p style="color: gray; font-size: 0.85rem; margin: 0;">Haz clic en "Añadir Variante" para empezar.</p> }
+                            </div>
+                        }
+                    }
+                    
+                    <h4 style="color: var(--verde-pino); border-bottom: 1px dashed #ccc; padding-bottom: 5px; margin-top: 15px;">
+                        <i class="fas fa-images"></i> Fotografías Generales
+                    </h4>
+                    
+                    <div class="grid-2 mb-20">
+                        <div class="foto-box">
+                            <label>Foto Principal (Portada) *</label>
+                            <input type="file" name="foto_principal" class="form-input" accept="image/*" [required]="!itemEditando">
+                            @if(itemEditando) { <small style="color: gray;">Sube una para reemplazar la actual.</small> }
+                        </div>
+                        <div class="foto-box">
+                            <label>Fotos Adicionales (Galería)</label>
+                            <input type="file" name="fotos_adicionales[]" class="form-input" accept="image/*" multiple>
+                            <small style="color: gray;">Puedes seleccionar varios archivos a la vez.</small>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary w-100 mt-15" [disabled]="cargando">
+                        {{ cargando ? 'Guardando...' : 'Guardar Producto' }}
+                    </button>
+                </form>
+            }
+
+            @if (modalAbierto === 'cupon') {
+                <h2 style="color: var(--verde-pino); margin-top: 0;"><i class="fas fa-ticket-alt"></i> Crear Cupón</h2>
+                <form (submit)="procesarFormulario($event, 'guardar_cupon')" class="form-modal">
+                    <label class="text-terracota">Código (Ej: TIKTOK20)</label><input type="text" name="codigo_cupon" class="form-input border-terracota" required style="text-transform: uppercase;">
+                    <div class="grid-2">
+                        <div><label class="text-terracota">% Descuento</label><input type="number" name="descuento" class="form-input border-terracota" required></div>
+                        <div><label class="text-terracota">Límite de Usos</label><input type="number" name="limite_usos" class="form-input border-terracota" required></div>
+                    </div>
+                    <label class="text-terracota">Días de Validez</label><input type="number" name="dias_validez" class="form-input border-terracota" value="30" required>
+                    <button type="submit" class="btn-primary w-100 mt-15" [disabled]="cargando">Generar Código</button>
+                </form>
+            }
+
+            @if (modalAbierto === 'noticia') {
+                <h2 style="color: var(--verde-pino); margin-top: 0;"><i class="fas fa-newspaper"></i> {{ itemEditando ? 'Editar' : 'Añadir Nueva' }} Publicación</h2>
+                <form (submit)="procesarFormulario($event, 'guardar_noticia')" class="form-modal">
+                    <input type="hidden" name="id_noticia" [value]="itemEditando?.id_noticia || ''">
+                    <label>Título del Anuncio *</label><input type="text" name="titulo" class="form-input" [value]="itemEditando?.titulo || ''" required>
+                    <label>Descripción Breve</label><textarea name="descripcion" class="form-input" rows="4" required>{{ itemEditando?.descripcion || '' }}</textarea>
+                    <label>Enlace Adicional (Opcional)</label><input type="text" name="link_destino" class="form-input" [value]="itemEditando?.link_destino || ''" placeholder="https://...">
+                    <div class="foto-box"><label>Imagen del Banner {{ itemEditando ? '(Vacío para mantener actual)' : '*' }}</label><input type="file" name="foto_noticia" class="form-input" accept="image/*" [required]="!itemEditando" style="margin-bottom: 0;"></div>
+                    <button type="submit" class="btn-primary w-100 mt-15" [disabled]="cargando">{{ itemEditando ? 'Actualizar' : 'Publicar' }} Noticia</button>
+                </form>
+            }
+
+            @if (modalAbierto === 'premio_ruleta') {
+                <h2 style="color: var(--verde-pino); margin-top: 0;"><i class="fas fa-gift"></i> Editar Rebanada</h2>
+                <form (submit)="procesarFormulario($event, 'guardar_premio_ruleta')" class="form-modal">
+                    <input type="hidden" name="id_premio" [value]="itemEditando?.id_premio">
+                    <label>Título del Premio</label><input type="text" name="titulo_premio" class="form-input" [value]="itemEditando?.titulo" required>
+                    <label>Descuento (%)</label><input type="number" name="descuento_premio" class="form-input" [value]="itemEditando?.descuento_porcentaje" required>
+                    <label>Color de la Sección</label><input type="color" name="color_premio" class="form-input" [value]="itemEditando?.color_seccion" style="height: 50px; padding: 5px;">
+                    <div class="grid-2 mt-15">
+                        <button type="button" class="btn-secondary text-danger w-100" (click)="ejecutarAccion('eliminar_premio_ruleta', {id_premio: itemEditando?.id_premio})"><i class="fas fa-trash"></i> Eliminar</button>
+                        <button type="submit" class="btn-primary w-100" [disabled]="cargando">Guardar</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+}
+
+@if (verCategorias) {
+    <div class="modal-overlay" style="z-index: 2000; background: rgba(0,0,0,0.6);" (click)="cerrarCategorias()">
+        <div class="modal-content" style="max-width: 500px;" (click)="$event.stopPropagation()">
+            <span class="close-modal" (click)="cerrarCategorias()">&times;</span>
+            
+            <h2 style="color: var(--verde-pino); margin-top: 0;"><i class="fas fa-tags"></i> Gestionar Categorías de {{ vistaInventario === 'cactus' ? 'Cactus' : 'Recuerdos' }}</h2>
+            
+            <form (submit)="procesarFormulario($event, 'guardar_categoria')" class="foto-box mb-20" style="background: #f9f9f9;">
+                <label>Añadir / Editar Categoría</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="hidden" name="id_categoria" [value]="catEditando?.id_categoria || ''">
+                    
+                    <input type="hidden" name="tipo_categoria" [value]="vistaInventario">
+                    
+                    <input type="text" name="nombre_categoria" class="form-input" style="margin-bottom: 0;" placeholder="Ej: {{ vistaInventario === 'cactus' ? 'Suculentas...' : 'Tazas...' }}" [value]="catEditando?.nombre || ''" required>
+                    <button type="submit" class="btn-primary" [disabled]="cargando">Guardar</button>
+                </div>
+                @if (catEditando) { <small style="color: gray; cursor: pointer; display: block; margin-top: 8px;" (click)="catEditando = null"><i class="fas fa-times"></i> Limpiar para crear nueva</small> }
+            </form>
+            
+            <div style="max-height: 250px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
+                <table class="admin-table" style="box-shadow: none; margin: 0;">
+                    <thead><tr><th>Nombre</th><th style="width: 80px; text-align: center;">Acción</th></tr></thead>
+                    <tbody>
+                        @for (cat of categorias; track cat.id_categoria) {
+                            @if (cat.tipo === vistaInventario || !cat.tipo) {
+                                <tr>
+                                    <td><strong>{{ cat.nombre }}</strong></td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px; justify-content: center;">
+                                            <button class="btn-circle btn-edit-icon" style="width: 30px; height: 30px; font-size: 0.8rem;" (click)="catEditando = cat"><i class="fas fa-edit"></i></button>
+                                            <button class="btn-circle btn-delete-icon" style="width: 30px; height: 30px; font-size: 0.8rem;" (click)="ejecutarAccion('eliminar_categoria', {id_categoria: cat.id_categoria})"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

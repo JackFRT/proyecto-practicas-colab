@@ -1,0 +1,45 @@
+<div class="ruleta-modal-overlay" (click)="cerrarModal()">
+    
+    <div class="ruleta-glass-container" (click)="$event.stopPropagation()">
+        
+        <button class="close-modal-x" (click)="cerrarModal()">&times;</button>
+
+        <div class="ruleta-header">
+            <h2><i class="fas fa-dharmachakra spin-icon"></i> RULETA SEMANAL MOKA</h2>
+            <p>Un giro cada semana. ¡Gana descuentos para tu próxima adopción!</p>
+        </div>
+
+        <div class="ruleta-body-grid">
+            <div class="moka-panel">
+                <div class="moka-bubble" [style.background]="mokaColor" [style.borderColor]="mokaColor.replace('0.2', '0.5').replace('0.15', '0.5').replace('0.1', '0.3')">
+                    <i class="fas fa-quote-left quote-mark"></i>
+                    {{ mokaMensaje }}
+                </div>
+                <img [src]="'/assets/images/barista/' + mokaImagen" alt="Moka" class="moka-img">
+            </div>
+
+            <div class="wheel-panel">
+                <div class="wheel-result-box">
+                    <span>RESULTADO:</span>
+                    <strong [style.color]="resultadoColor" [class.glowing]="!isGirando && haGirado">{{ resultadoTexto }}</strong>
+                </div>
+
+                <div class="wheel-interactive-area" (click)="girar()">
+                    <div class="wheel-pointer"><i class="fas fa-caret-right"></i></div>
+                    
+                    <div class="canvas-wrapper" [class.disabled]="haGirado && !isGirando">
+                        <canvas #wheelCanvas width="300" height="300" 
+                                [style.transform]="'rotate(' + rotacionActual + 'deg)'"
+                                class="wheel-canvas"></canvas>
+                        
+                        <div class="wheel-center-btn">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="wheel-hint">¡HAZ CLIC EN LA RUEDA PARA GIRAR!</p>
+            </div>
+        </div>
+    </div>
+</div>

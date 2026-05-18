@@ -1,0 +1,118 @@
+<section class="about-section">
+    <div class="about-grid">
+        <div class="about-header">
+            <h2>Más de<br>nosotros</h2>
+        </div>
+        <div class="about-texts">
+            <div class="text-block">
+                <h3>La cultura del museo</h3>
+                <div class="line-separator"></div>
+                Descubre la historia, diversidad y adaptación de los cactus en distintos ecosistemas del Perú y el mundo en Ayacucho.
+            </div>
+            <div class="text-block">
+                <h3>Nuestra cafetería</h3>
+                <div class="line-separator"></div>
+                Disfruta de bebidas y postres inspirados en el mundo de los cactus en un ambiente único en Ayacucho.
+            </div>
+            <div class="text-block">
+                <h3>Beneficios</h3>
+                <div class="line-separator"></div>
+                Gana cupones de descuento en nuestra ruleta, obtén beneficios por compras y acumula puntos de fidelidad por cada visita al local.
+            </div>
+            <div class="text-block">
+                <h3>Sensación de vida</h3>
+                <div class="line-separator"></div>
+                El museo ofrece de compañía a los cactus. Inspirado en eso, la web del Museo presenta a Moka, la barista virtual que te acompañará.
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="bio-section">
+    <div class="bio-image-wrapper">
+        <img src="/assets/images/decoracion/henryAy.jpg" alt="Ing. Henry Ayala">
+        <div class="bio-badge"><i class="fas fa-award"></i> Fundador</div>
+    </div>
+    <div class="bio-text-wrapper">
+        <h2 class="bio-title">El alma detrás del Museo</h2>
+        <h3 class="bio-subtitle">Ing. Henry Ayala</h3>
+        <p class="bio-desc">
+            Descubre la pasión y la visión del ingeniero agrónomo que, con más de diez años de experiencia, dedica su vida a estudiar, cultivar y preservar las maravillosas especies de cactáceas en la región de Ayacucho. A través de sus conocimientos, Henry ha logrado crear un espacio único de conservación y aprendizaje.
+        </p>
+        <div class="bio-charlas-box">
+            <h4><i class="fas fa-chalkboard-teacher"></i> Charlas y Talleres</h4>
+            <p>Regularmente brindamos charlas especializadas sobre el cuidado, injerto y propagación de cactus. ¡No pierdas la oportunidad de aprender directamente del experto!</p>
+        </div>
+        <a href="https://www.facebook.com/henry.ayalahinostroza.9/" target="_blank" class="btn-solid-white rounded-pill"><i class="fab fa-facebook"></i> Más información en su página de Facebook </a>
+    </div>
+</section>
+
+<section class="culture-section">
+    <h2 class="section-title">Cultura, Arte y Naturaleza</h2>
+    <div class="culture-grid">
+        <div class="culture-card">
+            <img src="/assets/images/decoracion/cactusWaris.jpg" alt="Los Waris">
+            <div class="culture-content">
+                <h3 style="color: var(--terracota-accent);">Los Waris y los Cactus</h3>
+                <p>Nuestra cultura Wari ya utilizaba el cactus San Pedro para hacer la mezcla del mucilaginoso y la arcilla para pintar sus vasijas. También se encontraron peines hechos de espinas y muchas iconografías.</p>
+            </div>
+        </div>
+        <div class="culture-card">
+            <img src="/assets/images/decoracion/agroproductos.jpg" alt="BioProductos">
+            <div class="culture-content">
+                <h3 style="color: var(--green-accent);">BioProductos Cactáceos</h3>
+                <p>En México se aprovecharon las propiedades únicas de los nopales para ofrecer bioproductos naturales. Desde mermeladas y dulces derivados de frutos de cactáceas, producidos en armonía con nuestro ecosistema.</p>
+            </div>
+        </div>
+        <div class="culture-card">
+            <img src="/assets/images/decoracion/artesanias.jpg" alt="Artesanías">
+            <div class="culture-content">
+                <h3 style="color: #FFE066;">Artesanía Local</h3>
+                <p>Nuestra tienda muestra el arte de artesanos ayacuchanos. Descubre hermosas macetas hechas a mano y recuerdos en madera de cactus que capturan la esencia espinosa y bella del desierto.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (noticias.length > 0) {
+<section class="news-section">
+    <div class="news-container-inner">
+        <div class="news-header">
+            <h2 class="news-main-title">Boletín de noticias</h2>
+            <div class="news-arrows-box">
+                <button class="news-arrow" (click)="moverNoticia(-1)"><i class="fas fa-chevron-left"></i></button>
+                <button class="news-arrow" (click)="moverNoticia(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+        
+        <div class="news-carousel-wrapper">
+            @for (noticia of noticias; track noticia.id_noticia; let i = $index) {
+                <div class="news-slide" [class.active]="i === noticiaActualIndex">
+                    <div class="news-content-box">
+                        <h3 class="news-title">{{ noticia.titulo }}</h3>
+                        <div class="news-lines-bg">
+                            <p class="news-desc">{{ noticia.descripcion }}</p>
+                        </div>
+                        @if (noticia.link_destino) {
+                            <a [href]="noticia.link_destino" target="_blank" class="news-btn-link">Saber más <i class="fas fa-arrow-right"></i></a>
+                        }
+                    </div>
+                    <div class="news-image-box">
+                        <img [src]="getRutaImagen(noticia.imagen_url, 'news')" alt="Imagen Noticia">
+                    </div>
+                </div>
+            }
+        </div>
+        
+        @if (noticias.length > 1) {
+            <div class="news-pagination" id="news-pagination-container">
+                @for (noticia of noticias; track noticia.id_noticia; let i = $index) {
+                    <div class="news-dot" [class.active]="i === noticiaActualIndex" (click)="cambiarNoticia(i)">
+                        <div class="progress-fill" [style.width.%]="i === noticiaActualIndex ? currentProgress() : 0"></div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+}
