@@ -33,6 +33,13 @@ export class AdminPanel implements OnInit {
   statsEmpleados: any[] = [];
   statsProductos: any[] = [];
 
+  modalSeguridadAbierto: boolean = false;
+  passwordConfirmacion: string = '';
+  accionPendiente: any = null;
+
+  modalImagenAbierto: boolean = false;
+  imagenSeleccionada: string = '';
+
   ngOnInit() {
     const userGuardado = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario_cactus') : null;
     if (!userGuardado) { this.router.navigate(['/login']); return; }
@@ -89,26 +96,54 @@ export class AdminPanel implements OnInit {
     );
   }
 
-
   ejecutarAccionSegura(accion: string, idUsuario: number, extraData: any = {}) {
-    const pass = prompt('Por seguridad, ingresa tu contraseña de administrador para confirmar:');
-    if (pass === null) return;
-    if (pass.trim() === '') { this.mostrarToast('Contraseña requerida'); return; }
+    this.accionPendiente = { accion, idUsuario, extraData };
+    this.passwordConfirmacion = '';
+    this.modalSeguridadAbierto = true;
+  }
+
+  confirmarAccionSegura() {
+    if (!this.passwordConfirmacion.trim()) {
+        this.mostrarToast('La contraseña es requerida.');
+        return;
+    }
 
     const payload = { 
-        accion, 
-        id_usuario_objetivo: idUsuario, 
+        accion: this.accionPendiente.accion, 
+        id_usuario_objetivo: this.accionPendiente.idUsuario, 
         id_admin: this.adminActual.id_usuario,
-        admin_password: pass, 
-        ...extraData 
+        admin_password: this.passwordConfirmacion, 
+        ...this.accionPendiente.extraData 
     };
 
+    this.cargando = true;
     this.http.post<any>('http://localhost/cactus-api/admin_api.php', payload).subscribe(res => {
       if(res.success) {
         this.mostrarToast(res.mensaje);
         this.cargarDatos();
-      } else { alert(res.mensaje); }
+      } else { 
+        alert(res.mensaje); 
+      }
+      this.cerrarModalSeguridad();
+      this.cargando = false;
     });
+  }
+
+  cerrarModalSeguridad() {
+    this.modalSeguridadAbierto = false;
+    this.passwordConfirmacion = '';
+    this.accionPendiente = null;
+  }
+
+  verComprobante(archivo: string) {
+      if (!archivo) return;
+      this.imagenSeleccionada = `http://localhost/cactus-api/images/comprobantes/${archivo}`;
+      this.modalImagenAbierto = true;
+  }
+
+  cerrarModalImagen() {
+      this.modalImagenAbierto = false;
+      this.imagenSeleccionada = '';
   }
 
   cambiarRol(idUsuario: number, event: any) {

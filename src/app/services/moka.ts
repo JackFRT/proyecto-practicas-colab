@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -8,10 +9,32 @@ export class Moka {
   private haSaludado = false;
   private resetClickTimer: any;
 
+  public eventoMoka$ = new Subject<{texto: string, imagen: string, mantener: boolean}>();
+
+  public passwordVisible: boolean = false;
+
+  public interactuarAuth(): { texto: string, imagen: string, castigo: boolean } {
+    if (this.passwordVisible) {
+        return { texto: "¡No insistas, sigo con los ojos cerrados! Tu contraseña está a salvo.", imagen: 'barista_cara_cubierta.png', castigo: false };
+    }
+    const frasesAuth = [
+        "Tus datos están protegidos en nuestro invernadero virtual.",
+        "Una buena contraseña es como un cactus: ¡Difícil de vulnerar sin pincharse!",
+        "Asegúrate de no compartir tu contraseña con nadie. ¡Ni siquiera conmigo!",
+        "La seguridad es lo primero. ¡Estoy vigilando que nadie vea tu pantalla!"
+    ];
+    const elegido = frasesAuth[Math.floor(Math.random() * frasesAuth.length)];
+    return { texto: elegido, imagen: 'barista_emocionada.png', castigo: false };
+  }
+
+  public dispararEvento(texto: string, imagen: string, mantener: boolean = false) {
+      this.eventoMoka$.next({texto, imagen, mantener});
+  }
+
   private dialogosUsados: Record<string, string[]> = {
     bienvenida: [], normal: [], incomodidad: [], molesta_formal: [],
     paciencia_agotada: [], enojada_informal: [], datos_curiosos: [], 
-    recomendacion_producto: [], aburrimiento: []
+    recomendacion_producto: [], aburrimiento: [], seguridad: []
   };
 
   private dialogos = {
@@ -68,6 +91,12 @@ export class Moka {
         "Si esto sigue así, me voy a poner a contar las espinas de ese cactus verde.",
         "Oye... ¿Aún sigues ahí o dejaste la pestaña abierta para escuchar la música?",
         "Creo que aprovecharé este silencio para limpiar la máquina de espresso... por quinta vez."
+    ],
+    seguridad: [
+        "¡Uy! La seguridad es primero. Me tapo los ojos para no ver tu contraseña.",
+        "Tus datos son súper sensibles. ¡Yo no miraré nada, te lo prometo!",
+        "Una buena contraseña es como un cactus: ¡Difícil de vulnerar sin pincharse!",
+        "¡Secreto de sumario! Cuidar tus datos es tan importante como regar las plantas."
     ]
   };
 
@@ -116,5 +145,13 @@ export class Moka {
 
   public obtenerAburrimiento(): { texto: string, imagen: string } {
     return { texto: this.obtenerFraseAleatoria('aburrimiento'), imagen: 'barista_aburrida.png' };
+  }
+
+  public reaccionarPassword(visible: boolean): { texto: string, imagen: string } {
+    if (visible) {
+        return { texto: this.obtenerFraseAleatoria('seguridad'), imagen: 'barista_cara_cubierta.png' };
+    } else {
+        return { texto: "¡Listo! Ya puedes seguir escribiendo tranquilo.", imagen: 'barista_feliz.png' };
+    }
   }
 }

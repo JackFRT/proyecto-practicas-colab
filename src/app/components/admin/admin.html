@@ -158,6 +158,7 @@
                                         <th>Fecha de Entrega</th>
                                         <th>Cliente</th>
                                         <th>Atendido por</th>
+                                        <th style="text-align: center;">Comprobante</th>
                                         <th style="text-align: right;">Monto</th>
                                     </tr>
                                 </thead>
@@ -168,6 +169,17 @@
                                             <td>{{ venta.fecha_reserva | date:'short' }}</td>
                                             <td>{{ venta.cliente || 'Usuario Eliminado' }}</td>
                                             <td><span style="font-size: 0.85rem; color: #ccc;"><i class="fas fa-headset"></i> {{ venta.empleado_nombre || 'Web' }}</span></td>
+                                            
+                                            <td style="text-align: center;">
+                                                @if (venta.comprobante_pago || venta.comprobante) {
+                                                    <button class="btn-action-glass text-gold" style="font-size: 0.8rem; padding: 5px 10px;" (click)="verComprobante(venta.comprobante_pago || venta.comprobante)">
+                                                        <i class="fas fa-image"></i> Ver Pago
+                                                    </button>
+                                                } @else {
+                                                    <span style="color: rgba(255,255,255,0.3); font-size: 0.8rem;">Sin captura</span>
+                                                }
+                                            </td>
+
                                             <td style="text-align: right; font-weight: bold; color: #A3B18A;">S/ {{ venta.total_pagado | number:'1.2-2' }}</td>
                                         </tr>
                                     }
@@ -180,4 +192,33 @@
     </div>
 </div>
 
-@if (toastMsg) { <div class="toast-notification">{{ toastMsg }}</div> }
+@if (modalSeguridadAbierto) {
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center;" (click)="cerrarModalSeguridad()">
+        <div class="glass-card" style="width: 100%; max-width: 400px; text-align: center; padding: 30px;" (click)="$event.stopPropagation()">
+            <h2 style="color: #FFE066; margin-top: 0; margin-bottom: 10px;"><i class="fas fa-shield-alt"></i> Seguridad</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 25px; font-size: 0.95rem;">Ingresa tu contraseña de administrador para autorizar esta acción:</p>
+            
+            <input type="password" class="glass-input" placeholder="Tu contraseña oculta..." style="text-align: center; font-size: 1.2rem; letter-spacing: 3px;" [(ngModel)]="passwordConfirmacion" (keyup.enter)="confirmarAccionSegura()">
+            
+            <div style="display: flex; gap: 15px; margin-top: 25px;">
+                <button class="btn-glass-danger" style="flex: 1; padding: 12px; border-radius: 8px;" (click)="cerrarModalSeguridad()">Cancelar</button>
+                <button class="btn-action-glass text-gold" style="flex: 1; padding: 12px; border-radius: 8px; justify-content: center;" (click)="confirmarAccionSegura()">
+                    <i class="fas fa-check"></i> Autorizar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalImagenAbierto) {
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center;" (click)="cerrarModalImagen()">
+        <div class="glass-card" style="position: relative; max-width: 600px; text-align: center; padding: 20px;" (click)="$event.stopPropagation()">
+            <button style="position: absolute; top: -15px; right: -15px; width: 40px; height: 40px; border-radius: 50%; background: #ff6b6b; color: white; border: none; font-size: 1.5rem; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5);" (click)="cerrarModalImagen()">&times;</button>
+            
+            <h3 style="color: #A3B18A; margin-top: 0; margin-bottom: 15px;"><i class="fas fa-file-invoice-dollar"></i> Captura del Cliente</h3>
+            <img [src]="imagenSeleccionada" alt="Comprobante" style="max-width: 100%; max-height: 75vh; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        </div>
+    </div>
+} 
+
+@if (toastMsg) { <div class="toast-notification">{{ toastMsg }}</div>}

@@ -48,16 +48,44 @@ export class Catalog implements OnInit {
   usuarioActual: any = null;
   mensajeFidelidad: string = '';
 
+  get userRole(): string {
+    if (typeof localStorage === 'undefined') return 'cliente';
+    const user = localStorage.getItem('usuario_cactus');
+    return user ? JSON.parse(user).rol : 'cliente';
+  }
+
   ngOnInit() {
     document.documentElement.style.setProperty('--color-catalogo', '#A3B18A');
     const userGuardado = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario_cactus') : null;
-    if (userGuardado) this.usuarioActual = JSON.parse(userGuardado);
+    if (userGuardado) {
+        this.usuarioActual = JSON.parse(userGuardado);
+        
+        const idValidado = this.usuarioActual.id_usuario || this.usuarioActual.id;
+        this.http.post<any>('http://localhost/cactus-api/perfil_api.php', { accion: 'cargar_perfil', id_usuario: idValidado }).subscribe(res => {
+            if (res.success) {
+                this.usuarioActual = res.usuario;
+                localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
+                
+                const visitas = parseInt(this.usuarioActual.visitas_presenciales) || 0;
+                if (visitas >= 68) { this.nivelSocio = 5; this.descuentoSocio = 15; }
+                else if (visitas >= 43) { this.nivelSocio = 4; this.descuentoSocio = 10; }
+                else if (visitas >= 23) { this.nivelSocio = 3; this.descuentoSocio = 7; }
+                else if (visitas >= 11) { this.nivelSocio = 2; this.descuentoSocio = 5; }
+                else if (visitas >= 3) { this.nivelSocio = 1; this.descuentoSocio = 2; }
+                else { this.nivelSocio = 0; this.descuentoSocio = 0; }
+
+                if (this.productoSeleccionado) {
+                    this.precioCalculado = this.precioOriginal * (1 - (this.descuentoSocio / 100));
+                }
+                this.cdr.detectChanges();
+            }
+        });
+    }
 
     this.http.get<any>('http://localhost/cactus-api/obtener_inicio.php').subscribe({
       next: (data) => {
         this.todosCactus = data.cactus || [];
         this.todosSouvenirs = data.souvenirs || [];
-        
         this.categorias = data.categorias || [];
 
         this.aplicarFiltros();
@@ -66,7 +94,7 @@ export class Catalog implements OnInit {
     });
 
     this.cartService.mostrarCarrito$.subscribe(abrir => {
-        if (abrir) this.modalTienda = 'carrito';
+        if (abrir) { this.modalTienda = 'carrito'; this.cdr.detectChanges(); }
     });
   }
 
@@ -139,8 +167,12 @@ export class Catalog implements OnInit {
   imagenesProducto: string[] = [];
   variantesProducto: any[] = [];
   varianteSeleccionada: any = null;
+  tieneVariantesReales: boolean = false;
   stockVariedadActual: number = 0;
   precioCalculado: number = 0;
+  precioOriginal: number = 0;
+  descuentoSocio: number = 0;
+  nivelSocio: number = 0;
 
   abrirDetalle(producto: any) {
     this.productoSeleccionado = producto;
@@ -152,22 +184,41 @@ export class Catalog implements OnInit {
     this.imagenModalActual = this.imagenesProducto.length > 0 ? this.imagenesProducto[0] : '';
     
     this.variantesProducto = producto.variantes || [];
-    this.precioCalculado = parseFloat(producto.precio_base || producto.precio) || 0;
+    this.precioOriginal = parseFloat(producto.precio_base || producto.precio) || 0;
+    this.precioCalculado = this.precioOriginal * (1 - (this.descuentoSocio / 100));
     this.cantidadSeleccionada = 1;
 
     if (producto.tipo === 'recuerdo' && this.variantesProducto.length > 0) {
-        this.varianteSeleccionada = null; 
-        this.stockVariedadActual = 0; 
+        
+        if (this.variantesProducto.length === 1 && this.variantesProducto[0].nombre_variante === 'Estándar') {
+            this.tieneVariantesReales = false;
+            this.varianteSeleccionada = this.variantesProducto[0];
+            this.stockVariedadActual = this.variantesProducto[0].stock;
+        } 
+        else {
+            this.tieneVariantesReales = true;
+            
+            if (this.variantesProducto.length === 1) {
+                this.varianteSeleccionada = this.variantesProducto[0];
+                this.stockVariedadActual = this.variantesProducto[0].stock;
+            } else {
+                this.varianteSeleccionada = null; 
+                this.stockVariedadActual = 0; 
+            }
+        }
     } else {
+        this.tieneVariantesReales = false;
         this.varianteSeleccionada = 'única';
         this.stockVariedadActual = producto.stock || 10; 
     }
 
     this.modalTienda = 'detalle';
+    this.cdr.detectChanges();
   }
   
   cambiarImagenModal(img: string) {
     this.imagenModalActual = img;
+    this.cdr.detectChanges();
   }
 
   onVarianteChange(variante: any) {
@@ -176,12 +227,20 @@ export class Catalog implements OnInit {
         this.stockVariedadActual = variante.stock;
         
         const base = parseFloat(this.productoSeleccionado.precio_base || this.productoSeleccionado.precio) || 0;
-        this.precioCalculado = base + parseFloat(variante.precio_adicional || 0);
+        this.precioOriginal = base + parseFloat(variante.precio_adicional || 0);
+        this.precioCalculado = this.precioOriginal * (1 - (this.descuentoSocio / 100));
         
         if (variante.ruta_imagen) {
             this.imagenModalActual = variante.ruta_imagen;
             if (!this.imagenesProducto.includes(variante.ruta_imagen)) {
                 this.imagenesProducto.push(variante.ruta_imagen);
+            }
+        } 
+        
+        else {
+            const indexVariante = this.variantesProducto.indexOf(variante);
+            if (indexVariante !== -1 && this.imagenesProducto.length > indexVariante + 1) {
+                this.imagenModalActual = this.imagenesProducto[indexVariante + 1];
             }
         }
 
@@ -229,6 +288,7 @@ export class Catalog implements OnInit {
     this.modalTienda = null;
     this.productoSeleccionado = null;
     this.cartService.cerrarModal();
+    this.cdr.detectChanges();
   }
 
   eliminarDelCarrito(index: number) { 
@@ -254,24 +314,29 @@ export class Catalog implements OnInit {
   aplicarCupon() {
     if (!this.codigoCupon) return;
     
+    const codigoLimpio = this.codigoCupon.trim().toUpperCase();
+
     if (this.descuentoAplicado > 0) {
         this.mostrarToast('Ya tienes un cupón aplicado a esta compra.');
         return;
     }
 
+    const idValidado = this.usuarioActual.id_usuario || this.usuarioActual.id;
+
     this.http.post<any>('http://localhost/cactus-api/ordenes_api.php', { 
         accion: 'validar_cupon', 
-        codigo: this.codigoCupon, 
-        id_usuario: this.usuarioActual.id_usuario 
+        codigo: codigoLimpio, 
+        id_usuario: idValidado 
     }).subscribe(res => {
       if (res.success) {
         this.descuentoAplicado = res.descuento;
+        this.codigoCupon = codigoLimpio; 
         this.mostrarToast(`¡Éxito! Se aplicó un ${res.descuento}% de descuento.`);
       } else { 
         this.mostrarToast(res.mensaje); 
         this.descuentoAplicado = 0; 
-        this.codigoCupon = '';
       }
+      this.cdr.detectChanges();
     });
   }
 
@@ -299,7 +364,8 @@ export class Catalog implements OnInit {
 
     const formData = new FormData();
     formData.append('accion', 'crear_reserva');
-    formData.append('id_usuario', this.usuarioActual.id_usuario);
+    const idValidado = this.usuarioActual.id_usuario || this.usuarioActual.id;
+    formData.append('id_usuario', idValidado.toString());
     formData.append('tipo_comprobante', this.tipoComprobante === 'Factura' ? 'factura' : 'boleta');
     formData.append('dni_opcional', dniOpcionalFinal);
     
@@ -327,8 +393,11 @@ export class Catalog implements OnInit {
           this.modalTienda = 'success';
         } else { alert(res.mensaje); }
         this.cargandoPago = false;
+        this.cdr.detectChanges();
       },
-      error: () => { alert("Error de red. Asegúrate de que XAMPP esté encendido."); this.cargandoPago = false; }
+      error: () => { alert("Error de red. Asegúrate de que XAMPP esté encendido."); this.cargandoPago = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -336,5 +405,6 @@ export class Catalog implements OnInit {
     this.modalTienda = null;
     this.descuentoAplicado = 0;
     this.codigoCupon = '';
+    this.cdr.detectChanges();
   }
 }

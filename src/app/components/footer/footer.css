@@ -35,3 +35,21 @@
 
 @media (max-width: 768px) { .footer-content { padding-left: 0; } .footer-split { flex-direction: column; align-items: center; gap: 80px; } }
 
+@media (max-width: 850px) { 
+    .dark-footer { height: 1050px !important; } 
+    
+    .footer-content { padding-left: 0 !important; bottom: 320px !important; width: 100%; display: flex; justify-content: center; } 
+    .footer-split { flex-direction: column !important; align-items: center !important; gap: 80px !important; width: 100%; } 
+    
+    .desert-sun-wrapper { transform: translateX(-50%) translateY(40px) !important; }
+    .sun-circle { width: 280px !important; height: 280px !important; padding-top: 35px !important; }
+    .footer-tagline { font-size: 1.15rem !important; }
+    
+    .wooden-post { height: 60px !important; bottom: -60px !important; }
+
+    .cactus-real-decor { transform: scale(0.6); opacity: 0.5; }
+    .cactus-real-decor:nth-of-type(1) { left: -5% !important; bottom: 50px !important; }
+    .cactus-real-decor:nth-of-type(2) { display: none !important; }
+    .cactus-real-decor:nth-of-type(3) { right: -5% !important; bottom: 50px !important; }
+    .cactus-real-decor:nth-of-type(4) { display: none !important; }
+}

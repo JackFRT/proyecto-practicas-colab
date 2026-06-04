@@ -48,6 +48,22 @@ export class Empleado implements OnInit {
   verCategorias: boolean = false;
   catEditando: any = null;
 
+  ofuscarEmail(email: string): string {
+    if (!email || !email.includes('@')) return email;
+    const [nombre, dominio] = email.split('@');
+    if (nombre.length <= 2) return `${nombre}***@${dominio}`;
+    return `${nombre.substring(0, 2)}***@${dominio}`;
+  }
+
+  ofuscarDni(dni: string): string {
+    if (!dni || dni.length < 4) return dni;
+    return `${dni.substring(0, 2)}****${dni.substring(dni.length - 2)}`;
+  }
+
+  irConfiguracionPerfil() {
+      this.router.navigate(['/cliente/perfil']); 
+  }
+
   ngOnInit() {
     const usuarioGuardado = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario_cactus') : null;
     if (!usuarioGuardado) { this.router.navigate(['/login']); return; }
@@ -97,9 +113,7 @@ export class Empleado implements OnInit {
         const matchBusqueda = nombreCompleto.includes(this.terminoBusqueda.toLowerCase());
         const matchCategoria = this.categoriaFiltro === 'todas' || item.nombre_categoria === this.categoriaFiltro;
         
-        if (this.vistaInventario === 'recuerdo') {
-            return matchTipo && matchBusqueda;
-        }
+        // Ahora aplica todos los filtros sin importar si es cactus o recuerdo
         return matchTipo && matchBusqueda && matchCategoria;
     });
   }
@@ -121,17 +135,40 @@ export class Empleado implements OnInit {
   }
 
   abrirModal(tipo: string, item?: any) {
-    this.itemEditando = item || null;
+    this.itemEditando = item ? JSON.parse(JSON.stringify(item)) : null;
     this.modalAbierto = tipo;
     
     if (tipo === 'producto') {
       this.variantesDinamicas = [];
       this.tieneEstilos = false;
 
-      if (item) {
-        const variantesReales = item.variantes ? item.variantes.filter((v: any) => v.nombre_variante !== 'Estándar') : [];
+      if (this.itemEditando) {
+        let variantesReales: any[] = [];
+        
+        if (this.itemEditando.variantes && Array.isArray(this.itemEditando.variantes)) {
+            variantesReales = this.itemEditando.variantes.filter((v: any) => {
+                const nombre = v.nombre_variante ? v.nombre_variante.trim().toLowerCase() : '';
+                return nombre !== 'estándar' && nombre !== 'estandar' && nombre !== '';
+            });
+        }
 
-        if (variantesReales.length > 0 || item.nombre_estilo1) {
+        let tieneEstilo1Viejo = false;
+        if (this.itemEditando.nombre_estilo1) {
+            const nombreViejo = this.itemEditando.nombre_estilo1.trim().toLowerCase();
+            if (nombreViejo !== 'estándar' && nombreViejo !== 'estandar' && nombreViejo !== '') {
+                tieneEstilo1Viejo = true;
+            }
+        }
+
+        if (variantesReales.length === 0 && !tieneEstilo1Viejo) {
+            if (this.itemEditando.variantes && this.itemEditando.variantes.length > 0) {
+                this.itemEditando.stock = this.itemEditando.variantes[0].stock;
+            } else if (this.itemEditando.stock_estilo1 !== undefined && this.itemEditando.stock_estilo1 !== null) {
+                this.itemEditando.stock = this.itemEditando.stock_estilo1;
+            }
+        }
+
+        if (variantesReales.length > 0 || tieneEstilo1Viejo) {
             this.tieneEstilos = true;
             
             if (variantesReales.length > 0) {
@@ -141,9 +178,9 @@ export class Empleado implements OnInit {
                     ruta_imagen: v.ruta_imagen
                 }));
             } else {
-                if (item.nombre_estilo1) this.variantesDinamicas.push({ nombre_variante: item.nombre_estilo1, stock: item.stock_estilo1 || 0 });
-                if (item.nombre_estilo2) this.variantesDinamicas.push({ nombre_variante: item.nombre_estilo2, stock: item.stock_estilo2 || 0 });
-                if (item.nombre_estilo3) this.variantesDinamicas.push({ nombre_variante: item.nombre_estilo3, stock: item.stock_estilo3 || 0 });
+                if (tieneEstilo1Viejo) this.variantesDinamicas.push({ nombre_variante: this.itemEditando.nombre_estilo1, stock: this.itemEditando.stock_estilo1 || 0 });
+                if (this.itemEditando.nombre_estilo2) this.variantesDinamicas.push({ nombre_variante: this.itemEditando.nombre_estilo2, stock: this.itemEditando.stock_estilo2 || 0 });
+                if (this.itemEditando.nombre_estilo3) this.variantesDinamicas.push({ nombre_variante: this.itemEditando.nombre_estilo3, stock: this.itemEditando.stock_estilo3 || 0 });
             }
         }
       }
@@ -219,7 +256,7 @@ export class Empleado implements OnInit {
 
   seleccionarCliente(cliente: any) {
     this.clienteSeleccionado = cliente;
-    this.terminoFidelidad = `${cliente.nombre} (${cliente.email})`;
+    this.terminoFidelidad = `${cliente.nombre} (${this.ofuscarEmail(cliente.email)})`;
     this.sugerenciasClientes = [];
   }
 
@@ -254,7 +291,10 @@ export class Empleado implements OnInit {
           this.historial_atendidas = res.datos.historial_atendidas || [];
           this.num_notificaciones = this.reservas_activas.length;
           
+          // Magia auto-reparadora
+          this.autoRepararRuleta();
           this.prepararRuleta();
+          
           this.aplicarFiltros();
         }
         this.cargando = false;
@@ -296,14 +336,18 @@ export class Empleado implements OnInit {
   }
 
   ejecutarAccion(accion: string, extraData: any = {}) {
-      if ((accion.includes('eliminar') || accion === 'cancelar') && !confirm("¿Estás seguro?")) return;
+      if ((accion.includes('eliminar') || accion === 'cancelar') && !confirm("¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.")) return;
       if (accion === 'reportar' && !confirm("ALERTA: ¿Bloquear usuario por 7 días?")) return;
       
       const payload = { accion, id_empleado: this.idEmpleado, ...extraData };
 
       this.http.post<any>(`http://localhost/cactus-api/${this.obtenerEndpoint(accion)}`, payload).subscribe({
           next: (res) => { 
-              if(res.success) { this.mostrarToast(res.mensaje); this.cargarDashboard(); }
+              if(res.success) { 
+                  this.mostrarToast(res.mensaje); 
+                  this.cerrarModales();
+                  this.cargarDashboard(); 
+              }
               else { alert(res.mensaje); }
           },
           error: () => alert("Error de servidor.")
@@ -391,4 +435,69 @@ export class Empleado implements OnInit {
     this.premios_ruleta.forEach(p => payload[p.id_premio] = Math.round(p.probabilidad * 10) / 10);
     this.ejecutarAccion('guardar_probabilidades_ruleta', { probabilidades: payload });
   }
+
+  abrirModalNuevoPremio() {
+    this.itemEditando = { titulo: '', descuento_porcentaje: 0, color_seccion: '#e2e8f0', es_nuevo: true };
+    this.modalAbierto = 'premio_ruleta';
+  }
+
+  autoRepararRuleta() {
+      if (this.premios_ruleta.length === 0) return;
+      let hayCambios = false;
+
+      const premiosNuevos = this.premios_ruleta.filter(p => parseFloat(p.probabilidad) === 0);
+      const premiosValidos = this.premios_ruleta.filter(p => parseFloat(p.probabilidad) > 0);
+
+      if (premiosNuevos.length > 0) {
+          hayCambios = true;
+          const porcentajeParaNuevos = 5.0 * premiosNuevos.length;
+          const porcentajeRestante = 100.0 - porcentajeParaNuevos;
+
+          let sumaActual = 0;
+          premiosValidos.forEach(p => sumaActual += parseFloat(p.probabilidad));
+
+          let nuevaSuma = 0;
+          let maxIndex = 0;
+          let maxVal = -1;
+
+          if (sumaActual > 0) {
+              premiosValidos.forEach((p, i) => {
+                  const proporcion = parseFloat(p.probabilidad) / sumaActual;
+                  p.probabilidad = Number((proporcion * porcentajeRestante).toFixed(1));
+                  nuevaSuma += p.probabilidad;
+
+                  if (p.probabilidad > maxVal) { maxVal = p.probabilidad; maxIndex = i; }
+              });
+
+              const diferencia = Number((porcentajeRestante - nuevaSuma).toFixed(1));
+              premiosValidos[maxIndex].probabilidad = Number((premiosValidos[maxIndex].probabilidad + diferencia).toFixed(1));
+          }
+
+          premiosNuevos.forEach(p => p.probabilidad = 5.0);
+      } 
+      else {
+          let sumaTotal = 0;
+          this.premios_ruleta.forEach(p => sumaTotal += parseFloat(p.probabilidad));
+          
+          if (Math.abs(sumaTotal - 100.0) > 0.5) {
+              hayCambios = true;
+              let nuevaSuma = 0;
+              let maxIndex = 0;
+              let maxVal = -1;
+              
+              this.premios_ruleta.forEach((p, i) => {
+                  const proporcion = parseFloat(p.probabilidad) / sumaTotal;
+                  p.probabilidad = Number((proporcion * 100.0).toFixed(1));
+                  nuevaSuma += p.probabilidad;
+                  if (p.probabilidad > maxVal) { maxVal = p.probabilidad; maxIndex = i; }
+              });
+
+              const diferencia = Number((100.0 - nuevaSuma).toFixed(1));
+              if (this.premios_ruleta.length > 0) {
+                  this.premios_ruleta[maxIndex].probabilidad = Number((this.premios_ruleta[maxIndex].probabilidad + diferencia).toFixed(1));
+              }
+          }
+      }
+  }
 }
+

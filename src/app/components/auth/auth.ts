@@ -1,8 +1,9 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Moka } from '../../services/moka'; 
 
 @Component({
   selector: 'app-auth',
@@ -11,17 +12,21 @@ import { CommonModule } from '@angular/common';
   templateUrl: './auth.html',
   styleUrl: './auth.css'
 })
-export class Auth {
+export class Auth implements OnInit, OnDestroy {
   http = inject(HttpClient);
   router = inject(Router);
   cdr = inject(ChangeDetectorRef);
+  mokaService = inject(Moka);
 
   isLoginMode: boolean = true;
   isRecuperarMode: boolean = false; 
+  showPassword: boolean = false;
   
   nombre: string = '';
   email: string = '';
   password: string = '';
+  dni: string = '';
+  telefono: string = '';
   codigoRecuperacion: string = ''; 
   pasoRecuperacion: number = 1; 
   
@@ -29,22 +34,44 @@ export class Auth {
   mensajeExito: string = '';
   cargando: boolean = false;
 
+  mokaTexto: string = '';
+  mokaImg: string = 'barista_saludando.png';
+
+  ngOnInit() {
+      const saludo = this.mokaService.interactuar();
+      this.mokaTexto = "¡Hola! Estoy aquí para asegurarme de que entres a salvo al museo.";
+      this.mokaImg = saludo.imagen;
+  }
+
+  ngOnDestroy() {
+      this.mokaService.passwordVisible = false;
+  }
+
   toggleMode() {
     this.isLoginMode = !this.isLoginMode;
     this.isRecuperarMode = false;
+    this.showPassword = false;
     this.limpiarMensajes();
+    
+    this.mokaTexto = this.isLoginMode ? "¿De vuelta al Oasis? ¡Qué alegría!" : "¡Genial! Una nueva cuenta. Te prometo muchos beneficios.";
+    this.mokaImg = "barista_feliz.png";
   }
 
   abrirRecuperacion(event: Event) {
     event.preventDefault();
     this.isRecuperarMode = true;
     this.pasoRecuperacion = 1;
+    this.showPassword = false;
     this.limpiarMensajes();
+    
+    this.mokaTexto = "Uy... ¿olvidaste la llave? No te preocupes, yo te ayudo a recuperarla.";
+    this.mokaImg = "barista_emocionada.png";
   }
 
   volverLogin() {
     this.isRecuperarMode = false;
     this.isLoginMode = true;
+    this.showPassword = false;
     this.limpiarMensajes();
   }
 
@@ -53,6 +80,21 @@ export class Auth {
     this.mensajeExito = '';
     this.password = '';
     this.codigoRecuperacion = '';
+  }
+
+  togglePassword() {
+      this.showPassword = !this.showPassword;
+      
+      this.mokaService.passwordVisible = this.showPassword; 
+      
+      const reaccion = this.mokaService.reaccionarPassword(this.showPassword);
+      this.mokaService.dispararEvento(reaccion.texto, reaccion.imagen, true);
+  }
+
+  interactuarMoka() {
+      const reaccion = this.mokaService.interactuar();
+      this.mokaTexto = reaccion.texto;
+      this.mokaImg = reaccion.imagen;
   }
 
   onSubmit() {
@@ -73,24 +115,46 @@ export class Auth {
     const endpoint = this.isLoginMode ? 'login.php' : 'registro.php';
     const payload = this.isLoginMode 
       ? { email: this.email, password: this.password }
-      : { nombre: this.nombre, email: this.email, password: this.password };
+      : { nombre: this.nombre, email: this.email, password: this.password, dni: this.dni, telefono: this.telefono };
 
     this.http.post<any>(`http://localhost/cactus-api/${endpoint}`, payload).subscribe({
       next: (res) => {
         this.cargando = false;
+        
         if (res.success) {
           if (this.isLoginMode) {
-            if(res.usuario) localStorage.setItem('usuario_cactus', JSON.stringify(res.usuario));
-            this.router.navigate(['/']);
+            if(res.usuario) {
+                localStorage.setItem('usuario_cactus', JSON.stringify(res.usuario));
+            
+                if (res.usuario.rol === 'admin') {
+                    this.router.navigate(['/admin/panel']);
+                } else if (res.usuario.rol === 'empleado') {
+                    this.router.navigate(['/empleado/dashboard']);
+                } else {
+                    this.router.navigate(['/']);
+                }
+            } else {
+                this.router.navigate(['/']);
+            }
           } else {
             this.mensajeExito = "¡Cuenta creada con éxito! Por favor inicia sesión.";
             this.isLoginMode = true; 
             this.password = ''; 
+            this.mokaService.dispararEvento("¡Registro exitoso! Ahora pon tu correo y entremos.", "barista_emocionada.png", true);
           }
-        } else { this.mensajeError = res.mensaje || "Error en la operación"; }
+        } else {
+          this.mensajeError = res.mensaje || "Correo o contraseña incorrectos.";
+          this.mokaService.dispararEvento("Uy, parece que hubo un error con tus datos. ¡Inténtalo de nuevo!", "barista_sad.png", true);
+        }
+
         this.cdr.detectChanges();
       },
-      error: () => { this.cargando = false; this.mensajeError = "Error de servidor."; this.cdr.detectChanges(); }
+      error: () => { 
+        this.cargando = false; 
+        this.mensajeError = "Error de servidor."; 
+        this.mokaService.dispararEvento("Ay... no me pude conectar con la base de datos.", "barista_asustada.png", true);
+        this.cdr.detectChanges(); 
+      }
     });
   }
 

@@ -2,7 +2,13 @@
     <header class="perfil-header">
         <h1>Cactus Museum</h1>
         <div class="header-actions">
-            <button class="btn-glass-outline" (click)="irTienda()"><i class="fas fa-store"></i> Tienda</button>
+            @if (rolUsuario === 'empleado') {
+                <button class="btn-glass-outline" (click)="irPanelEmpleado()"><i class="fas fa-boxes"></i> Panel Empleado</button>
+            } @else if (rolUsuario === 'admin') {
+                <button class="btn-glass-outline" (click)="irPanelAdmin()"><i class="fas fa-user-shield"></i> Panel Supremo</button>
+            } @else {
+                <button class="btn-glass-outline" (click)="irTienda()"><i class="fas fa-store"></i> Tienda</button>
+            }
             <button class="btn-glass-danger" (click)="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> Salir</button>
         </div>
     </header>
@@ -15,18 +21,29 @@
                 <div class="user-avatar-box">
                     <div class="avatar-circle"><i class="fas fa-user"></i></div>
                     <h3>{{ usuario.nombre }}</h3>
-                    <div class="badge-nivel-glass" [ngClass]="'lvl-' + usuario.datos_nivel?.nivel">
-                        Socio Nivel {{ usuario.datos_nivel?.nivel }}
-                    </div>
-                    <p class="visitas-text"><i class="fas fa-mug-hot"></i> Visitas presenciales: {{ usuario.visitas_presenciales }}</p>
+                    
+                    @if (rolUsuario !== 'empleado') {
+                        <div class="badge-nivel-glass" [ngClass]="'lvl-' + usuario.datos_nivel?.nivel">
+                            Socio Nivel {{ usuario.datos_nivel?.nivel }}
+                        </div>
+                        <p class="visitas-text"><i class="fas fa-mug-hot"></i> Visitas presenciales: {{ usuario.visitas_presenciales }}</p>
+                    } @else {
+                        <div class="badge-nivel-glass" style="background: rgba(255,255,255,0.2); color: white;">
+                            <i class="fas fa-briefcase"></i> Cuenta de Equipo
+                        </div>
+                    }
                 </div>
 
                 <nav class="perfil-nav">
-                    <button [class.active]="tabActivo === 'socio'" (click)="cambiarTab('socio')"><i class="fas fa-star"></i> Nivel y Beneficios</button>
+                    @if (rolUsuario !== 'empleado') {
+                        <button [class.active]="tabActivo === 'socio'" (click)="cambiarTab('socio')"><i class="fas fa-star"></i> Nivel y Beneficios</button>
+                    }
                     <button [class.active]="tabActivo === 'info'" (click)="cambiarTab('info')"><i class="fas fa-id-card"></i> Configuración</button>
-                    <button [class.active]="tabActivo === 'reservas'" (click)="cambiarTab('reservas')"><i class="fas fa-shopping-basket"></i> Mis Compras</button>
-                    <button [class.active]="tabActivo === 'cupones'" (click)="cambiarTab('cupones')"><i class="fas fa-ticket-alt"></i> Mis Premios</button>
-                    <button [class.active]="tabActivo === 'peligro'" (click)="cambiarTab('peligro')" class="text-danger"><i class="fas fa-exclamation-triangle"></i> Peligro</button>
+                    @if (rolUsuario !== 'empleado') {
+                        <button [class.active]="tabActivo === 'reservas'" (click)="cambiarTab('reservas')"><i class="fas fa-shopping-basket"></i> Mis Compras</button>
+                        <button [class.active]="tabActivo === 'cupones'" (click)="cambiarTab('cupones')"><i class="fas fa-ticket-alt"></i> Mis Premios</button>
+                        <button [class.active]="tabActivo === 'peligro'" (click)="cambiarTab('peligro')" class="text-danger"><i class="fas fa-exclamation-triangle"></i> Peligro</button>
+                    }
                 </nav>
             </aside>
 
@@ -39,19 +56,19 @@
                         <div class="glass-card mb-20">
                             <div class="flex-between">
                                 <div>
-                                    <h3 class="text-terracota m-0"><i class="fas fa-map-marker-alt"></i> Progreso a {{ usuario.datos_nivel?.texto }}</h3>
-                                    <p class="text-muted">Visita la cafetería para subir de nivel.</p>
+                                    <h3 class="text-terracota m-0"><i class="fas fa-map-marker-alt"></i> Progreso a {{ usuario.datos_nivel?.textoNext }}</h3>
+                                    <p class="text-muted">Visita la cafetería para subir de nivel. (No es acumulativo)</p>
                                 </div>
-                                <div class="progress-text">{{ usuario.visitas_presenciales }} / {{ usuario.datos_nivel?.next }}</div>
+                                <div class="progress-text">{{ usuario.datos_nivel?.visitasNivelActual }} / {{ usuario.datos_nivel?.metaNivel }}</div>
                             </div>
                             
                             <div class="progress-bar-bg">
                                 <div class="progress-bar-fill fill-terracota" [style.width]="usuario.datos_nivel?.progreso + '%'"></div>
                             </div>
                             
-                            <div class="beneficios-box">
-                                <strong>Beneficios Actuales:</strong>
-                                <p>{{ usuario.datos_nivel?.beneficios }}</p>
+                            <div class="beneficios-box mt-15">
+                                <strong><i class="fas fa-gift text-gold"></i> Beneficios Actuales:</strong>
+                                <p style="margin-top: 5px;">{{ usuario.datos_nivel?.beneficios }}</p>
                             </div>
                         </div>
 
@@ -77,7 +94,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Correo Electrónico</label>
-                                <input type="email" class="glass-input" [(ngModel)]="editEmail">
+                                <input type="email" class="glass-input" [(ngModel)]="editEmail" [disabled]="rolUsuario === 'empleado'" [title]="rolUsuario === 'empleado' ? 'Correos de equipo no se pueden cambiar aquí.' : ''">
                             </div>
                             <div class="grid-2">
                                 <div class="form-group">

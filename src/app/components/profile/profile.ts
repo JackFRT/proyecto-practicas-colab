@@ -19,6 +19,7 @@ export class Profile implements OnInit {
   tabActivo: string = 'socio';
   cargando: boolean = true;
   toastMsg: string = '';
+  rolUsuario: string = 'cliente';
 
   usuario: any = {};
   historial: any[] = [];
@@ -36,6 +37,12 @@ export class Profile implements OnInit {
     if (!guardado) { this.router.navigate(['/login']); return; }
     
     const user = JSON.parse(guardado);
+    this.rolUsuario = user.rol || 'cliente';
+
+    if (this.rolUsuario === 'empleado') {
+        this.tabActivo = 'info';
+    }
+
     this.cargarDatos(user.id_usuario);
   }
 
@@ -45,6 +52,9 @@ export class Profile implements OnInit {
       next: (res) => {
         if (res.success) {
           this.usuario = res.usuario;
+          
+          this.usuario.datos_nivel = this.calcularNivelSocio(parseInt(this.usuario.visitas_presenciales) || 0);
+
           this.historial = res.historial;
           this.cupones = res.cupones;
 
@@ -58,6 +68,55 @@ export class Profile implements OnInit {
       },
       error: () => { this.mostrarToast('Error al conectar con el servidor.'); this.cargando = false; this.cdr.detectChanges(); }
     });
+  }
+
+  calcularNivelSocio(visitasTotales: number) {
+      let nivel = 0;
+      let descuento = 0;
+      let progreso = 0;
+      let metaNivel = 3;
+      let visitasNivelActual = visitasTotales;
+      let textoNext = 'Nivel 1 (2% Dcto)';
+
+      if (visitasTotales >= 68) {
+          nivel = 5; descuento = 15; progreso = 100; metaNivel = 25;
+          visitasNivelActual = 25; textoNext = '¡Nivel Máximo Alcanzado!';
+      } else if (visitasTotales >= 43) {
+          nivel = 4; descuento = 10; metaNivel = 25;
+          visitasNivelActual = visitasTotales - 43;
+          progreso = (visitasNivelActual / metaNivel) * 100;
+          textoNext = 'Nivel 5 (15% Dcto)';
+      } else if (visitasTotales >= 23) {
+          nivel = 3; descuento = 7; metaNivel = 20;
+          visitasNivelActual = visitasTotales - 23;
+          progreso = (visitasNivelActual / metaNivel) * 100;
+          textoNext = 'Nivel 4 (10% Dcto)';
+      } else if (visitasTotales >= 11) {
+          nivel = 2; descuento = 5; metaNivel = 12;
+          visitasNivelActual = visitasTotales - 11;
+          progreso = (visitasNivelActual / metaNivel) * 100;
+          textoNext = 'Nivel 3 (7% Dcto)';
+      } else if (visitasTotales >= 3) {
+          nivel = 1; descuento = 2; metaNivel = 8;
+          visitasNivelActual = visitasTotales - 3;
+          progreso = (visitasNivelActual / metaNivel) * 100;
+          textoNext = 'Nivel 2 (5% Dcto)';
+      } else {
+          nivel = 0; descuento = 0; metaNivel = 3;
+          visitasNivelActual = visitasTotales;
+          progreso = (visitasNivelActual / metaNivel) * 100;
+          textoNext = 'Nivel 1 (2% Dcto)';
+      }
+
+      return {
+          nivel,
+          descuento,
+          progreso,
+          visitasNivelActual,
+          metaNivel,
+          textoNext,
+          beneficios: descuento > 0 ? `Descuento permanente del ${descuento}% en todas tus compras en tienda.` : 'Aún no tienes beneficios fijos. ¡Sigue visitándonos!'
+      };
   }
 
   cambiarTab(tab: string) { this.tabActivo = tab; }
@@ -107,6 +166,7 @@ export class Profile implements OnInit {
             this.mostrarToast(res.mensaje);
         }
         this.cargando = false;
+        this.cdr.detectChanges();
     });
   }
 
@@ -126,6 +186,8 @@ export class Profile implements OnInit {
   }
 
   irTienda() { this.router.navigate(['/']); }
+  irPanelEmpleado() { this.router.navigate(['/empleado/dashboard']); }
+  irPanelAdmin() { this.router.navigate(['/admin/panel']); }
 
   cerrarSesion() {
     localStorage.removeItem('usuario_cactus');
@@ -134,6 +196,6 @@ export class Profile implements OnInit {
 
   mostrarToast(msg: string) {
     this.toastMsg = msg;
-    setTimeout(() => this.toastMsg = '', 3500);
+    setTimeout(() => { this.toastMsg = ''; this.cdr.detectChanges(); }, 3500);
   }
 }

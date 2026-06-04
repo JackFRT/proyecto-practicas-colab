@@ -5,9 +5,15 @@
         <button class="close-modal-x" (click)="cerrarModal()">&times;</button>
 
         <div class="ruleta-header">
-            <h2><i class="fas fa-dharmachakra spin-icon"></i> RULETA SEMANAL MOKA</h2>
+            <h2><i class="fas fa-dharmachakra spin-icon"></i> RULETA SEMANAL DE MOKA</h2>
             <p>Un giro cada semana. ¡Gana descuentos para tu próxima adopción!</p>
         </div>
+
+        @if (userRole === 'empleado') {
+            <div style="background: rgba(255,255,255,0.1); color: #FFE066; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; font-weight: bold; border: 1px dashed rgba(255, 224, 102, 0.4); margin-left: 20px; margin-right: 20px;">
+                <i class="fas fa-eye"></i> Vista de Empleado (Giro Deshabilitado)
+            </div>
+        }
 
         <div class="ruleta-body-grid">
             <div class="moka-panel">
@@ -21,13 +27,13 @@
             <div class="wheel-panel">
                 <div class="wheel-result-box">
                     <span>RESULTADO:</span>
-                    <strong [style.color]="resultadoColor" [class.glowing]="!isGirando && haGirado">{{ resultadoTexto }}</strong>
+                    <strong [style.color]="resultadoColor" [class.glowing]="!isGirando && (haGirado || userRole === 'empleado')">{{ resultadoTexto }}</strong>
                 </div>
 
                 <div class="wheel-interactive-area" (click)="girar()">
                     <div class="wheel-pointer"><i class="fas fa-caret-right"></i></div>
                     
-                    <div class="canvas-wrapper" [class.disabled]="haGirado && !isGirando">
+                    <div class="canvas-wrapper" [class.disabled]="(haGirado && !isGirando) || userRole === 'empleado'">
                         <canvas #wheelCanvas width="300" height="300" 
                                 [style.transform]="'rotate(' + rotacionActual + 'deg)'"
                                 class="wheel-canvas"></canvas>
@@ -38,7 +44,9 @@
                     </div>
                 </div>
                 
-                <p class="wheel-hint">¡HAZ CLIC EN LA RUEDA PARA GIRAR!</p>
+                @if (userRole !== 'empleado') {
+                    <p class="wheel-hint">¡HAZ CLIC EN LA RUEDA PARA GIRAR!</p>
+                }
             </div>
         </div>
     </div>

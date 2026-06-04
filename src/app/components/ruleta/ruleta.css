@@ -101,3 +101,20 @@
     .moka-panel { flex-direction: column; align-items: center; }
     .moka-bubble::after { bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-color: inherit transparent transparent transparent; }
 }
+
+@media (max-width: 800px) {
+    .ruleta-glass-container { padding: 20px 15px; }
+    .ruleta-header h2 { font-size: 1.4rem; }
+    .ruleta-body-grid { grid-template-columns: 1fr; gap: 20px; }
+    .moka-panel { flex-direction: row-reverse; gap: 15px; align-items: flex-end;}
+    .moka-img { width: 130px; }
+    .moka-bubble::after { bottom: 20px; left: -10px; border-width: 10px 10px 10px 0; border-color: transparent inherit transparent transparent; transform: none; }
+}
+@media (max-width: 500px) {
+    .ruleta-modal-overlay { padding: 10px; }
+    .canvas-wrapper { width: 250px; height: 250px; }
+    .wheel-center-btn { width: 40px; height: 40px; font-size: 1rem; }
+    .moka-panel { flex-direction: column; align-items: center; text-align: center; }
+    .moka-bubble { font-size: 0.9rem; padding: 10px; }
+    .moka-bubble::after { bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-color: inherit transparent transparent transparent; }
+}

@@ -1,4 +1,6 @@
 <?php
+error_reporting(0);
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
@@ -15,6 +17,13 @@ $inputJSON = file_get_contents('php://input');
 $inputData = json_decode($inputJSON, true);
 if (is_array($inputData)) {
     $_POST = array_merge($_POST, $inputData);
+}
+
+$esSubidaDeArchivo = isset($_SERVER["CONTENT_TYPE"]) && strpos($_SERVER["CONTENT_TYPE"], "multipart/form-data") !== false;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && empty($_FILES) && $_SERVER['CONTENT_LENGTH'] > 0 && $esSubidaDeArchivo) {
+    echo json_encode(["success" => false, "mensaje" => "La imagen es demasiado pesada y el servidor la bloqueó. Por favor, toma una captura de pantalla del pago y sube esa versión."]);
+    exit();
 }
 
 $accion = $_POST['accion'] ?? '';
@@ -50,8 +59,16 @@ if (in_array($accion, ['aprobar', 'completar', 'cancelar', 'reportar'])) {
 }
 
 if ($accion === 'buscar_clientes') {
-    $termino = "%" . trim($_POST['termino'] ?? '') . "%";
-    $stmt = $pdo->prepare("SELECT id_usuario, nombre, email, dni FROM usuarios WHERE (nombre LIKE ? OR email LIKE ? OR dni LIKE ?) LIMIT 5");
+    $termino = "%" . ($_POST['termino'] ?? '') . "%";
+    
+    $stmt = $pdo->prepare("
+        SELECT id_usuario, nombre, email, dni, rol 
+        FROM usuarios 
+        WHERE (nombre LIKE ? OR email LIKE ? OR dni LIKE ?) 
+        AND rol IN ('cliente', 'admin') 
+        LIMIT 5
+    ");
+    
     $stmt->execute([$termino, $termino, $termino]);
     echo json_encode(["success" => true, "clientes" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
     exit();
@@ -59,23 +76,57 @@ if ($accion === 'buscar_clientes') {
 
 if ($accion === 'registrar_visita') {
     $id_cliente = intval($_POST['id_cliente'] ?? 0);
-    if ($id_cliente > 0) {
-        $pdo->prepare("UPDATE usuarios SET visitas_presenciales = visitas_presenciales + 1 WHERE id_usuario = ?")->execute([$id_cliente]);
-        echo json_encode(["success" => true, "mensaje" => "Visita presencial registrada exitosamente."]);
-    } else {
-        echo json_encode(["success" => false, "mensaje" => "Cliente no válido."]);
+    
+    if (!$id_cliente) {
+        echo json_encode(["success" => false, "mensaje" => "No se proporcionó un ID de cliente válido."]);
+        exit();
+    }
+
+    try {
+        $stmt_check = $pdo->prepare("SELECT fecha_ultima_visita, visitas_presenciales FROM usuarios WHERE id_usuario = ?");
+        $stmt_check->execute([$id_cliente]);
+        $cliente = $stmt_check->fetch(PDO::FETCH_ASSOC);
+
+        if ($cliente) {
+            $hoy = date('Y-m-d');
+
+            if ($cliente['fecha_ultima_visita'] === $hoy) {
+                echo json_encode(["success" => false, "mensaje" => "Este cliente ya registró una visita el día de hoy. ¡Debe volver mañana!"]);
+                exit();
+            }
+
+            $stmt_update = $pdo->prepare("UPDATE usuarios SET visitas_presenciales = visitas_presenciales + 1, fecha_ultima_visita = ? WHERE id_usuario = ?");
+            $stmt_update->execute([$hoy, $id_cliente]);
+
+            echo json_encode(["success" => true, "mensaje" => "¡Visita presencial registrada con éxito!"]);
+        } else {
+            echo json_encode(["success" => false, "mensaje" => "Cliente no encontrado en la base de datos."]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(["success" => false, "mensaje" => "Error de base de datos: " . $e->getMessage()]);
     }
     exit();
 }
 
 if ($accion === 'crear_reserva') {
+    $id_usuario = intval($_POST['id_usuario']);
+    $codigo_cupon = trim($_POST['codigo_cupon'] ?? '');
+
+    if (!empty($codigo_cupon)) {
+        $stmt_uso = $pdo->prepare("SELECT COUNT(*) FROM reservas WHERE id_usuario = ? AND codigo_cupon = ? AND estado != 'cancelado'");
+        $stmt_uso->execute([$id_usuario, $codigo_cupon]);
+        
+        if ($stmt_uso->fetchColumn() > 0) {
+            echo json_encode(["success" => false, "mensaje" => "Error: Ya has utilizado este cupón anteriormente. ¡Solo es válido una vez por cuenta!"]);
+            exit();
+        }
+    }
+
     try {
         $pdo->beginTransaction();
 
-        $id_usuario = intval($_POST['id_usuario']);
         $total = floatval($_POST['total_pagado']);
         $tipo_comprobante = $_POST['tipo_comprobante'] ?? 'ninguno';
-        $codigo_cupon = trim($_POST['codigo_cupon'] ?? '');
         
         $dni_cliente = trim($_POST['dni_cliente'] ?? '');
         $telefono_cliente = trim($_POST['telefono_cliente'] ?? '');
@@ -92,10 +143,22 @@ if ($accion === 'crear_reserva') {
         }
 
         $nombre_comprobante = null;
-        if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] == 0) {
-            $extension = pathinfo($_FILES['comprobante']['name'], PATHINFO_EXTENSION);
-            $nombre_comprobante = "pago_" . $id_usuario . "_" . time() . "." . $extension;
-            move_uploaded_file($_FILES['comprobante']['tmp_name'], 'images/comprobantes/' . $nombre_comprobante);
+        if (isset($_FILES['comprobante'])) {
+            if ($_FILES['comprobante']['error'] == 1) { 
+                echo json_encode(["success" => false, "mensaje" => "La imagen es demasiado pesada. Sube un recorte más pequeño o aumenta el límite en tu XAMPP."]);
+                exit();
+            } 
+            elseif ($_FILES['comprobante']['error'] == 0) {
+                $ruta_destino = 'images/comprobantes/';
+                
+                if (!file_exists($ruta_destino)) {
+                    mkdir($ruta_destino, 0777, true);
+                }
+                
+                $extension = pathinfo($_FILES['comprobante']['name'], PATHINFO_EXTENSION);
+                $nombre_comprobante = "pago_" . $id_usuario . "_" . time() . "." . $extension;
+                move_uploaded_file($_FILES['comprobante']['tmp_name'], $ruta_destino . $nombre_comprobante);
+            }
         }
 
         $stmt = $pdo->prepare("INSERT INTO reservas (id_usuario, total_pagado, codigo_cupon, tipo_comprobante, dni_opcional, comprobante_pago, estado) 
@@ -148,9 +211,10 @@ if ($accion === 'crear_reserva') {
 
         $pdo->commit();
         echo json_encode(["success" => true, "id_reserva" => $id_reserva_nueva, "premio_lealtad" => $cupon_regalo, "mensaje_fidelidad" => $mensaje_fidelidad]);
-    } catch (Exception $e) {
+        
+    } catch (Throwable $e) {
         $pdo->rollBack();
-        echo json_encode(["success" => false, "mensaje" => "Error al guardar en BD: " . $e->getMessage()]);
+        echo json_encode(["success" => false, "mensaje" => "Error interno en el servidor: " . $e->getMessage()]);
     }
     exit();
 }
@@ -158,27 +222,46 @@ if ($accion === 'crear_reserva') {
 if ($accion === 'validar_cupon') {
     $codigo = trim($_POST['codigo'] ?? '');
     $id_usuario = intval($_POST['id_usuario'] ?? 0);
-    $stmt = $pdo->prepare("
-        SELECT descuento_porcentaje 
-        FROM cupones 
-        WHERE codigo = ? 
-        AND usos_actuales < limite_usos 
-        AND fecha_vencimiento >= NOW() 
-        AND (id_usuario = ? OR id_usuario IS NULL)
-    ");
-    $stmt->execute([$codigo, $id_usuario]);
-    $cupon = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($cupon) {
-        echo json_encode(["success" => true, "descuento" => intval($cupon['descuento_porcentaje'])]);
-    } else {
-        echo json_encode(["success" => false, "mensaje" => "Cupón inválido, agotado o ya vencido."]);
+    $stmt_cupon = $pdo->prepare("SELECT * FROM cupones WHERE codigo = ?");
+    $stmt_cupon->execute([$codigo]);
+    $cupon = $stmt_cupon->fetch(PDO::FETCH_ASSOC);
+
+    if (!$cupon) {
+        echo json_encode(["success" => false, "mensaje" => "El código ingresado no existe."]);
+        exit();
     }
+
+    if (!empty($cupon['id_usuario']) && $cupon['id_usuario'] != 0 && $cupon['id_usuario'] != $id_usuario) {
+        echo json_encode(["success" => false, "mensaje" => "Este cupón pertenece a otra cuenta."]);
+        exit();
+    }
+
+    $usos = intval($cupon['usos_actuales']);
+    $limite = intval($cupon['limite_usos']);
+    if ($limite > 0 && $usos >= $limite) {
+        echo json_encode(["success" => false, "mensaje" => "Este cupón ya alcanzó su límite máximo de usos."]);
+        exit();
+    }
+
+    $fecha_vencimiento = $cupon['fecha_vencimiento'];
+    if ($fecha_vencimiento && $fecha_vencimiento !== '0000-00-00 00:00:00') {
+        if (strtotime($fecha_vencimiento) < time()) {
+            echo json_encode(["success" => false, "mensaje" => "El cupón expiró el " . date('d/m/Y', strtotime($fecha_vencimiento)) . "."]);
+            exit();
+        }
+    }
+
+    $stmt_uso = $pdo->prepare("SELECT COUNT(*) FROM reservas WHERE id_usuario = ? AND codigo_cupon = ? AND estado != 'cancelado'");
+    $stmt_uso->execute([$id_usuario, $codigo]);
+    if ($stmt_uso->fetchColumn() > 0) {
+        echo json_encode(["success" => false, "mensaje" => "Ya utilizaste este código anteriormente. Solo es válido una vez por cuenta."]);
+        exit();
+    }
+
+    echo json_encode(["success" => true, "descuento" => intval($cupon['descuento_porcentaje'])]);
     exit();
 }
-
-echo json_encode(["success" => false, "mensaje" => "Acción no reconocida."]);
-exit();
 
 function descontarStockInteligente($pdo, $id_producto, $cantidad, $estilo_comprado) {
     if (empty($estilo_comprado) || $estilo_comprado === 'Principal') {

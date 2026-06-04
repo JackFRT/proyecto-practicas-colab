@@ -21,7 +21,15 @@ if ($accion === 'cargar') {
         $usuarios = $stmt_usuarios->fetchAll(PDO::FETCH_ASSOC);
 
         $stmt_ventas = $pdo->query("
-            SELECT r.id_reserva, r.fecha_reserva, r.total_pagado, r.tipo_comprobante, 
+            SELECT r.id_reserva, r.fecha_reserva, r.total_pagado, r.tipo_comprobante, r.comprobante_pago, 
+                   u.nombre as cliente, emp.nombre as empleado_nombre 
+            FROM reservas r 
+            LEFT JOIN usuarios u ON r.id_usuario = u.id_usuario 
+            LEFT JOIN usuarios emp ON r.atendido_por = emp.id_usuario 
+            WHERE r.estado = 'recogido' 
+            ORDER BY r.fecha_reserva DESC
+        ");$stmt_ventas = $pdo->query("
+            SELECT r.id_reserva, r.fecha_reserva, r.total_pagado, r.tipo_comprobante, r.comprobante_pago, 
                    u.nombre as cliente, emp.nombre as empleado_nombre 
             FROM reservas r 
             LEFT JOIN usuarios u ON r.id_usuario = u.id_usuario 

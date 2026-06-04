@@ -11,41 +11,39 @@
         </div>
     </div>
 
-    <div class="floating-ui floating-top-right" id="ui-top-right">
+    <nav class="main-top-navbar floating-ui" id="ui-navbar">
+        <button class="btn-ghost" (click)="scrollTo('about-section')"><i class="fas fa-seedling"></i> Nosotros</button>
+        <button class="btn-ghost" (click)="scrollTo('bio-section')"><i class="fas fa-user-tie"></i> Fundador</button>
+        <button class="btn-ghost" (click)="scrollTo('culture-section')"><i class="fas fa-palette"></i> Cultura</button>
+        <button class="btn-ghost" (click)="scrollTo('news-section')"><i class="fas fa-newspaper"></i> Noticias</button>
+        
+        <div class="separator-vertical"></div>
+
         <button class="btn-ghost" (click)="lanzarRuleta()">
-            <i class="fas fa-dice"></i> Ruleta semanal
+            <i class="fas fa-dice"></i> Ruleta
         </button>
         
         @if (!isLoggedIn) {
             <a routerLink="/login" class="btn-ghost">
-                <i class="fas fa-user"></i> Iniciar Sesión
+                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
             </a>
         }
-    </div>
+    </nav>
 
     @if (isLoggedIn && (userRole === 'admin' || userRole === 'empleado')) {
-        <div class="floating-ui floating-admin-tools" id="ui-admin-tools">
+        <div class="floating-ui floating-top-right" id="ui-top-right">
             @if (userRole === 'admin') {
-                <a routerLink="/admin/panel" class="btn-ghost-admin">PANEL ADMIN</a>
+                <a routerLink="/admin/panel" class="btn-ghost btn-panel-admin">
+                    <i class="fas fa-chess-king"></i> Panel Admin
+                </a>
             }
-            <a routerLink="/empleado/dashboard" class="btn-ghost-admin">PANEL EMPLEADO</a>
+            @if (userRole === 'empleado' || userRole === 'admin') {
+                <a routerLink="/empleado/dashboard" class="btn-ghost btn-panel-empleado">
+                    <i class="fas fa-boxes"></i> Panel Empleado
+                </a>
+            }
         </div>
     }
-
-    <div class="floating-ui floating-moka" id="ui-moka" [class.moka-escondida]="mokaOcultaPorFooter">
-        <div class="moka-interaction-box">
-            <div class="moka-avatar-wrapper">
-                <img [src]="imagenMoka" alt="Moka" id="moka-img" class="moka-main-img" (click)="interactuarMoka()">
-            </div>
-            @if (mensajeMoka) {
-                <div class="chat-container">
-                    <div id="bubble" class="chat-bubble" [style.background]="colorBurbujaMoka" [style.--bubble-color]="colorBurbujaMoka">
-                        {{ mensajeMoka }}
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
 
     @if (isLoggedIn) {
         <div class="floating-ui floating-menu-container" id="ui-profile">
@@ -57,7 +55,9 @@
                 
                 <div class="dropdown-links">
                     <a routerLink="/cliente/perfil"><i class="fas fa-id-card"></i> Mi Perfil Completo</a>
-                    <a href="#" (click)="abrirCarritoGlobal($event)"><i class="fas fa-shopping-basket"></i> Mi Carrito</a>
+                    @if (userRole !== 'empleado') {
+                        <a href="#" (click)="abrirCarritoGlobal($event)"><i class="fas fa-shopping-basket"></i> Mi Carrito</a>
+                    }
                 </div>
                 
                 <div class="dropdown-divider"></div>
@@ -79,7 +79,7 @@
 
             <button class="floating-profile-btn" (click)="toggleProfileMenu($event)" title="Mi Cuenta">
                 <i class="fas fa-user"></i>
-                @if (cartService.getTotalPlantas() > 0) {
+                @if (userRole !== 'empleado' && cartService.getTotalPlantas() > 0) {
                     <span class="cart-badge" style="position: absolute; top: -5px; right: -5px; background: #FF4757; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; font-weight: bold; border: 2px solid white;">
                         {{ cartService.getTotalPlantas() }}
                     </span>
@@ -89,6 +89,25 @@
     }
 
 } 
+
+@if (mostrarMokaGlobal()) {
+    <div class="floating-ui floating-moka" id="ui-moka" 
+         [class.moka-escondida]="mokaOcultaPorFooter" 
+         [style.z-index]="router.url === '/login' ? '9999' : ''">
+        <div class="moka-interaction-box">
+            <div class="moka-avatar-wrapper">
+                <img [src]="imagenMoka" alt="Moka" id="moka-img" class="moka-main-img" (click)="interactuarMoka()">
+            </div>
+            @if (mensajeMoka) {
+                <div class="chat-container">
+                    <div id="bubble" class="chat-bubble" [style.background]="colorBurbujaMoka" [style.--bubble-color]="colorBurbujaMoka">
+                        {{ mensajeMoka }}
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
 
 @if (mostrarRuleta) {
     <app-ruleta (cerrar)="mostrarRuleta = false" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999;"></app-ruleta>

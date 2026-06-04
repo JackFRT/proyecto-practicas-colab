@@ -308,3 +308,26 @@
     overflow-y: auto; 
     overflow-x: hidden;
 }
+
+@media (max-width: 768px) {
+    .catalog-section { padding: 60px 5% !important; }
+    .catalog-header h2 { font-size: 2rem !important; text-align: center; line-height: 1.2; }
+    
+    .catalog-controls-wrapper > div { width: 100% !important; flex: none !important; margin: 0 !important; }
+    .catalog-controls-wrapper input, .catalog-controls-wrapper select { width: 100% !important; box-sizing: border-box; margin-bottom: 10px; }
+    
+    .catalog-carousel-wrapper { position: relative; display: block; width: 100%; }
+    .carousel-grid { display: grid; grid-template-columns: 1fr 1fr !important; gap: 15px !important; padding: 0 40px; }
+    .carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; font-size: 2.5rem !important; }
+    .carousel-arrow.left { left: 0; }
+    .carousel-arrow.right { right: 0; }
+
+    .producto-modal-layout { flex-direction: column !important; max-height: 85vh !important; }
+    .imagen-principal-container { height: 250px !important; }
+}
+
+@media (max-width: 480px) {
+    .carousel-grid { grid-template-columns: 1fr !important; padding: 0 45px; }
+    .switch-pill { flex-direction: column; width: 100%; }
+    .switch-btn { width: 100%; }
+}

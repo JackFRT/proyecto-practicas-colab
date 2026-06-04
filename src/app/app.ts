@@ -1,4 +1,4 @@
-import { Component, HostListener, ElementRef, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, HostListener, ElementRef, inject, ChangeDetectorRef, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Ruleta } from './components/ruleta/ruleta';
@@ -12,7 +12,7 @@ import { Moka } from './services/moka';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   elementRef = inject(ElementRef);
   router = inject(Router);
   cartService = inject(CartService);
@@ -21,9 +21,38 @@ export class AppComponent {
 
   mostrarRuleta: boolean = false; 
 
+  ngOnInit() {
+    this.mokaService.eventoMoka$.subscribe(evento => {
+      if (this.mokaSilenciada) return;
+      
+      this.mensajeMoka = evento.texto;
+      this.imagenMoka = '/assets/images/barista/' + evento.imagen;
+      this.colorBurbujaMoka = '#ffffff'; 
+      this.cdr.detectChanges();
+
+      if (!evento.mantener) {
+        setTimeout(() => {
+          if (this.mensajeMoka === evento.texto) {
+            this.mensajeMoka = null;
+            this.imagenMoka = '/assets/images/barista/barista_saludando.png';
+            this.colorBurbujaMoka = '#ffb6c1';
+            this.cdr.detectChanges();
+          }
+        }, 4000);
+      }
+    });
+  }
+
   lanzarRuleta() {
     this.mostrarRuleta = true;
     this.cdr.detectChanges();
+  }
+
+  scrollTo(target: string) {
+    const element = document.getElementById(target) || document.querySelector('.' + target);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   get isLoggedIn(): boolean {
@@ -46,6 +75,10 @@ export class AppComponent {
     return this.router.url === '/';
   }
 
+  public mostrarMokaGlobal(): boolean {
+    return this.router.url === '/' || this.router.url === '/login';
+  }
+
   mokaSilenciada: boolean = false;
   imagenMoka: string = '/assets/images/barista/barista_saludando.png';
   mensajeMoka: string | null = '¡Hola! Soy Moka. ¡Haz clic en mí!';
@@ -60,7 +93,18 @@ export class AppComponent {
   interactuarMoka() {
     if (this.mokaSilenciada) return;
     
-    const respuesta = this.mokaService.interactuar();
+    let respuesta;
+    
+    if (this.router.url === '/login') {
+        respuesta = this.mokaService.interactuarAuth();
+    } else {
+        respuesta = this.mokaService.interactuar();
+        
+        if (this.mokaService.passwordVisible) {
+            respuesta.imagen = 'barista_cara_cubierta.png';
+            respuesta.texto = "¡Sigo sin mirar! Promesa de barista.";
+        }
+    }
     
     this.mensajeMoka = respuesta.texto;
     this.imagenMoka = '/assets/images/barista/' + respuesta.imagen;
@@ -68,7 +112,7 @@ export class AppComponent {
     if (respuesta.castigo) {
         this.colorBurbujaMoka = '#ff6b6b'; 
     } else {
-        this.colorBurbujaMoka = '#ffb6c1'; 
+        this.colorBurbujaMoka = this.router.url === '/login' ? '#ffffff' : '#ffb6c1'; 
     }
 
     this.cdr.detectChanges(); 
@@ -80,7 +124,7 @@ export class AppComponent {
             this.mensajeMoka = null;
             this.colorBurbujaMoka = '#ffb6c1';
             
-            if (!this.mokaSilenciada) {
+            if (!this.mokaSilenciada && !this.mokaService.passwordVisible) {
                 this.imagenMoka = '/assets/images/barista/barista_saludando.png';
             }
         }

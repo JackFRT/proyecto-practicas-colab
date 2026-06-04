@@ -68,3 +68,11 @@
 .auth-footer { text-align: center; margin-top: 30px; font-size: 0.95rem; color: var(--text-muted); }
 .link-toggle { background: transparent; border: none; padding: 0; color: var(--green-accent); font-weight: bold; font-size: 0.95rem; font-family: var(--font-main); cursor: pointer; transition: 0.3s; margin-left: 5px; }
 .link-toggle:hover { color: white; text-decoration: underline; }
+
+@media (max-width: 480px) {
+    .auth-page-wrapper { padding: 10px !important; }
+    .auth-glass-card { padding: 30px 20px !important; }
+    .auth-header h2 { font-size: 1.5rem !important; }
+    .auth-header p { font-size: 0.85rem !important; }
+    .input-group input { padding-top: 12px; padding-bottom: 12px; }
+}

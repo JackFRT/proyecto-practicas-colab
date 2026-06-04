@@ -112,7 +112,7 @@ try {
             <div class="museum-title">CACTUS MUSEUM</div>
             <div class="museum-info">
                 Jr. San Cristóbal, Ayacucho<br>
-                RUC: 200000000<br>
+                RUC: 20605194886<br>
                 Tel: +51 981 851 430
             </div>
         </div>

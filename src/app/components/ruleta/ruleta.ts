@@ -30,6 +30,12 @@ export class Ruleta implements OnInit {
   resultadoTexto: string = 'ESPERANDO...';
   resultadoColor: string = 'gray';
 
+  get userRole(): string {
+    if (typeof localStorage === 'undefined') return 'cliente';
+    const user = localStorage.getItem('usuario_cactus');
+    return user ? JSON.parse(user).rol : 'cliente';
+  }
+
   ngOnInit() {
     const userGuardado = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario_cactus') : null;
     if (!userGuardado) { this.router.navigate(['/login']); return; }
@@ -44,7 +50,11 @@ export class Ruleta implements OnInit {
           this.premios = res.premios;
           this.haGirado = res.ha_girado;
           
-          if (this.haGirado) {
+          if (this.userRole === 'empleado') {
+            this.setMoka('Modo Visualización: Comprueba que los premios se vean bien. ¡No intentes jugar!', 'barista_saludando.png', 'rgba(255, 224, 102, 0.15)');
+            this.resultadoTexto = 'MODO EMPLEADO';
+            this.resultadoColor = '#FFE066';
+          } else if (this.haGirado) {
             this.setMoka('Ya giraste esta semana. ¡Vuelve el próximo lunes!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.15)');
             this.resultadoTexto = 'ESPERA AL LUNES';
           } else {
@@ -115,6 +125,12 @@ export class Ruleta implements OnInit {
   }
 
   girar() {
+    if (this.userRole === 'empleado') {
+      this.setMoka('¡Oye! Tú trabajas aquí, no puedes jugar con la ruleta de los clientes.', 'barista_en_alerta.png', 'rgba(255, 107, 107, 0.2)');
+      this.cdr.detectChanges();
+      return;
+    }
+
     if (this.isGirando) return;
     if (this.haGirado) {
       this.setMoka('Las reglas son claras. ¡Solo un giro por semana!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.2)');
