@@ -17,8 +17,17 @@ export class AuthService {
   }
 
   iniciarSesion(correo: string, password: string) {
-    const urlAPI = 'http://localhost/cactus-api/login.php';
-    return this.http.post<any>(urlAPI, { correo, password });
+    // 1. Apuntamos al nuevo endpoint de Spring Boot
+    const urlAPI = 'http://localhost:8080/api/auth/login';
+    
+    // 2. Mapeamos 'correo' a 'email' para que coincida con el DTO (LoginRequest.java)
+    return this.http.post<any>(urlAPI, { email: correo, password: password });
+  }
+
+  // Agregado para conectarlo a tu formulario de registro
+  registrar(usuario: any) {
+    const urlAPI = 'http://localhost:8080/api/auth/registro';
+    return this.http.post<any>(urlAPI, usuario);
   }
 
   guardarSesion(usuario: any) {

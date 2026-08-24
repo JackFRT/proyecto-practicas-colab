@@ -19,10 +19,19 @@ export class Ruleta implements OnInit {
   @ViewChild('wheelCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
   usuarioActual: any = null;
-  premios: any[] = [];
   haGirado: boolean = false;
   isGirando: boolean = false;
   rotacionActual: number = 0;
+
+  // 1. Configuramos los premios visuales de la ruleta estáticamente
+  premios: any[] = [
+    { titulo: '10% DTO', probabilidad: '20', color_seccion: '#A3B18A', anguloInicioRad: 0, anguloFinRad: 0 },
+    { titulo: '15% DTO', probabilidad: '20', color_seccion: '#588157', anguloInicioRad: 0, anguloFinRad: 0 },
+    { titulo: '20% DTO', probabilidad: '20', color_seccion: '#3A5A40', anguloInicioRad: 0, anguloFinRad: 0 },
+    { titulo: '25% DTO', probabilidad: '20', color_seccion: '#D65A31', anguloInicioRad: 0, anguloFinRad: 0 },
+    { titulo: '50% DTO', probabilidad: '10', color_seccion: '#FFE066', anguloInicioRad: 0, anguloFinRad: 0 },
+    { titulo: 'INTENTA OTRA VEZ', probabilidad: '10', color_seccion: '#333333', anguloInicioRad: 0, anguloFinRad: 0 }
+  ];
 
   mokaMensaje: string = 'Cargando ruleta...';
   mokaImagen: string = 'barista_saludando.png';
@@ -44,31 +53,26 @@ export class Ruleta implements OnInit {
   }
 
   cargarRuleta() {
-    this.http.post<any>('http://localhost/cactus-api/ruleta_api.php', { accion: 'cargar', id_usuario: this.usuarioActual.id_usuario }).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.premios = res.premios;
-          this.haGirado = res.ha_girado;
-          
-          if (this.userRole === 'empleado') {
-            this.setMoka('Modo Visualización: Comprueba que los premios se vean bien. ¡No intentes jugar!', 'barista_saludando.png', 'rgba(255, 224, 102, 0.15)');
-            this.resultadoTexto = 'MODO EMPLEADO';
-            this.resultadoColor = '#FFE066';
-          } else if (this.haGirado) {
-            this.setMoka('Ya giraste esta semana. ¡Vuelve el próximo lunes!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.15)');
-            this.resultadoTexto = 'ESPERA AL LUNES';
-          } else {
-            const nombre = this.usuarioActual.nombre.split(' ')[0];
-            this.setMoka(`¡Hola, ${nombre}! ¿Listo para probar tu suerte esta semana?`, 'barista_saludando.png', 'rgba(163, 177, 138, 0.15)');
-            this.resultadoTexto = '¡A GIRAR!';
-            this.resultadoColor = '#FFE066';
-          }
-          
-          this.cdr.detectChanges();
-          setTimeout(() => { this.dibujarRuleta(); }, 100);
-        }
-      }
-    });
+    // 2. Evaluamos si tiene giros disponibles basados en la respuesta de Spring Boot
+    this.haGirado = this.usuarioActual.girosExtra <= 0;
+
+    if (this.userRole === 'admin' || this.userRole === 'empleado') {
+      this.setMoka('Modo Visualización: Comprueba que los premios se vean bien. ¡No intentes jugar!', 'barista_saludando.png', 'rgba(255, 224, 102, 0.15)');
+      this.resultadoTexto = 'MODO EMPLEADO';
+      this.resultadoColor = '#FFE066';
+    } else if (this.haGirado) {
+      this.setMoka('Ya giraste. ¡Registra una visita presencial para obtener más giros!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.15)');
+      this.resultadoTexto = 'SIN GIROS';
+      this.resultadoColor = 'gray';
+    } else {
+      const nombre = this.usuarioActual.nombre ? this.usuarioActual.nombre.split(' ')[0] : 'Cliente';
+      this.setMoka(`¡Hola, ${nombre}! ¿Listo para probar tu suerte?`, 'barista_saludando.png', 'rgba(163, 177, 138, 0.15)');
+      this.resultadoTexto = '¡A GIRAR!';
+      this.resultadoColor = '#FFE066';
+    }
+    
+    this.cdr.detectChanges();
+    setTimeout(() => { this.dibujarRuleta(); }, 100);
   }
 
   dibujarRuleta() {
@@ -125,7 +129,7 @@ export class Ruleta implements OnInit {
   }
 
   girar() {
-    if (this.userRole === 'empleado') {
+    if (this.userRole === 'admin' || this.userRole === 'empleado') {
       this.setMoka('¡Oye! Tú trabajas aquí, no puedes jugar con la ruleta de los clientes.', 'barista_en_alerta.png', 'rgba(255, 107, 107, 0.2)');
       this.cdr.detectChanges();
       return;
@@ -133,7 +137,7 @@ export class Ruleta implements OnInit {
 
     if (this.isGirando) return;
     if (this.haGirado) {
-      this.setMoka('Las reglas son claras. ¡Solo un giro por semana!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.2)');
+      this.setMoka('Las reglas son claras. ¡Necesitas registrar una visita presencial!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.2)');
       this.cdr.detectChanges();
       return;
     }
@@ -144,19 +148,13 @@ export class Ruleta implements OnInit {
     this.resultadoColor = '#D65A31';
     this.cdr.detectChanges();
 
-    this.http.post<any>('http://localhost/cactus-api/ruleta_api.php', { accion: 'girar', id_usuario: this.usuarioActual.id_usuario }).subscribe({
+    // 3. Conectamos al endpoint de Spring Boot
+    this.http.post<any>(`http://localhost:8080/api/ruleta/girar/${this.usuarioActual.idUsuario}`, {}).subscribe({
       next: (data) => {
-        if (!data.success) {
-          this.isGirando = false;
-          this.haGirado = true;
-          this.setMoka(data.mensaje, 'barista_sad.png', 'rgba(255, 255, 255, 0.1)');
-          this.resultadoTexto = 'BLOQUEADO';
-          this.resultadoColor = 'gray';
-          this.cdr.detectChanges();
-          return;
-        }
-
-        const premioObjetivo = this.premios.find(p => p.titulo === data.titulo);
+        // Obtenemos el texto equivalente en nuestro array de premios
+        const tituloObjetivo = data.descuento > 0 ? `${data.descuento}% DTO` : 'INTENTA OTRA VEZ';
+        const premioObjetivo = this.premios.find(p => p.titulo === tituloObjetivo);
+        
         if (premioObjetivo) {
           this.setMoka('¡Ahí va! ¡Qué nervios!', 'barista_asustada.png', 'rgba(214, 90, 49, 0.2)');
           this.resultadoTexto = '¡GIRANDO...!';
@@ -166,32 +164,37 @@ export class Ruleta implements OnInit {
           this.rotacionActual = giroBase + (5 * 360);
           
           this.cdr.detectChanges();
-          setTimeout(() => this.mostrarResultadoFinal(data), 4500); 
+          setTimeout(() => this.mostrarResultadoFinal(data, tituloObjetivo), 4500); 
+
+          // Actualizamos la sesión para restar el giro
+          this.usuarioActual.girosExtra = data.girosRestantes;
+          localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
         }
       },
-      error: () => {
+      error: (err) => {
         this.isGirando = false;
-        this.setMoka('Error de conexión. Intenta de nuevo.', 'barista_sad.png', 'rgba(255, 107, 107, 0.2)');
+        const msg = err.error && typeof err.error === 'string' ? err.error : 'Error de conexión. Intenta de nuevo.';
+        this.setMoka(msg, 'barista_sad.png', 'rgba(255, 107, 107, 0.2)');
         this.cdr.detectChanges();
       }
     });
   }
 
-  mostrarResultadoFinal(data: any) {
-    this.haGirado = true;
+  mostrarResultadoFinal(data: any, tituloStr: string) {
+    this.haGirado = data.girosRestantes <= 0;
     this.isGirando = false;
-    this.resultadoTexto = data.titulo.toUpperCase();
+    this.resultadoTexto = tituloStr;
 
-    if (data.descuento == 0) {
+    if (data.descuento === 0) {
       this.resultadoColor = 'gray';
-      this.setMoka('¡Oh no! No hubo suerte esta vez. El próximo lunes tendrás otra oportunidad.', 'barista_sad.png', 'rgba(255, 255, 255, 0.1)');
+      this.setMoka('¡Oh no! No hubo suerte esta vez. Necesitas otra visita presencial.', 'barista_sad.png', 'rgba(255, 255, 255, 0.1)');
     } else {
       this.resultadoColor = '#A3B18A';
-      if (data.descuento >= 15) {
+      if (data.descuento >= 25) {
         this.resultadoColor = '#FFE066';
-        this.setMoka('¡INCREÍBLE! ¡Te llevaste el premio grande! Ve a tu perfil para revisar tu cupón.', 'barista_emocionada.png', 'rgba(255, 224, 102, 0.2)');
+        this.setMoka(`¡INCREÍBLE! ¡Te llevaste el premio grande! Tu código es ${data.codigoCupon}`, 'barista_emocionada.png', 'rgba(255, 224, 102, 0.2)');
       } else {
-        this.setMoka(`¡Felicidades! Ganaste un ${data.descuento}% de descuento. ¡Se guardó en tu perfil!`, 'barista_feliz.png', 'rgba(163, 177, 138, 0.2)');
+        this.setMoka(`¡Felicidades! Ganaste un ${data.descuento}% de descuento. Tu código es ${data.codigoCupon}`, 'barista_feliz.png', 'rgba(163, 177, 138, 0.2)');
       }
     }
     this.cdr.detectChanges();
