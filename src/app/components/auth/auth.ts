@@ -112,50 +112,68 @@ export class Auth implements OnInit, OnDestroy {
     this.mensajeError = '';
     this.mensajeExito = '';
 
-    const endpoint = this.isLoginMode ? 'login.php' : 'registro.php';
-    const payload = this.isLoginMode 
-      ? { email: this.email, password: this.password }
-      : { nombre: this.nombre, email: this.email, password: this.password, dni: this.dni, telefono: this.telefono };
-
-    this.http.post<any>(`http://localhost/cactus-api/${endpoint}`, payload).subscribe({
-      next: (res) => {
-        this.cargando = false;
-        
-        if (res.success) {
-          if (this.isLoginMode) {
-            if(res.usuario) {
-                localStorage.setItem('usuario_cactus', JSON.stringify(res.usuario));
+    if (this.isLoginMode) {
+      this.http.post<any>('http://localhost:8080/api/auth/login', { 
+        email: this.email, 
+        password: this.password 
+      }).subscribe({
+        next: (res) => {
+          this.cargando = false;
+          if (res.success) {
+            localStorage.setItem('usuario_cactus', JSON.stringify(res.usuario));
             
-                if (res.usuario.rol === 'admin') {
-                    this.router.navigate(['/admin/panel']);
-                } else if (res.usuario.rol === 'empleado') {
-                    this.router.navigate(['/empleado/dashboard']);
-                } else {
-                    this.router.navigate(['/']);
-                }
+            if (res.usuario.rol === 'admin') {
+              this.router.navigate(['/admin/panel']);
+            } else if (res.usuario.rol === 'empleado') {
+              this.router.navigate(['/empleado/dashboard']);
             } else {
-                this.router.navigate(['/']);
+              this.router.navigate(['/']); 
             }
           } else {
+            this.mensajeError = res.mensaje || "Correo o contraseña incorrectos.";
+            this.mokaService.dispararEvento("Uy, parece que hubo un error con tus datos. ¡Inténtalo de nuevo!", "barista_sad.png", true);
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.cargando = false;
+          this.mensajeError = "Error de servidor.";
+          this.mokaService.dispararEvento("Ay... no me pude conectar con la base de datos.", "barista_asustada.png", true);
+          this.cdr.detectChanges();
+        }
+      });
+
+    } else {
+      const payload = { 
+        nombre: this.nombre, 
+        email: this.email, 
+        password: this.password, 
+        dni: this.dni, 
+        telefono: this.telefono 
+      };
+
+      this.http.post<any>('http://localhost:8080/api/auth/registro', payload).subscribe({
+        next: (res) => {
+          this.cargando = false;
+          if (res.success) {
             this.mensajeExito = "¡Cuenta creada con éxito! Por favor inicia sesión.";
             this.isLoginMode = true; 
             this.password = ''; 
             this.mokaService.dispararEvento("¡Registro exitoso! Ahora pon tu correo y entremos.", "barista_emocionada.png", true);
+          } else {
+            this.mensajeError = res.mensaje || "Error al registrar.";
+            this.mokaService.dispararEvento("Ese correo ya parece tener dueño. ¡Intenta con otro!", "barista_sad.png", true);
           }
-        } else {
-          this.mensajeError = res.mensaje || "Correo o contraseña incorrectos.";
-          this.mokaService.dispararEvento("Uy, parece que hubo un error con tus datos. ¡Inténtalo de nuevo!", "barista_sad.png", true);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.cargando = false;
+          this.mensajeError = "Error de servidor.";
+          this.mokaService.dispararEvento("Ay... no me pude conectar con la base de datos.", "barista_asustada.png", true);
+          this.cdr.detectChanges();
         }
-
-        this.cdr.detectChanges();
-      },
-      error: () => { 
-        this.cargando = false; 
-        this.mensajeError = "Error de servidor."; 
-        this.mokaService.dispararEvento("Ay... no me pude conectar con la base de datos.", "barista_asustada.png", true);
-        this.cdr.detectChanges(); 
-      }
-    });
+      });
+    }
   }
 
   procesarRecuperacion() {
