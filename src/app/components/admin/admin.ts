@@ -55,7 +55,8 @@ export class AdminPanel implements OnInit {
 
   cargarDatos() {
     this.cargando = true;
-    this.http.post<any>('http://localhost/cactus-api/admin_api.php', { accion: 'cargar' }).subscribe({
+    // Nueva URL de Java por método GET
+    this.http.get<any>('http://localhost:8080/api/admin/dashboard').subscribe({
       next: (res) => {
         if (res.success) {
           this.usuarios = res.usuarios || [];
@@ -75,7 +76,6 @@ export class AdminPanel implements OnInit {
   cambiarTab(tab: string) { 
     this.tabActivo = tab; 
   }
-
 
   ofuscarEmail(email: string): string {
     if (!email || !email.includes('@')) return email;
@@ -108,24 +108,36 @@ export class AdminPanel implements OnInit {
         return;
     }
 
-    const payload = { 
-        accion: this.accionPendiente.accion, 
-        id_usuario_objetivo: this.accionPendiente.idUsuario, 
-        id_admin: this.adminActual.id_usuario,
-        admin_password: this.passwordConfirmacion, 
-        ...this.accionPendiente.extraData 
+    // Determinamos la URL correcta en Java según la acción
+    let url = '';
+    const payload: any = { 
+        id_usuario_objetivo: this.accionPendiente.idUsuario 
     };
 
+    if (this.accionPendiente.accion === 'cambiar_rol') {
+        url = 'http://localhost:8080/api/admin/cambiar-rol';
+        payload.nuevo_rol = this.accionPendiente.extraData.nuevo_rol;
+    } else if (this.accionPendiente.accion === 'resetear_ruleta') {
+        url = 'http://localhost:8080/api/admin/resetear-ruleta';
+    }
+
     this.cargando = true;
-    this.http.post<any>('http://localhost/cactus-api/admin_api.php', payload).subscribe(res => {
-      if(res.success) {
-        this.mostrarToast(res.mensaje);
-        this.cargarDatos();
-      } else { 
-        alert(res.mensaje); 
+    this.http.post<any>(url, payload).subscribe({
+      next: (res) => {
+        if(res.success) {
+          this.mostrarToast(res.mensaje);
+          this.cargarDatos();
+        } else { 
+          alert(res.mensaje); 
+        }
+        this.cerrarModalSeguridad();
+        this.cargando = false;
+      },
+      error: () => {
+        this.mostrarToast('Error al ejecutar la acción.');
+        this.cerrarModalSeguridad();
+        this.cargando = false;
       }
-      this.cerrarModalSeguridad();
-      this.cargando = false;
     });
   }
 
@@ -137,7 +149,8 @@ export class AdminPanel implements OnInit {
 
   verComprobante(archivo: string) {
       if (!archivo) return;
-      this.imagenSeleccionada = `http://localhost/cactus-api/images/comprobantes/${archivo}`;
+      // Apunta al puerto de Java (Solo útil para imágenes antiguas antes del sistema de tickets)
+      this.imagenSeleccionada = `http://localhost:8080/images/comprobantes/${archivo}`;
       this.modalImagenAbierto = true;
   }
 
@@ -161,7 +174,8 @@ export class AdminPanel implements OnInit {
     this.ventasFiltradas = this.ventas.filter(v => {
         if (this.filtroTiempoVentas === 'todos') return true;
         
-        const fechaVenta = new Date(v.fecha_reserva);
+        // Ajustado al modelo Pedido de Java
+        const fechaVenta = new Date(v.fechaPedido);
         const diffTime = Math.abs(ahora.getTime() - fechaVenta.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -176,34 +190,28 @@ export class AdminPanel implements OnInit {
 
   calcularMetricasVentas() {
     const mapEmpleados = new Map<string, { total_ventas: number, ingresos: number }>();
+    
     this.ventasFiltradas.forEach(v => {
-        const emp = v.empleado_nombre || 'Sistema Web'; 
+        // Ajustado para leer el objeto EmpleadoAtencion de Java
+        const emp = (v.empleadoAtencion && v.empleadoAtencion.nombre) ? v.empleadoAtencion.nombre : 'Sistema Web'; 
         const actual = mapEmpleados.get(emp) || { total_ventas: 0, ingresos: 0 };
         actual.total_ventas += 1;
-        actual.ingresos += parseFloat(v.total_pagado);
+        actual.ingresos += parseFloat(v.totalPagado);
         mapEmpleados.set(emp, actual);
     });
+    
     this.statsEmpleados = Array.from(mapEmpleados.entries())
         .map(([nombre, stats]) => ({ nombre, ...stats }))
         .sort((a, b) => b.ingresos - a.ingresos);
-
-    const mapProductos = new Map<string, number>();
-    this.ventasFiltradas.forEach(v => {
-        if (v.detalles && Array.isArray(v.detalles)) {
-            v.detalles.forEach((d: any) => {
-                const cant = parseInt(d.cantidad) || 1;
-                mapProductos.set(d.nombre_comun, (mapProductos.get(d.nombre_comun) || 0) + cant);
-            });
-        }
-    });
-    this.statsProductos = Array.from(mapProductos.entries())
-        .map(([nombre, cantidad]) => ({ nombre, cantidad }))
-        .sort((a, b) => b.cantidad - a.cantidad)
-        .slice(0, 5);
   }
 
   ir(ruta: string) { this.router.navigate([ruta]); }
-  cerrarSesion() { localStorage.removeItem('usuario_cactus'); this.router.navigate(['/login']); }
+  
+  cerrarSesion() { 
+    localStorage.removeItem('usuario_cactus'); 
+    this.router.navigate(['/login']); 
+  }
+  
   mostrarToast(msg: string) {
     this.toastMsg = msg;
     setTimeout(() => { this.toastMsg = ''; this.cdr.detectChanges(); }, 3500);

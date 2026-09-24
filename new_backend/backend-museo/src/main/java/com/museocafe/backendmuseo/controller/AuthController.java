@@ -27,7 +27,6 @@ public class AuthController {
         
         Map<String, Object> response = new HashMap<>();
         
-        // Si el usuario existe y la contraseña es correcta
         if (usuarioOpt.isPresent() && usuarioOpt.get().getPassword().equals(loginDto.getPassword())) {
             response.put("success", true);
             response.put("usuario", usuarioOpt.get());

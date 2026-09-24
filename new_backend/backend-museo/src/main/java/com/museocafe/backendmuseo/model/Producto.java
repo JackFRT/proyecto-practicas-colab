@@ -36,4 +36,9 @@ public class Producto {
     private Integer stock = 0;
 
     private Boolean activo = true;
+
+    public Object getCategoria() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getCategoria'");
+    }
 }

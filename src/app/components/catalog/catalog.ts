@@ -19,6 +19,7 @@ export class Catalog implements OnInit {
   todosCactus: any[] = [];
   todosSouvenirs: any[] = [];
   categorias: any[] = []; 
+  cuponesDisponibles: any[] = []; // Nueva lista local de cupones
 
   tipoActual: 'cactus' | 'recuerdo' = 'cactus'; 
   categoriaSeleccionada: string = 'todos';
@@ -39,14 +40,15 @@ export class Catalog implements OnInit {
   telefonoCliente: string = '';
   codigoCupon: string = '';
   descuentoAplicado: number = 0;
-  archivoComprobante: File | null = null;
   cargandoPago: boolean = false;
 
   ordenGeneradaId: number = 0;
-  totalPlantasCompradas: number = 0;
+  codigoTicketGenerado: string = '';
   premioLealtad: any = null;
   usuarioActual: any = null;
   mensajeFidelidad: string = '';
+  archivoComprobante: File | null = null;
+  
 
   get userRole(): string {
     if (typeof localStorage === 'undefined') return 'cliente';
@@ -57,20 +59,25 @@ export class Catalog implements OnInit {
   ngOnInit() {
     document.documentElement.style.setProperty('--color-catalogo', '#A3B18A');
     const userGuardado = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario_cactus') : null;
+    
     if (userGuardado) {
         this.usuarioActual = JSON.parse(userGuardado);
+        const idValidado = this.usuarioActual.idUsuario || this.usuarioActual.id_usuario;
         
-        const idValidado = this.usuarioActual.id_usuario || this.usuarioActual.id;
-        this.http.post<any>('http://localhost/cactus-api/perfil_api.php', { accion: 'cargar_perfil', id_usuario: idValidado }).subscribe(res => {
+        // Llamada al nuevo PerfilController en Spring Boot
+        this.http.get<any>(`http://localhost:8080/api/perfil/cargar/${idValidado}`).subscribe(res => {
             if (res.success) {
                 this.usuarioActual = res.usuario;
+                this.cuponesDisponibles = res.cupones || [];
                 localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
                 
-                const visitas = parseInt(this.usuarioActual.visitas_presenciales) || 0;
-                if (visitas >= 68) { this.nivelSocio = 5; this.descuentoSocio = 15; }
-                else if (visitas >= 43) { this.nivelSocio = 4; this.descuentoSocio = 10; }
-                else if (visitas >= 23) { this.nivelSocio = 3; this.descuentoSocio = 7; }
-                else if (visitas >= 11) { this.nivelSocio = 2; this.descuentoSocio = 5; }
+                // Compatibilidad con los nombres de variables de Java (visitasPresenciales)
+                const visitas = parseInt(this.usuarioActual.visitasPresenciales || this.usuarioActual.visitas_presenciales) || 0;
+                
+                if (visitas >= 51) { this.nivelSocio = 5; this.descuentoSocio = 15; }
+                else if (visitas >= 31) { this.nivelSocio = 4; this.descuentoSocio = 10; }
+                else if (visitas >= 16) { this.nivelSocio = 3; this.descuentoSocio = 7; }
+                else if (visitas >= 8) { this.nivelSocio = 2; this.descuentoSocio = 5; }
                 else if (visitas >= 3) { this.nivelSocio = 1; this.descuentoSocio = 2; }
                 else { this.nivelSocio = 0; this.descuentoSocio = 0; }
 
@@ -82,7 +89,8 @@ export class Catalog implements OnInit {
         });
     }
 
-    this.http.get<any>('http://localhost/cactus-api/obtener_inicio.php').subscribe({
+    // Llamada al nuevo HomeController en Spring Boot
+    this.http.get<any>('http://localhost:8080/api/publico/inicio').subscribe({
       next: (data) => {
         this.todosCactus = data.cactus || [];
         this.todosSouvenirs = data.souvenirs || [];
@@ -100,7 +108,7 @@ export class Catalog implements OnInit {
 
   getRutaImagen(nombreArchivo: string, carpeta: string = 'cactus'): string {
     if (!nombreArchivo) return ''; 
-    return `http://localhost/cactus-api/images/${carpeta}/${nombreArchivo}`;
+    return `http://localhost:8080/images/${carpeta}/${nombreArchivo}`;
   }
 
   mostrarToast(msg: string) {
@@ -119,6 +127,8 @@ export class Catalog implements OnInit {
     this.aplicarFiltros();
   }
 
+  
+
   cambiarCategoria(event: any) {
     this.categoriaSeleccionada = event.target.value;
     this.paginaActual = 1;
@@ -135,12 +145,16 @@ export class Catalog implements OnInit {
     let baseDatos = this.tipoActual === 'cactus' ? this.todosCactus : this.todosSouvenirs;
     
     this.productosFiltrados = baseDatos.filter(p => {
-      const nombreCompleto = `${p.nombre_comun} ${p.nombre_cientifico || ''}`.toLowerCase();
+      // Soporte para variables Java (nombreComun) y PHP (nombre_comun)
+      const nombreC = p.nombreComun || p.nombre_comun || '';
+      const nombreCi = p.nombreCientifico || p.nombre_cientifico || '';
+      const nombreCompleto = `${nombreC} ${nombreCi}`.toLowerCase();
       const matchBusqueda = !this.terminoBusqueda || nombreCompleto.includes(this.terminoBusqueda.toLowerCase());
 
       let matchCategoria = true;
       if (this.categoriaSeleccionada !== 'todos') {
-        matchCategoria = p.id_categoria == this.categoriaSeleccionada;
+        const idCat = p.categoria ? p.categoria.idCategoria : p.id_categoria;
+        matchCategoria = idCat == this.categoriaSeleccionada;
       }
 
       return matchBusqueda && matchCategoria;
@@ -178,26 +192,23 @@ export class Catalog implements OnInit {
     this.productoSeleccionado = producto;
     
     this.imagenesProducto = producto.imagenes || [];
-    if (this.imagenesProducto.length === 0 && producto.imagen_url) {
-        this.imagenesProducto.push(producto.imagen_url);
+    if (this.imagenesProducto.length === 0 && (producto.imagenUrl || producto.imagen_url)) {
+        this.imagenesProducto.push(producto.imagenUrl || producto.imagen_url);
     }
     this.imagenModalActual = this.imagenesProducto.length > 0 ? this.imagenesProducto[0] : '';
     
     this.variantesProducto = producto.variantes || [];
-    this.precioOriginal = parseFloat(producto.precio_base || producto.precio) || 0;
+    this.precioOriginal = parseFloat(producto.precioBase || producto.precio_base || producto.precio) || 0;
     this.precioCalculado = this.precioOriginal * (1 - (this.descuentoSocio / 100));
     this.cantidadSeleccionada = 1;
 
     if (producto.tipo === 'recuerdo' && this.variantesProducto.length > 0) {
-        
-        if (this.variantesProducto.length === 1 && this.variantesProducto[0].nombre_variante === 'Estándar') {
+        if (this.variantesProducto.length === 1 && (this.variantesProducto[0].nombreVariante || this.variantesProducto[0].nombre_variante) === 'Estándar') {
             this.tieneVariantesReales = false;
             this.varianteSeleccionada = this.variantesProducto[0];
             this.stockVariedadActual = this.variantesProducto[0].stock;
-        } 
-        else {
+        } else {
             this.tieneVariantesReales = true;
-            
             if (this.variantesProducto.length === 1) {
                 this.varianteSeleccionada = this.variantesProducto[0];
                 this.stockVariedadActual = this.variantesProducto[0].stock;
@@ -225,19 +236,17 @@ export class Catalog implements OnInit {
     this.varianteSeleccionada = variante;
     if (variante) {
         this.stockVariedadActual = variante.stock;
-        
-        const base = parseFloat(this.productoSeleccionado.precio_base || this.productoSeleccionado.precio) || 0;
-        this.precioOriginal = base + parseFloat(variante.precio_adicional || 0);
+        const base = parseFloat(this.productoSeleccionado.precioBase || this.productoSeleccionado.precio_base || this.productoSeleccionado.precio) || 0;
+        this.precioOriginal = base + parseFloat(variante.precioAdicional || variante.precio_adicional || 0);
         this.precioCalculado = this.precioOriginal * (1 - (this.descuentoSocio / 100));
         
-        if (variante.ruta_imagen) {
-            this.imagenModalActual = variante.ruta_imagen;
-            if (!this.imagenesProducto.includes(variante.ruta_imagen)) {
-                this.imagenesProducto.push(variante.ruta_imagen);
+        const rutaImg = variante.rutaImagen || variante.ruta_imagen;
+        if (rutaImg) {
+            this.imagenModalActual = rutaImg;
+            if (!this.imagenesProducto.includes(rutaImg)) {
+                this.imagenesProducto.push(rutaImg);
             }
-        } 
-        
-        else {
+        } else {
             const indexVariante = this.variantesProducto.indexOf(variante);
             if (indexVariante !== -1 && this.imagenesProducto.length > indexVariante + 1) {
                 this.imagenModalActual = this.imagenesProducto[indexVariante + 1];
@@ -262,14 +271,15 @@ export class Catalog implements OnInit {
   obtenerItemPreparado() {
     return {
         ...this.productoSeleccionado,
-        id_cactus: this.productoSeleccionado.id_producto || this.productoSeleccionado.id_cactus,
+        id_producto: this.productoSeleccionado.idProducto || this.productoSeleccionado.id_producto || this.productoSeleccionado.id_cactus,
         imagen_url: this.imagenModalActual,
         precio: this.precioCalculado,
         cantidad: this.cantidadSeleccionada,
-        estilo: this.varianteSeleccionada && this.varianteSeleccionada !== 'única' ? this.varianteSeleccionada.nombre_variante : 'Estándar',
-        id_variante: this.varianteSeleccionada && this.varianteSeleccionada !== 'única' ? this.varianteSeleccionada.id_variante : null
+        estilo: this.varianteSeleccionada && this.varianteSeleccionada !== 'única' ? (this.varianteSeleccionada.nombreVariante || this.varianteSeleccionada.nombre_variante) : 'Estándar',
     };
   }
+
+  
 
   comprarDirecto(event?: Event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -313,7 +323,6 @@ export class Catalog implements OnInit {
 
   aplicarCupon() {
     if (!this.codigoCupon) return;
-    
     const codigoLimpio = this.codigoCupon.trim().toUpperCase();
 
     if (this.descuentoAplicado > 0) {
@@ -321,72 +330,49 @@ export class Catalog implements OnInit {
         return;
     }
 
-    const idValidado = this.usuarioActual.id_usuario || this.usuarioActual.id;
+    // Validación local directa con la información del Perfil de Java
+    const cuponValido = this.cuponesDisponibles.find(c => c.codigo === codigoLimpio);
 
-    this.http.post<any>('http://localhost/cactus-api/ordenes_api.php', { 
-        accion: 'validar_cupon', 
-        codigo: codigoLimpio, 
-        id_usuario: idValidado 
-    }).subscribe(res => {
-      if (res.success) {
-        this.descuentoAplicado = res.descuento;
+    if (cuponValido) {
+        this.descuentoAplicado = cuponValido.descuentoPorcentaje || cuponValido.descuento_porcentaje;
         this.codigoCupon = codigoLimpio; 
-        this.mostrarToast(`¡Éxito! Se aplicó un ${res.descuento}% de descuento.`);
-      } else { 
-        this.mostrarToast(res.mensaje); 
-        this.descuentoAplicado = 0; 
-      }
-      this.cdr.detectChanges();
-    });
-  }
-
-  onFileSelected(event: any) {
-    if (event.target.files.length > 0) this.archivoComprobante = event.target.files[0];
+        this.mostrarToast(`¡Éxito! Se aplicó un ${this.descuentoAplicado}% de descuento.`);
+    } else {
+        this.mostrarToast('El cupón ingresado no es válido, ya fue usado o pertenece a otra cuenta.');
+        this.descuentoAplicado = 0;
+    }
+    this.cdr.detectChanges();
   }
 
   procesarPago() {
-    if (!this.archivoComprobante) { alert("Sube la captura de tu pago para continuar."); return; }
-    
     const finalDni = this.documentoCliente || this.usuarioActual?.dni || '';
     const finalTel = this.telefonoCliente || this.usuarioActual?.telefono || '';
 
     if (this.tipoComprobante === 'Boleta de Venta' && !finalDni) { alert("La Boleta requiere un número de DNI."); return; }
     if (this.tipoComprobante === 'Factura' && !finalDni) { alert("La Factura requiere un número de RUC."); return; }
-    if (this.cartService.getTotalPlantas() >= 4 && !finalTel) { alert("Para pedidos grandes necesitamos un número de celular."); return; }
-
+    
     this.cargandoPago = true;
 
-    let dniOpcionalFinal = finalDni;
-    if (finalTel) {
-      if (dniOpcionalFinal) dniOpcionalFinal += " | ";
-      dniOpcionalFinal += "Cel/Wsp: " + finalTel;
-    }
+    // JSON estructurado directo para el nuevo PedidoController de Spring Boot
+    const payload = {
+        id_usuario: this.usuarioActual.idUsuario || this.usuarioActual.id_usuario,
+        total_pagado: this.calcularTotalFinal(),
+        codigo_cupon: this.descuentoAplicado > 0 ? this.codigoCupon : '',
+        tipo_consumo: 'para_llevar',
+        notas_cliente: `Comprobante: ${this.tipoComprobante} | Doc: ${finalDni} | Tel: ${finalTel}`,
+        carrito: this.cartService.items
+    };
 
-    const formData = new FormData();
-    formData.append('accion', 'crear_reserva');
-    const idValidado = this.usuarioActual.id_usuario || this.usuarioActual.id;
-    formData.append('id_usuario', idValidado.toString());
-    formData.append('tipo_comprobante', this.tipoComprobante === 'Factura' ? 'factura' : 'boleta');
-    formData.append('dni_opcional', dniOpcionalFinal);
-    
-    formData.append('dni_cliente', finalDni); 
-    formData.append('telefono_cliente', finalTel); 
-    formData.append('actualizar_perfil', 'true');
-
-    formData.append('total_pagado', this.calcularTotalFinal().toString());
-    formData.append('codigo_cupon', this.descuentoAplicado > 0 ? this.codigoCupon : '');
-    formData.append('comprobante', this.archivoComprobante);
-    formData.append('carrito', JSON.stringify(this.cartService.items));
-
-    this.http.post<any>('http://localhost/cactus-api/ordenes_api.php', formData).subscribe({
+    this.http.post<any>('http://localhost:8080/api/pedidos/crear', payload).subscribe({
       next: (res) => {
         if (res.success) {
-          this.usuarioActual.dni = this.documentoCliente || this.usuarioActual.dni;
-          this.usuarioActual.telefono = this.telefonoCliente || this.usuarioActual.telefono;
+          this.usuarioActual.dni = finalDni;
+          this.usuarioActual.telefono = finalTel;
           localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
 
-          this.ordenGeneradaId = res.id_reserva;
-          this.totalPlantasCompradas = this.cartService.getTotalPlantas();
+          this.ordenGeneradaId = res.id_pedido;
+          this.codigoTicketGenerado = res.codigo_ticket;
+          this.mensajeFidelidad = res.mensaje_fidelidad;
           this.premioLealtad = res.premio_lealtad || null;
           
           this.cartService.limpiarCarrito(); 
@@ -395,7 +381,9 @@ export class Catalog implements OnInit {
         this.cargandoPago = false;
         this.cdr.detectChanges();
       },
-      error: () => { alert("Error de red. Asegúrate de que XAMPP esté encendido."); this.cargandoPago = false;
+      error: () => { 
+        alert("Error de conexión con el servidor Java."); 
+        this.cargandoPago = false;
         this.cdr.detectChanges();
       }
     });
@@ -407,4 +395,6 @@ export class Catalog implements OnInit {
     this.codigoCupon = '';
     this.cdr.detectChanges();
   }
+
+  
 }

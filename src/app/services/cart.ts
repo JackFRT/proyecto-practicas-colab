@@ -31,10 +31,13 @@ export class CartService {
 
   agregarItem(item: any) {
     const actual = this.items;
-    const existe = actual.find(i => i.id_cactus === item.id_cactus && i.estilo === item.estilo);
+    const existe = actual.find(i => i.id_producto === item.id_producto && i.estilo === item.estilo);
     
-    if (existe) { existe.cantidad += item.cantidad; } 
-    else { actual.push(item); }
+    if (existe) { 
+        existe.cantidad += item.cantidad; 
+    } else { 
+        actual.push(item); 
+    }
     
     this.saveCart(actual);
   }

@@ -23,11 +23,13 @@ export class About implements OnInit, OnDestroy {
 
   getRutaImagen(nombreArchivo: string, carpeta: string = 'news'): string {
     if (!nombreArchivo) return ''; 
-    return `http://localhost/cactus-api/images/${carpeta}/${nombreArchivo}`;
+    // Apuntamos al servidor de Spring Boot en el puerto 8080
+    return `http://localhost:8080/images/${carpeta}/${nombreArchivo}`;
   }
 
   ngOnInit() {
-    const urlAPI = 'http://localhost/cactus-api/obtener_inicio.php';
+    // Apuntamos al nuevo HomeController de Java
+    const urlAPI = 'http://localhost:8080/api/publico/inicio';
 
     this.http.get<any>(urlAPI).subscribe({
       next: (data) => {
