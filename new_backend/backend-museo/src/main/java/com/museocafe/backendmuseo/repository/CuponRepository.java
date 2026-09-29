@@ -7,6 +7,6 @@ import java.util.List;
 
 @Repository
 public interface CuponRepository extends JpaRepository<Cupon, Long> {
-    // Apaga el segundo error de tu PerfilController
+    
     List<Cupon> findByUsuarioIdUsuario(Long idUsuario);
 }

@@ -20,7 +20,7 @@ public class MarketingController {
 
     private final CuponRepository cuponRepository;
     private final NoticiaRepository noticiaRepository;
-    private final UsuarioRepository usuarioRepository; // Añadido para verificar quién hace la petición
+    private final UsuarioRepository usuarioRepository; 
 
     public MarketingController(CuponRepository cuponRepository, NoticiaRepository noticiaRepository, UsuarioRepository usuarioRepository) {
         this.cuponRepository = cuponRepository;
@@ -28,14 +28,14 @@ public class MarketingController {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // ==========================================
-    // 1. GESTIÓN DE CUPONES (ESTRICTAMENTE SOLO ADMIN)
-    // ==========================================
+    
+    
+    
     @PostMapping("/cupones/guardar/{idUsuario}")
     public ResponseEntity<?> guardarCupon(@PathVariable Long idUsuario, @RequestBody Map<String, Object> payload) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
         
-        // Bloqueo de seguridad: Si no existe o no es admin, lo rechazamos
+        
         if (usuarioOpt.isEmpty() || !"admin".equals(usuarioOpt.get().getRol())) {
             return ResponseEntity.status(403).body(Map.of("success", false, "mensaje", "Acceso denegado: Solo los administradores pueden crear cupones."));
         }
@@ -63,14 +63,14 @@ public class MarketingController {
         return ResponseEntity.ok(Map.of("success", true, "mensaje", "Cupón eliminado."));
     }
 
-    // ==========================================
-    // 2. GESTIÓN DE NOTICIAS (ADMIN Y EMPLEADOS)
-    // ==========================================
+    
+    
+    
     @PostMapping("/noticias/guardar/{idUsuario}")
     public ResponseEntity<?> guardarNoticia(@PathVariable Long idUsuario, @RequestBody Noticia noticia) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
         
-        // Bloqueo de seguridad: Validamos que sea admin O empleado
+        
         if (usuarioOpt.isEmpty() || (!"admin".equals(usuarioOpt.get().getRol()) && !"empleado".equals(usuarioOpt.get().getRol()))) {
             return ResponseEntity.status(403).body(Map.of("success", false, "mensaje", "Acceso denegado: Se requiere rol de administrador o empleado."));
         }

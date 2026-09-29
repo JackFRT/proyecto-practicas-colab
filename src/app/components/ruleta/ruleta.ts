@@ -23,7 +23,7 @@ export class Ruleta implements OnInit {
   isGirando: boolean = false;
   rotacionActual: number = 0;
 
-  // 1. Configuramos los premios visuales de la ruleta estáticamente
+  
   premios: any[] = [
     { titulo: '10% DTO', probabilidad: '20', color_seccion: '#A3B18A', anguloInicioRad: 0, anguloFinRad: 0 },
     { titulo: '15% DTO', probabilidad: '20', color_seccion: '#588157', anguloInicioRad: 0, anguloFinRad: 0 },
@@ -53,7 +53,7 @@ export class Ruleta implements OnInit {
   }
 
   cargarRuleta() {
-    // 2. Evaluamos si tiene giros disponibles basados en la respuesta de Spring Boot
+    
     this.haGirado = this.usuarioActual.girosExtra <= 0;
 
     if (this.userRole === 'admin' || this.userRole === 'empleado') {
@@ -148,10 +148,10 @@ export class Ruleta implements OnInit {
     this.resultadoColor = '#D65A31';
     this.cdr.detectChanges();
 
-    // 3. Conectamos al endpoint de Spring Boot
+    
     this.http.post<any>(`http://localhost:8080/api/ruleta/girar/${this.usuarioActual.idUsuario}`, {}).subscribe({
       next: (data) => {
-        // Obtenemos el texto equivalente en nuestro array de premios
+        
         const tituloObjetivo = data.descuento > 0 ? `${data.descuento}% DTO` : 'INTENTA OTRA VEZ';
         const premioObjetivo = this.premios.find(p => p.titulo === tituloObjetivo);
         
@@ -166,7 +166,7 @@ export class Ruleta implements OnInit {
           this.cdr.detectChanges();
           setTimeout(() => this.mostrarResultadoFinal(data, tituloObjetivo), 4500); 
 
-          // Actualizamos la sesión para restar el giro
+          
           this.usuarioActual.girosExtra = data.girosRestantes;
           localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
         }

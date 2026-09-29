@@ -26,19 +26,15 @@ public class AdminController {
         this.pedidoRepository = pedidoRepository;
     }
 
-    // 1. CARGAR DATOS DEL PANEL ADMIN (Reemplaza acción 'cargar' de admin_api.php)
     @GetMapping("/dashboard")
     public ResponseEntity<?> cargarDashboard() {
         Map<String, Object> respuesta = new HashMap<>();
 
-        // Lista de todos los usuarios
         respuesta.put("usuarios", usuarioRepository.findAll());
 
-        // Ventas completadas (antes 'recogido', ahora 'entregado' en nuestro nuevo flujo)
         List<Pedido> ventas = pedidoRepository.findByEstado("entregado");
         respuesta.put("ventas", ventas);
 
-        // Calcular ingresos totales de forma automática
         BigDecimal ingresosTotales = ventas.stream()
                 .map(Pedido::getTotalPagado)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -48,7 +44,6 @@ public class AdminController {
         return ResponseEntity.ok(respuesta);
     }
 
-    // 2. CAMBIAR ROL DE UN USUARIO (Reemplaza acción 'cambiar_rol')
     @PostMapping("/cambiar-rol")
     public ResponseEntity<?> cambiarRol(@RequestBody Map<String, Object> payload) {
         Long idUsuarioObjetivo = Long.valueOf(payload.get("id_usuario_objetivo").toString());
@@ -66,7 +61,6 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("success", true, "mensaje", "Rol actualizado correctamente."));
     }
 
-    // 3. RESETEAR RULETA DE UN USUARIO (Reemplaza acción 'resetear_ruleta')
     @PostMapping("/resetear-ruleta")
     public ResponseEntity<?> resetearRuleta(@RequestBody Map<String, Object> payload) {
         Long idUsuarioObjetivo = Long.valueOf(payload.get("id_usuario_objetivo").toString());
@@ -77,7 +71,6 @@ public class AdminController {
         }
 
         Usuario usuario = usuarioOpt.get();
-        // Borramos la fecha del último giro para que el cliente pueda volver a jugar
         usuario.setFechaUltimoGiro(null); 
         usuarioRepository.save(usuario);
 

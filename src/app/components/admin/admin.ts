@@ -55,7 +55,7 @@ export class AdminPanel implements OnInit {
 
   cargarDatos() {
     this.cargando = true;
-    // Nueva URL de Java por método GET
+    
     this.http.get<any>('http://localhost:8080/api/admin/dashboard').subscribe({
       next: (res) => {
         if (res.success) {
@@ -108,7 +108,7 @@ export class AdminPanel implements OnInit {
         return;
     }
 
-    // Determinamos la URL correcta en Java según la acción
+    
     let url = '';
     const payload: any = { 
         id_usuario_objetivo: this.accionPendiente.idUsuario 
@@ -149,7 +149,7 @@ export class AdminPanel implements OnInit {
 
   verComprobante(archivo: string) {
       if (!archivo) return;
-      // Apunta al puerto de Java (Solo útil para imágenes antiguas antes del sistema de tickets)
+      
       this.imagenSeleccionada = `http://localhost:8080/images/comprobantes/${archivo}`;
       this.modalImagenAbierto = true;
   }
@@ -174,7 +174,7 @@ export class AdminPanel implements OnInit {
     this.ventasFiltradas = this.ventas.filter(v => {
         if (this.filtroTiempoVentas === 'todos') return true;
         
-        // Ajustado al modelo Pedido de Java
+        
         const fechaVenta = new Date(v.fechaPedido);
         const diffTime = Math.abs(ahora.getTime() - fechaVenta.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -192,7 +192,7 @@ export class AdminPanel implements OnInit {
     const mapEmpleados = new Map<string, { total_ventas: number, ingresos: number }>();
     
     this.ventasFiltradas.forEach(v => {
-        // Ajustado para leer el objeto EmpleadoAtencion de Java
+        
         const emp = (v.empleadoAtencion && v.empleadoAtencion.nombre) ? v.empleadoAtencion.nombre : 'Sistema Web'; 
         const actual = mapEmpleados.get(emp) || { total_ventas: 0, ingresos: 0 };
         actual.total_ventas += 1;

@@ -7,6 +7,6 @@ import java.util.List;
 
 @Repository
 public interface NoticiaRepository extends JpaRepository<Noticia, Long> {
-    // Apaga el primer error del HomeController
+    
     List<Noticia> findByEstado(Boolean estado);
 }

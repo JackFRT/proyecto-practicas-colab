@@ -1,9 +1,11 @@
 import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-about',
   standalone: true,
+  imports: [CommonModule],
   templateUrl: './about.html',
   styleUrl: './about.css'
 })
@@ -21,14 +23,16 @@ export class About implements OnInit, OnDestroy {
   intervaloPase: any; 
   intervaloProgreso: any; 
 
+  tarjetaActiva: number | null = null;
+
   getRutaImagen(nombreArchivo: string, carpeta: string = 'news'): string {
     if (!nombreArchivo) return ''; 
-    // Apuntamos al servidor de Spring Boot en el puerto 8080
+    
     return `http://localhost:8080/images/${carpeta}/${nombreArchivo}`;
   }
 
   ngOnInit() {
-    // Apuntamos al nuevo HomeController de Java
+    
     const urlAPI = 'http://localhost:8080/api/publico/inicio';
 
     this.http.get<any>(urlAPI).subscribe({
@@ -40,6 +44,14 @@ export class About implements OnInit, OnDestroy {
       },
       error: (err) => console.error("Error en noticias:", err)
     });
+  }
+
+  toggleTarjeta(index: number) {
+    if (this.tarjetaActiva === index) {
+      this.tarjetaActiva = null; 
+    } else {
+      this.tarjetaActiva = index; 
+    }
   }
 
   moverNoticia(direccion: number) {

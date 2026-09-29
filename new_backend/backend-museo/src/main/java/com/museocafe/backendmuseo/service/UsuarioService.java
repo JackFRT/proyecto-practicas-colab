@@ -24,7 +24,7 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    // Regla de Negocio: 1 visita máx. al día + otorga 1 giro extra de ruleta
+    
     public Usuario registrarVisitaPresencial(Long idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + idUsuario));

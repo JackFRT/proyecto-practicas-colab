@@ -38,9 +38,9 @@ public class PedidoController {
         this.cuponRepository = cuponRepository;
     }
 
-    // ==========================================
-    // 1. OBTENER DATOS PARA EL TICKET DE COMPRA
-    // ==========================================
+    
+    
+    
     @GetMapping("/ticket/{codigoTicket}")
     public ResponseEntity<?> obtenerTicket(@PathVariable String codigoTicket) {
         Optional<Pedido> pedidoOpt = pedidoRepository.findByCodigoTicket(codigoTicket);
@@ -52,7 +52,7 @@ public class PedidoController {
         Pedido pedido = pedidoOpt.get();
         List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdPedido(pedido.getIdPedido());
 
-        // Armamos el JSON exacto que necesita Angular para dibujar el ticket
+        
         Map<String, Object> ticket = new HashMap<>();
         ticket.put("codigo", pedido.getCodigoTicket());
         ticket.put("fecha", pedido.getFechaPedido());
@@ -65,9 +65,9 @@ public class PedidoController {
         return ResponseEntity.ok(ticket);
     }
 
-    // ==========================================
-    // 2. CREAR NUEVA COMPRA (CHECKOUT)
-    // ==========================================
+    
+    
+    
     @PostMapping("/crear")
     @Transactional 
     public ResponseEntity<?> crearPedido(
@@ -83,12 +83,12 @@ public class PedidoController {
             Usuario usuario = usuarioRepository.findById(idUsuario)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-            // 1. Guardar la imagen del Yape/Plin
+            
             String nombreArchivo = null;
             if (archivoComprobante != null && !archivoComprobante.isEmpty()) {
-                // Generamos un nombre único
+                
                 nombreArchivo = "yape_" + idUsuario + "_" + System.currentTimeMillis() + ".jpg";
-                // Definimos la carpeta de destino (asegúrate de que exista en tu proyecto)
+                
                 Path directorio = Paths.get("src/main/resources/static/images/comprobantes/");
                 if (!Files.exists(directorio)) {
                     Files.createDirectories(directorio);
@@ -96,7 +96,7 @@ public class PedidoController {
                 Files.copy(archivoComprobante.getInputStream(), directorio.resolve(nombreArchivo));
             }
 
-            // 2. Validar cupón
+            
             if (!codigoCupon.isEmpty()) {
                 Cupon cupon = cuponRepository.findAll().stream()
                         .filter(c -> c.getCodigo().equals(codigoCupon)).findFirst().orElse(null);
@@ -106,19 +106,19 @@ public class PedidoController {
                 }
             }
 
-            // 3. Crear el Pedido Principal
+            
             Pedido nuevoPedido = new Pedido();
             nuevoPedido.setUsuario(usuario);
             nuevoPedido.setTotalPagado(totalPagado);
             nuevoPedido.setCodigoCupon(codigoCupon);
             nuevoPedido.setTipoConsumo(tipoConsumo);
             nuevoPedido.setNotasCliente(notasCliente);
-            nuevoPedido.setComprobantePago(nombreArchivo); // Guardamos la imagen
+            nuevoPedido.setComprobantePago(nombreArchivo); 
             nuevoPedido.setRecompensaProcesada(false); 
             
             nuevoPedido = pedidoRepository.save(nuevoPedido);
 
-            // 4. Procesar el carrito (Convertimos el String JSON a Lista)
+            
             ObjectMapper mapper = new ObjectMapper();
             List<Map<String, Object>> carrito = mapper.readValue(carritoJson, new TypeReference<List<Map<String, Object>>>(){});
 
@@ -138,7 +138,7 @@ public class PedidoController {
                 detallePedidoRepository.save(detalle);
             }
 
-            // 5. SISTEMA DE FIDELIDAD (4 COMPRAS = Cupón 25%)
+            
             String mensajeFidelidad = "¡Gracias por tu compra!";
             Map<String, Object> premioLealtad = null;
 
@@ -169,7 +169,7 @@ public class PedidoController {
                 mensajeFidelidad = "¡Vas por buen camino! Te faltan solo " + faltantes + " compras para tu próximo premio.";
             }
 
-            // 6. RESPUESTA AL FRONTEND
+            
             Map<String, Object> respuesta = new HashMap<>();
             respuesta.put("success", true);
             respuesta.put("id_pedido", nuevoPedido.getIdPedido());

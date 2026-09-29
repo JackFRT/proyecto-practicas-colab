@@ -84,7 +84,6 @@ export class Auth implements OnInit, OnDestroy {
 
   togglePassword() {
       this.showPassword = !this.showPassword;
-      
       this.mokaService.passwordVisible = this.showPassword; 
       
       const reaccion = this.mokaService.reaccionarPassword(this.showPassword);
@@ -181,7 +180,8 @@ export class Auth implements OnInit, OnDestroy {
       if (!this.email) { this.mensajeError = "Ingresa tu correo."; return; }
       
       this.cargando = true;
-      this.http.post<any>('http://localhost/cactus-api/recuperar_api.php', { accion: 'solicitar_codigo', email: this.email }).subscribe({
+      
+      this.http.post<any>('http://localhost:8080/api/auth/recuperar/solicitar', { email: this.email }).subscribe({
         next: (res) => {
           this.cargando = false;
           if (res.success) {
@@ -198,7 +198,12 @@ export class Auth implements OnInit, OnDestroy {
       if (!this.codigoRecuperacion || !this.password) { this.mensajeError = "Completa los campos."; return; }
       
       this.cargando = true;
-      this.http.post<any>('http://localhost/cactus-api/recuperar_api.php', { accion: 'cambiar_password', email: this.email, codigo: this.codigoRecuperacion, nueva_password: this.password }).subscribe({
+      
+      this.http.post<any>('http://localhost:8080/api/auth/recuperar/cambiar', { 
+          email: this.email, 
+          codigo: this.codigoRecuperacion, 
+          nueva_password: this.password 
+      }).subscribe({
         next: (res) => {
           this.cargando = false;
           if (res.success) {

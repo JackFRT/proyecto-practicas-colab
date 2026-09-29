@@ -20,8 +20,17 @@ export class AppComponent implements OnInit {
   cdr = inject(ChangeDetectorRef);
 
   mostrarRuleta: boolean = false; 
+  heroScrolled: boolean = false;
+  menuPerfilAbierto: boolean = false;
+
+  mokaSilenciada: boolean = false;
+  imagenMoka: string = '/assets/images/barista/barista_saludando.png';
+  mensajeMoka: string | null = '¡BIENVENIDO/A!';
+  colorBurbujaMoka: string = '#ffffff';
 
   ngOnInit() {
+    this.evaluarScroll();
+    
     this.mokaService.eventoMoka$.subscribe(evento => {
       if (this.mokaSilenciada) return;
       
@@ -35,7 +44,6 @@ export class AppComponent implements OnInit {
           if (this.mensajeMoka === evento.texto) {
             this.mensajeMoka = null;
             this.imagenMoka = '/assets/images/barista/barista_saludando.png';
-            this.colorBurbujaMoka = '#ffb6c1';
             this.cdr.detectChanges();
           }
         }, 4000);
@@ -43,16 +51,22 @@ export class AppComponent implements OnInit {
     });
   }
 
-  lanzarRuleta() {
-    this.mostrarRuleta = true;
-    this.cdr.detectChanges();
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    this.evaluarScroll();
   }
 
-  scrollTo(target: string) {
-    const element = document.getElementById(target) || document.querySelector('.' + target);
-    if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  evaluarScroll() {
+    if (typeof window !== 'undefined') {
+        
+        this.heroScrolled = window.scrollY > window.innerHeight * 0.5;
     }
+  }
+
+  
+  get mostrarHUDCompleto(): boolean {
+    if (this.router.url !== '/') return true; 
+    return this.heroScrolled; 
   }
 
   get isLoggedIn(): boolean {
@@ -79,27 +93,21 @@ export class AppComponent implements OnInit {
     return this.router.url === '/' || this.router.url === '/login';
   }
 
-  mokaSilenciada: boolean = false;
-  imagenMoka: string = '/assets/images/barista/barista_saludando.png';
-  mensajeMoka: string | null = '¡Hola! Soy Moka. ¡Haz clic en mí!';
-  colorBurbujaMoka: string = '#ffb6c1';
-
-  mokaOcultaPorFooter: boolean = false;
-  mokaDespidiendose: boolean = false;
-  
-  mensajeCactus: string | null = null;
-  menuPerfilAbierto: boolean = false;
+  lanzarRuleta(event?: Event) {
+    if (event) event.preventDefault();
+    this.mostrarRuleta = true;
+    this.menuPerfilAbierto = false; 
+    this.cdr.detectChanges();
+  }
 
   interactuarMoka() {
     if (this.mokaSilenciada) return;
     
     let respuesta;
-    
     if (this.router.url === '/login') {
         respuesta = this.mokaService.interactuarAuth();
     } else {
         respuesta = this.mokaService.interactuar();
-        
         if (this.mokaService.passwordVisible) {
             respuesta.imagen = 'barista_cara_cubierta.png';
             respuesta.texto = "¡Sigo sin mirar! Promesa de barista.";
@@ -108,25 +116,14 @@ export class AppComponent implements OnInit {
     
     this.mensajeMoka = respuesta.texto;
     this.imagenMoka = '/assets/images/barista/' + respuesta.imagen;
-    
-    if (respuesta.castigo) {
-        this.colorBurbujaMoka = '#ff6b6b'; 
-    } else {
-        this.colorBurbujaMoka = this.router.url === '/login' ? '#ffffff' : '#ffb6c1'; 
-    }
-
     this.cdr.detectChanges(); 
 
     const tiempoEspera = respuesta.castigo ? 6000 : 4000;
 
     setTimeout(() => {
-        if (!this.mokaOcultaPorFooter) {
-            this.mensajeMoka = null;
-            this.colorBurbujaMoka = '#ffb6c1';
-            
-            if (!this.mokaSilenciada && !this.mokaService.passwordVisible) {
-                this.imagenMoka = '/assets/images/barista/barista_saludando.png';
-            }
+        this.mensajeMoka = null;
+        if (!this.mokaSilenciada && !this.mokaService.passwordVisible) {
+            this.imagenMoka = '/assets/images/barista/barista_saludando.png';
         }
         this.cdr.detectChanges(); 
     }, tiempoEspera);
@@ -137,35 +134,17 @@ export class AppComponent implements OnInit {
     
     if (this.mokaSilenciada) {
       this.imagenMoka = '/assets/images/barista/barista_sad.png';
-      this.mensajeMoka = '...';
-      this.colorBurbujaMoka = '#f2f2f2';
-      this.cdr.detectChanges();
-
-      setTimeout(() => {
-          this.mensajeMoka = null;
-          this.cdr.detectChanges();
-      }, 2000);
+      this.mensajeMoka = 'ASISTENCIA SILENCIADA';
     } else {
       this.imagenMoka = '/assets/images/barista/barista_saludando.png';
-      this.mensajeMoka = '¡Qué bueno escucharte de nuevo!';
-      this.colorBurbujaMoka = '#ffb6c1';
-      this.cdr.detectChanges();
-
-      setTimeout(() => {
-          this.mensajeMoka = null;
-          this.cdr.detectChanges();
-      }, 3000);
+      this.mensajeMoka = 'AUDIO ACTIVADO';
     }
-  }
-
-  interactuarCactus() {
-    this.mensajeCactus = '¡No toques mis espinas!';
     this.cdr.detectChanges();
 
     setTimeout(() => {
-        this.mensajeCactus = null;
+        this.mensajeMoka = null;
         this.cdr.detectChanges();
-    }, 3000);
+    }, 2000);
   }
 
   toggleProfileMenu(event: Event) {
@@ -195,45 +174,6 @@ export class AppComponent implements OnInit {
     if (!clickDentroDelMenu && this.menuPerfilAbierto) {
       this.menuPerfilAbierto = false;
       this.cdr.detectChanges();
-    }
-  }
-
-  @HostListener('window:scroll')
-  vigilarFooterParaMoka() {
-    const footer = document.getElementById('main-footer');
-    
-    if (footer) {
-      const rect = footer.getBoundingClientRect();
-      
-      if (rect.top < window.innerHeight - 100) {
-        if (!this.mokaOcultaPorFooter && !this.mokaDespidiendose) {
-          this.mokaDespidiendose = true;
-          this.imagenMoka = '/assets/images/barista/barista_sad3.png'; 
-          
-          if (!this.mokaSilenciada) {
-            this.colorBurbujaMoka = '#ffb6c1';
-            this.mensajeMoka = '¡Uy! No debería alejarme tanto de la caja... ¡Vuelvo arriba!';
-          }
-          this.cdr.detectChanges();
-
-          setTimeout(() => {
-            if (this.mokaDespidiendose) {
-              this.mokaOcultaPorFooter = true;
-              this.mensajeMoka = null;
-              this.cdr.detectChanges();
-            }
-          }, 2500);
-        }
-      } else {
-        if (this.mokaOcultaPorFooter || this.mokaDespidiendose) {
-          this.mokaOcultaPorFooter = false;
-          this.mokaDespidiendose = false;
-          this.mensajeMoka = null;
-          
-          this.imagenMoka = this.mokaSilenciada ? '/assets/images/barista/barista_sad.png' : '/assets/images/barista/barista_saludando.png';
-          this.cdr.detectChanges();
-        }
-      }
     }
   }
 }

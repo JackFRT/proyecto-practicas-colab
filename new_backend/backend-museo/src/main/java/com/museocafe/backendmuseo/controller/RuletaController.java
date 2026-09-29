@@ -37,16 +37,16 @@ public class RuletaController {
             return ResponseEntity.badRequest().body("No tienes giros disponibles. ¡Registra una visita presencial para obtener más!");
         }
 
-        // Descontar giro
+        
         usuario.setGirosExtra(usuario.getGirosExtra() - 1);
         usuario.setFechaUltimoGiro(LocalDateTime.now());
         usuarioRepository.save(usuario);
 
-        // Lógica de sorteo de premios
-        int[] premiosPorcentaje = {10, 15, 20, 25, 50}; // Porcentajes de descuento
+        
+        int[] premiosPorcentaje = {10, 15, 20, 25, 50}; 
         int descuentoGanado = premiosPorcentaje[new Random().nextInt(premiosPorcentaje.length)];
 
-        // Generar cupón en BD
+        
         Cupon cupon = new Cupon();
         cupon.setCodigo("CACTUS-" + UUID.randomUUID().toString().substring(0, 5).toUpperCase());
         cupon.setDescuentoPorcentaje(descuentoGanado);

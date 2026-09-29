@@ -54,4 +54,14 @@ public class Usuario {
 
     @Column(length = 20)
     private String telefono;
+
+    public void setCodigoRecuperacion(String codigo) {
+        
+        throw new UnsupportedOperationException("Unimplemented method 'setCodigoRecuperacion'");
+    }
+
+    public Object getCodigoRecuperacion() {
+        
+        throw new UnsupportedOperationException("Unimplemented method 'getCodigoRecuperacion'");
+    }
 }

@@ -113,7 +113,7 @@ export class Empleado implements OnInit {
         const matchBusqueda = nombreCompleto.includes(this.terminoBusqueda.toLowerCase());
         const matchCategoria = this.categoriaFiltro === 'todas' || item.nombre_categoria === this.categoriaFiltro;
         
-        // Ahora aplica todos los filtros sin importar si es cactus o recuerdo
+        
         return matchTipo && matchBusqueda && matchCategoria;
     });
   }
@@ -291,7 +291,7 @@ export class Empleado implements OnInit {
           this.historial_atendidas = res.datos.historial_atendidas || [];
           this.num_notificaciones = this.reservas_activas.length;
           
-          // Magia auto-reparadora
+          
           this.autoRepararRuleta();
           this.prepararRuleta();
           

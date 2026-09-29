@@ -19,7 +19,7 @@ export class Catalog implements OnInit {
   todosCactus: any[] = [];
   todosSouvenirs: any[] = [];
   categorias: any[] = []; 
-  cuponesDisponibles: any[] = []; // Nueva lista local de cupones
+  cuponesDisponibles: any[] = []; 
 
   tipoActual: 'cactus' | 'recuerdo' = 'cactus'; 
   categoriaSeleccionada: string = 'todos';
@@ -48,7 +48,6 @@ export class Catalog implements OnInit {
   usuarioActual: any = null;
   mensajeFidelidad: string = '';
   archivoComprobante: File | null = null;
-  
 
   get userRole(): string {
     if (typeof localStorage === 'undefined') return 'cliente';
@@ -64,14 +63,12 @@ export class Catalog implements OnInit {
         this.usuarioActual = JSON.parse(userGuardado);
         const idValidado = this.usuarioActual.idUsuario || this.usuarioActual.id_usuario;
         
-        // Llamada al nuevo PerfilController en Spring Boot
         this.http.get<any>(`http://localhost:8080/api/perfil/cargar/${idValidado}`).subscribe(res => {
             if (res.success) {
                 this.usuarioActual = res.usuario;
                 this.cuponesDisponibles = res.cupones || [];
                 localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
                 
-                // Compatibilidad con los nombres de variables de Java (visitasPresenciales)
                 const visitas = parseInt(this.usuarioActual.visitasPresenciales || this.usuarioActual.visitas_presenciales) || 0;
                 
                 if (visitas >= 51) { this.nivelSocio = 5; this.descuentoSocio = 15; }
@@ -89,7 +86,6 @@ export class Catalog implements OnInit {
         });
     }
 
-    // Llamada al nuevo HomeController en Spring Boot
     this.http.get<any>('http://localhost:8080/api/publico/inicio').subscribe({
       next: (data) => {
         this.todosCactus = data.cactus || [];
@@ -127,8 +123,6 @@ export class Catalog implements OnInit {
     this.aplicarFiltros();
   }
 
-  
-
   cambiarCategoria(event: any) {
     this.categoriaSeleccionada = event.target.value;
     this.paginaActual = 1;
@@ -145,7 +139,6 @@ export class Catalog implements OnInit {
     let baseDatos = this.tipoActual === 'cactus' ? this.todosCactus : this.todosSouvenirs;
     
     this.productosFiltrados = baseDatos.filter(p => {
-      // Soporte para variables Java (nombreComun) y PHP (nombre_comun)
       const nombreC = p.nombreComun || p.nombre_comun || '';
       const nombreCi = p.nombreCientifico || p.nombre_cientifico || '';
       const nombreCompleto = `${nombreC} ${nombreCi}`.toLowerCase();
@@ -279,8 +272,6 @@ export class Catalog implements OnInit {
     };
   }
 
-  
-
   comprarDirecto(event?: Event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
     this.cartService.agregarItem(this.obtenerItemPreparado());
@@ -330,7 +321,6 @@ export class Catalog implements OnInit {
         return;
     }
 
-    // Validación local directa con la información del Perfil de Java
     const cuponValido = this.cuponesDisponibles.find(c => c.codigo === codigoLimpio);
 
     if (cuponValido) {
@@ -344,29 +334,40 @@ export class Catalog implements OnInit {
     this.cdr.detectChanges();
   }
 
-  procesarPago() {
-    const finalDni = this.documentoCliente || this.usuarioActual?.dni || '';
-    const finalTel = this.telefonoCliente || this.usuarioActual?.telefono || '';
+  onFileSelected(event: any) {
+    if (event.target.files.length > 0) {
+      this.archivoComprobante = event.target.files[0];
+    }
+  }
 
-    if (this.tipoComprobante === 'Boleta de Venta' && !finalDni) { alert("La Boleta requiere un número de DNI."); return; }
-    if (this.tipoComprobante === 'Factura' && !finalDni) { alert("La Factura requiere un número de RUC."); return; }
+  procesarPago() {
+    if (!this.archivoComprobante) { 
+        alert("Sube la captura de tu pago por Yape o Plin para continuar."); 
+        return; 
+    }
     
+    const finalTel = this.telefonoCliente || this.usuarioActual?.telefono || '';
+    if (this.cartService.getTotalPlantas() >= 4 && !finalTel) { 
+        alert("Para pedidos grandes necesitamos un número de celular."); 
+        return; 
+    }
+
     this.cargandoPago = true;
 
-    // JSON estructurado directo para el nuevo PedidoController de Spring Boot
-    const payload = {
-        id_usuario: this.usuarioActual.idUsuario || this.usuarioActual.id_usuario,
-        total_pagado: this.calcularTotalFinal(),
-        codigo_cupon: this.descuentoAplicado > 0 ? this.codigoCupon : '',
-        tipo_consumo: 'para_llevar',
-        notas_cliente: `Comprobante: ${this.tipoComprobante} | Doc: ${finalDni} | Tel: ${finalTel}`,
-        carrito: this.cartService.items
-    };
+    const formData = new FormData();
+    const idValidado = this.usuarioActual.idUsuario || this.usuarioActual.id_usuario;
+    
+    formData.append('id_usuario', idValidado.toString());
+    formData.append('total_pagado', this.calcularTotalFinal().toString());
+    formData.append('codigo_cupon', this.descuentoAplicado > 0 ? this.codigoCupon : '');
+    formData.append('tipo_consumo', 'para_llevar');
+    formData.append('notas_cliente', finalTel ? `Cel/Wsp: ${finalTel}` : 'Sin notas');
+    formData.append('carrito', JSON.stringify(this.cartService.items));
+    formData.append('comprobante', this.archivoComprobante);
 
-    this.http.post<any>('http://localhost:8080/api/pedidos/crear', payload).subscribe({
+    this.http.post<any>('http://localhost:8080/api/pedidos/crear', formData).subscribe({
       next: (res) => {
         if (res.success) {
-          this.usuarioActual.dni = finalDni;
           this.usuarioActual.telefono = finalTel;
           localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
 
@@ -395,6 +396,4 @@ export class Catalog implements OnInit {
     this.codigoCupon = '';
     this.cdr.detectChanges();
   }
-
-  
 }

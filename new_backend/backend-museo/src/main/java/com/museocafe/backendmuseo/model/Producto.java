@@ -28,7 +28,7 @@ public class Producto {
     private BigDecimal precioBase;
 
     @Column(length = 20)
-    private String tipo; // 'cactus', 'recuerdo', 'ropa', 'cafe', 'otro'
+    private String tipo; 
 
     @Column(columnDefinition = "TEXT")
     private String cuidados;
@@ -38,7 +38,7 @@ public class Producto {
     private Boolean activo = true;
 
     public Object getCategoria() {
-        // TODO Auto-generated method stub
+        
         throw new UnsupportedOperationException("Unimplemented method 'getCategoria'");
     }
 }

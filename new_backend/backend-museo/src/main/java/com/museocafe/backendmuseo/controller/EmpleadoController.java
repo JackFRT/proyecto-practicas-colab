@@ -27,28 +27,24 @@ public class EmpleadoController {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // 1. CARGAR DASHBOARD (Reemplaza a obtener_dashboard.php)
     @GetMapping("/dashboard/{idEmpleado}")
     public ResponseEntity<?> obtenerDashboard(@PathVariable Long idEmpleado) {
         Map<String, Object> respuesta = new HashMap<>();
 
-        // Trae solo las órdenes activas (pendientes, preparándose o listas)
         List<Pedido> ordenesActivas = pedidoRepository.findByEstadoInOrderByFechaPedidoAsc(
                 Arrays.asList("pendiente", "preparando", "listo")
         );
         
-        // Historial del empleado (Solo las entregadas)
         List<Pedido> historial = pedidoRepository.findByEmpleadoAtencionIdUsuarioAndEstadoOrderByFechaPedidoDesc(idEmpleado, "entregado");
 
         respuesta.put("success", true);
         respuesta.put("ordenesActivas", ordenesActivas);
         respuesta.put("historial", historial);
-        respuesta.put("totalAtendidas", historial.size()); // Estadística rápida para el empleado
+        respuesta.put("totalAtendidas", historial.size());
 
         return ResponseEntity.ok(respuesta);
     }
 
-    // 2. GESTIÓN DE ÓRDENES (Reemplaza a ordenes_api.php - aprobar, completar, cancelar, reportar)
     @PostMapping("/ordenes/estado")
     public ResponseEntity<?> cambiarEstadoOrden(@RequestBody Map<String, Object> payload) {
         Long idReserva = Long.valueOf(payload.get("id_reserva").toString());
@@ -63,16 +59,16 @@ public class EmpleadoController {
         }
 
         Pedido pedido = pedidoOpt.get();
-        pedido.setEmpleadoAtencion(empleadoOpt.get()); // Registramos quién atendió la orden
+        pedido.setEmpleadoAtencion(empleadoOpt.get());
 
         String mensaje = "";
         switch (accion) {
             case "aprobar":
-                pedido.setEstado("preparando"); // Nuevo estado para la cafetería
+                pedido.setEstado("preparando");
                 mensaje = "Orden en preparación.";
                 break;
             case "listo":
-                pedido.setEstado("listo"); // Listo para ser entregado
+                pedido.setEstado("listo");
                 mensaje = "Orden lista para entregar.";
                 break;
             case "completar":
@@ -92,7 +88,7 @@ public class EmpleadoController {
         return ResponseEntity.ok(Map.of("success", true, "mensaje", mensaje));
     }
 
-    // 3. BUSCADOR DE CLIENTES EN VIVO (Reemplaza a buscar_clientes)
+    
     @PostMapping("/clientes/buscar")
     public ResponseEntity<?> buscarClientes(@RequestBody Map<String, String> payload) {
         String termino = payload.getOrDefault("termino", "");
@@ -100,7 +96,7 @@ public class EmpleadoController {
         return ResponseEntity.ok(Map.of("success", true, "clientes", clientes));
     }
 
-    // 4. REGISTRAR VISITA PRESENCIAL (Reemplaza a registrar_visita)
+    
     @PostMapping("/clientes/{idCliente}/visita")
     public ResponseEntity<?> registrarVisitaCliente(@PathVariable Long idCliente) {
         Optional<Usuario> clienteOpt = usuarioRepository.findById(idCliente);
@@ -112,12 +108,12 @@ public class EmpleadoController {
         Usuario cliente = clienteOpt.get();
         LocalDate hoy = LocalDate.now();
 
-        // Validamos que no haya registrado visita hoy mismo[cite: 23]
+        
         if (cliente.getFechaUltimaVisita() != null && cliente.getFechaUltimaVisita().equals(hoy)) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Este cliente ya registró una visita el día de hoy. ¡Debe volver mañana!"));
         }
 
-        // Subimos el nivel de socio y le damos un giro para la ruleta
+        
         cliente.setVisitasPresenciales(cliente.getVisitasPresenciales() + 1);
         cliente.setFechaUltimaVisita(hoy);
         cliente.setGirosExtra(cliente.getGirosExtra() + 1); 

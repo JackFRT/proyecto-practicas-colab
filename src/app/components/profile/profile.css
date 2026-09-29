@@ -121,8 +121,8 @@
 .glass-cupon-ticket { padding: 25px; border-radius: 20px; position: relative; overflow: hidden; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: transform 0.3s; }
 .glass-cupon-ticket:hover { transform: translateY(-5px); }
 
-.cupon-ruleta { background: linear-gradient(135deg, #1b4353 0%, #2b5876 100%); border: 1px solid #4eb4d1; color: white;} /* Celeste oscuro marino */
-.cupon-compra { background: linear-gradient(135deg, #cc496e 0%, #e07446 100%); border: 1px solid #ffd466; color: white;} /* Rosado/Amarillo oscuro Museum */
+.cupon-ruleta { background: linear-gradient(135deg, #1b4353 0%, #2b5876 100%); border: 1px solid #4eb4d1; color: white;} 
+.cupon-compra { background: linear-gradient(135deg, #cc496e 0%, #e07446 100%); border: 1px solid #ffd466; color: white;} 
 
 .cupon-header { display: flex; justify-content: center; margin-bottom: 15px; position: relative; }
 .cupon-header h3 { margin: 0; font-size: 0.9rem; letter-spacing: 2px; opacity: 0.9; }

@@ -32,13 +32,13 @@ public class HomeController {
         
         respuesta.put("success", true);
         
-        // 1. Categorías
+        
         respuesta.put("categorias", categoriaRepository.findAll());
         
-        // 2. Noticias (Solo las activas/públicas)
+        
         respuesta.put("noticias", noticiaRepository.findByEstado(true));
 
-        // 3. Productos divididos por tipo (Ignoramos los inactivos)
+        
         var todosLosProductos = productoRepository.findByActivoTrue();
         
         var cactus = todosLosProductos.stream()

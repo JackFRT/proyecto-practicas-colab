@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Long> {
     
-    // Para cargar los productos exactos (el café o los cactus) que tiene una orden
+    
     List<DetallePedido> findByPedidoIdPedido(Long idPedido);
 }

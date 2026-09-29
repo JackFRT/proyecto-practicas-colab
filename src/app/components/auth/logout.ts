@@ -16,6 +16,6 @@ export class Logout implements OnInit {
 
     this.router.navigate(['/']);
     
-    // setTimeout(() => window.location.reload(), 100); 
+    
   }
 }

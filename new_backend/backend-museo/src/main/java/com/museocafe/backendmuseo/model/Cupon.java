@@ -31,9 +31,19 @@ public class Cupon {
     @Column(name = "limite_usos")
     private Integer limiteUsos = 1;
 
-    @Column(name = "uses_actuales")
-    private Integer usesActuales = 0;
+    @Column(name = "usos_actuales")
+    private Integer usosActuales = 0;
 
     @Column(name = "fecha_vencimiento")
     private LocalDateTime fechaVencimiento;
+
+    public int getUsosActuales() {
+        
+        throw new UnsupportedOperationException("Unimplemented method 'getUsosActuales'");
+    }
+
+    public void setUsosActuales(int i) {
+        
+        throw new UnsupportedOperationException("Unimplemented method 'setUsosActuales'");
+    }
 }

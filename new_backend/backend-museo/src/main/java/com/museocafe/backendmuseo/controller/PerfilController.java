@@ -37,7 +37,7 @@ public class PerfilController {
         Usuario usuario = usuarioOpt.get();
         int visitas = usuario.getVisitasPresenciales() != null ? usuario.getVisitasPresenciales() : 0;
 
-        // SISTEMA DE NIVELES (Traducido de perfil_api.php)
+        
         Map<String, Object> nivel = new HashMap<>();
         if (visitas >= 51) {
             nivel.put("nivel", 5); nivel.put("next", "MAX"); nivel.put("texto", "Nivel Máximo"); nivel.put("progreso", 100);
@@ -64,7 +64,7 @@ public class PerfilController {
         respuesta.put("usuario", usuario);
         respuesta.put("datos_nivel", nivel);
         
-        // Historial de compras y Cupones disponibles
+        
         respuesta.put("historial", pedidoRepository.findByUsuarioIdUsuarioOrderByFechaPedidoDesc(idUsuario));
         respuesta.put("cupones", cuponRepository.findByUsuarioIdUsuario(idUsuario));
 
