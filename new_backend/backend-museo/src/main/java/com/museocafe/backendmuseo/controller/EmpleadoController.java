@@ -5,6 +5,8 @@ import com.museocafe.backendmuseo.model.Usuario;
 import com.museocafe.backendmuseo.repository.PedidoRepository;
 import com.museocafe.backendmuseo.repository.UsuarioRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -16,7 +18,12 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/empleado")
-@CrossOrigin(origins = "*")
+/* =========================================================================================
+   [PRODUCCIÓN - DOMINIO] 
+   Cuando tengas tu dominio, cambia los orígenes para que solo tu web pueda consultar esta API.
+   Ejemplo final: @CrossOrigin(origins = {"http://localhost:4200", "https://www.cafeayacuchano.com"})
+   ========================================================================================= */
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:80"})
 public class EmpleadoController {
 
     private final PedidoRepository pedidoRepository;
@@ -48,11 +55,24 @@ public class EmpleadoController {
     @PostMapping("/ordenes/estado")
     public ResponseEntity<?> cambiarEstadoOrden(@RequestBody Map<String, Object> payload) {
         Long idReserva = Long.valueOf(payload.get("id_reserva").toString());
-        Long idEmpleado = Long.valueOf(payload.get("id_empleado").toString());
         String accion = payload.get("accion").toString();
 
-        Optional<Pedido> pedidoOpt = pedidoRepository.findById(idReserva);
+        /* 
+         * -------------------------------------------------------------------
+         * SEGURIDAD AVANZADA (Opcional para el futuro):
+         * En lugar de confiar en el id_empleado que manda Angular, leemos el 
+         * token JWT para saber exactamente qué empleado hizo la petición.
+         * 
+         * Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+         * String emailEmpleadoLogueado = auth.getName();
+         * Optional<Usuario> empleadoOpt = usuarioRepository.findByEmail(emailEmpleadoLogueado);
+         * -------------------------------------------------------------------
+         */
+
+        // Lógica actual (Recibiendo el ID desde Angular)
+        Long idEmpleado = Long.valueOf(payload.get("id_empleado").toString());
         Optional<Usuario> empleadoOpt = usuarioRepository.findById(idEmpleado);
+        Optional<Pedido> pedidoOpt = pedidoRepository.findById(idReserva);
 
         if (pedidoOpt.isEmpty() || empleadoOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Orden o empleado no encontrados."));
@@ -88,7 +108,6 @@ public class EmpleadoController {
         return ResponseEntity.ok(Map.of("success", true, "mensaje", mensaje));
     }
 
-    
     @PostMapping("/clientes/buscar")
     public ResponseEntity<?> buscarClientes(@RequestBody Map<String, String> payload) {
         String termino = payload.getOrDefault("termino", "");
@@ -96,7 +115,6 @@ public class EmpleadoController {
         return ResponseEntity.ok(Map.of("success", true, "clientes", clientes));
     }
 
-    
     @PostMapping("/clientes/{idCliente}/visita")
     public ResponseEntity<?> registrarVisitaCliente(@PathVariable Long idCliente) {
         Optional<Usuario> clienteOpt = usuarioRepository.findById(idCliente);
@@ -108,12 +126,10 @@ public class EmpleadoController {
         Usuario cliente = clienteOpt.get();
         LocalDate hoy = LocalDate.now();
 
-        
         if (cliente.getFechaUltimaVisita() != null && cliente.getFechaUltimaVisita().equals(hoy)) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Este cliente ya registró una visita el día de hoy. ¡Debe volver mañana!"));
         }
 
-        
         cliente.setVisitasPresenciales(cliente.getVisitasPresenciales() + 1);
         cliente.setFechaUltimaVisita(hoy);
         cliente.setGirosExtra(cliente.getGirosExtra() + 1); 

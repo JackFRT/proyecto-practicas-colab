@@ -278,23 +278,21 @@ export class Empleado implements OnInit {
 
   cargarDashboard() {
     this.cargando = true;
-    this.http.post<any>('http://localhost/cactus-api/obtener_dashboard.php', { id_empleado: this.idEmpleado }).subscribe({
+    // NUEVO: Petición GET limpia a la ruta REST de Java
+    this.http.get<any>(`http://localhost:8080/api/empleado/dashboard/${this.idEmpleado}`).subscribe({
       next: (res) => {
         if (res.success) {
-          this.reservas_activas = res.datos.reservas || [];
-          this.inventario = res.datos.inventario || [];
-          this.categorias = res.datos.categorias || [];
-          this.cupones = res.datos.cupones || [];
-          this.noticias = res.datos.noticias || [];
-          this.premios_ruleta = res.datos.ruleta || [];
-          this.stats_empleado = res.datos.stats || { total_atendidas: 0 };
-          this.historial_atendidas = res.datos.historial_atendidas || [];
+          // El backend de Java (EmpleadoController) devuelve 'ordenesActivas' y 'historial'
+          this.reservas_activas = res.ordenesActivas || [];
+          this.historial_atendidas = res.historial || [];
+          this.stats_empleado = { total_atendidas: res.totalAtendidas || 0 };
           this.num_notificaciones = this.reservas_activas.length;
           
+          // Nota: Para llenar inventario, cupones y noticias, ahora se hacen 
+          // peticiones a sus respectivos controladores si los necesitas cargar de golpe.
           
           this.autoRepararRuleta();
           this.prepararRuleta();
-          
           this.aplicarFiltros();
         }
         this.cargando = false;

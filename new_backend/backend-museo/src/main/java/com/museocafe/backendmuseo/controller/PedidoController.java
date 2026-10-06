@@ -3,6 +3,8 @@ package com.museocafe.backendmuseo.controller;
 import com.museocafe.backendmuseo.model.*;
 import com.museocafe.backendmuseo.repository.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +21,12 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "*")
+/* =========================================================================================
+   [PRODUCCIÓN - DOMINIO] 
+   Cuando tengas tu dominio, cambia los orígenes para que solo tu web pueda consultar esta API.
+   Ejemplo: @CrossOrigin(origins = {"http://localhost:4200", "https://www.cafeayacuchano.com"})
+   ========================================================================================= */
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:80"})
 public class PedidoController {
 
     private final PedidoRepository pedidoRepository;
@@ -38,9 +45,6 @@ public class PedidoController {
         this.cuponRepository = cuponRepository;
     }
 
-    
-    
-    
     @GetMapping("/ticket/{codigoTicket}")
     public ResponseEntity<?> obtenerTicket(@PathVariable String codigoTicket) {
         Optional<Pedido> pedidoOpt = pedidoRepository.findByCodigoTicket(codigoTicket);
@@ -52,7 +56,6 @@ public class PedidoController {
         Pedido pedido = pedidoOpt.get();
         List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdPedido(pedido.getIdPedido());
 
-        
         Map<String, Object> ticket = new HashMap<>();
         ticket.put("codigo", pedido.getCodigoTicket());
         ticket.put("fecha", pedido.getFechaPedido());
@@ -65,9 +68,6 @@ public class PedidoController {
         return ResponseEntity.ok(ticket);
     }
 
-    
-    
-    
     @PostMapping("/crear")
     @Transactional 
     public ResponseEntity<?> crearPedido(
@@ -79,16 +79,22 @@ public class PedidoController {
             @RequestParam("carrito") String carritoJson,
             @RequestParam("comprobante") MultipartFile archivoComprobante) {
         
+        /* 
+         * =====================================================================================
+         * SEGURIDAD AVANZADA (Para el futuro):
+         * Extraer al usuario desde el Token JWT en vez del RequestParam evita falsificaciones.
+         * Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+         * Usuario usuario = usuarioRepository.findByEmail(auth.getName()).orElseThrow();
+         * =====================================================================================
+         */
+
         try {
             Usuario usuario = usuarioRepository.findById(idUsuario)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-            
             String nombreArchivo = null;
             if (archivoComprobante != null && !archivoComprobante.isEmpty()) {
-                
                 nombreArchivo = "yape_" + idUsuario + "_" + System.currentTimeMillis() + ".jpg";
-                
                 Path directorio = Paths.get("src/main/resources/static/images/comprobantes/");
                 if (!Files.exists(directorio)) {
                     Files.createDirectories(directorio);
@@ -96,7 +102,6 @@ public class PedidoController {
                 Files.copy(archivoComprobante.getInputStream(), directorio.resolve(nombreArchivo));
             }
 
-            
             if (!codigoCupon.isEmpty()) {
                 Cupon cupon = cuponRepository.findAll().stream()
                         .filter(c -> c.getCodigo().equals(codigoCupon)).findFirst().orElse(null);
@@ -106,7 +111,6 @@ public class PedidoController {
                 }
             }
 
-            
             Pedido nuevoPedido = new Pedido();
             nuevoPedido.setUsuario(usuario);
             nuevoPedido.setTotalPagado(totalPagado);
@@ -118,7 +122,6 @@ public class PedidoController {
             
             nuevoPedido = pedidoRepository.save(nuevoPedido);
 
-            
             ObjectMapper mapper = new ObjectMapper();
             List<Map<String, Object>> carrito = mapper.readValue(carritoJson, new TypeReference<List<Map<String, Object>>>(){});
 
@@ -138,7 +141,6 @@ public class PedidoController {
                 detallePedidoRepository.save(detalle);
             }
 
-            
             String mensajeFidelidad = "¡Gracias por tu compra!";
             Map<String, Object> premioLealtad = null;
 
@@ -169,7 +171,6 @@ public class PedidoController {
                 mensajeFidelidad = "¡Vas por buen camino! Te faltan solo " + faltantes + " compras para tu próximo premio.";
             }
 
-            
             Map<String, Object> respuesta = new HashMap<>();
             respuesta.put("success", true);
             respuesta.put("id_pedido", nuevoPedido.getIdPedido());

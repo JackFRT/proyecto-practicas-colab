@@ -5,6 +5,8 @@ import com.museocafe.backendmuseo.repository.CuponRepository;
 import com.museocafe.backendmuseo.repository.PedidoRepository;
 import com.museocafe.backendmuseo.repository.UsuarioRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -13,7 +15,12 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/perfil")
-@CrossOrigin(origins = "*")
+/* =========================================================================================
+   [PRODUCCIÓN - DOMINIO] 
+   Cuando tengas tu dominio, cambia los orígenes para que solo tu web pueda consultar esta API.
+   Ejemplo: @CrossOrigin(origins = {"http://localhost:4200", "https://www.cafeayacuchano.com"})
+   ========================================================================================= */
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:80"})
 public class PerfilController {
 
     private final UsuarioRepository usuarioRepository;
@@ -28,6 +35,17 @@ public class PerfilController {
 
     @GetMapping("/cargar/{idUsuario}")
     public ResponseEntity<?> cargarPerfil(@PathVariable Long idUsuario) {
+        
+        /* 
+         * =====================================================================================
+         * SEGURIDAD AVANZADA (Para el futuro):
+         * Extraer al usuario desde el Token JWT para evitar que un cliente vea el perfil de otro.
+         * Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+         * Usuario usuarioAutenticado = usuarioRepository.findByEmail(auth.getName()).orElseThrow();
+         * Long idSeguro = usuarioAutenticado.getIdUsuario();
+         * =====================================================================================
+         */
+
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
         
         if (usuarioOpt.isEmpty()) {
@@ -36,7 +54,6 @@ public class PerfilController {
 
         Usuario usuario = usuarioOpt.get();
         int visitas = usuario.getVisitasPresenciales() != null ? usuario.getVisitasPresenciales() : 0;
-
         
         Map<String, Object> nivel = new HashMap<>();
         if (visitas >= 51) {
@@ -63,7 +80,6 @@ public class PerfilController {
         respuesta.put("success", true);
         respuesta.put("usuario", usuario);
         respuesta.put("datos_nivel", nivel);
-        
         
         respuesta.put("historial", pedidoRepository.findByUsuarioIdUsuarioOrderByFechaPedidoDesc(idUsuario));
         respuesta.put("cupones", cuponRepository.findByUsuarioIdUsuario(idUsuario));

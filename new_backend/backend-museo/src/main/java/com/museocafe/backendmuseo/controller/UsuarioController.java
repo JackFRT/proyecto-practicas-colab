@@ -9,7 +9,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuarios")
-@CrossOrigin(origins = "*")
+/* =========================================================================================
+   [PRODUCCIÓN - DOMINIO] 
+   ========================================================================================= */
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:80"})
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
@@ -25,6 +28,9 @@ public class UsuarioController {
 
     @PostMapping
     public Usuario crearUsuario(@RequestBody Usuario usuario) {
+        // PRECAUCIÓN: Si usas este endpoint para crear admins manualmente, 
+        // recuerda que la contraseña debe ser encriptada con BCryptPasswordEncoder en el UsuarioService
+        // al igual que lo hicimos en el AuthController.
         return usuarioService.guardarUsuario(usuario);
     }
 

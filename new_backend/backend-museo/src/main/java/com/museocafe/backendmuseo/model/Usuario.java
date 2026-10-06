@@ -1,5 +1,6 @@
 package com.museocafe.backendmuseo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,6 +26,8 @@ public class Usuario {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+    // SEGURIDAD: Evita que la contraseña se serialice en las respuestas JSON hacia Angular
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -55,13 +58,12 @@ public class Usuario {
     @Column(length = 20)
     private String telefono;
 
-    public void setCodigoRecuperacion(String codigo) {
-        
-        throw new UnsupportedOperationException("Unimplemented method 'setCodigoRecuperacion'");
-    }
+    // LÓGICA DE RECUPERACIÓN (Lombok genera get/set automáticamente)
+    @JsonIgnore // Tampoco queremos que el código viaje en consultas públicas
+    @Column(name = "codigo_recuperacion", length = 6)
+    private String codigoRecuperacion;
 
-    public Object getCodigoRecuperacion() {
-        
-        throw new UnsupportedOperationException("Unimplemented method 'getCodigoRecuperacion'");
-    }
+    @JsonIgnore
+    @Column(name = "expiracion_codigo")
+    private LocalDateTime expiracionCodigo;
 }

@@ -1,5 +1,7 @@
 package com.museocafe.backendmuseo.controller;
 
+import com.museocafe.backendmuseo.dto.CambiarRolRequest;
+import com.museocafe.backendmuseo.dto.ResetearRuletaRequest;
 import com.museocafe.backendmuseo.model.Pedido;
 import com.museocafe.backendmuseo.model.Usuario;
 import com.museocafe.backendmuseo.repository.PedidoRepository;
@@ -15,7 +17,10 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "*")
+/* =========================================================================================
+   [PRODUCCIÓN - DOMINIO] 
+   ========================================================================================= */
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:80"})
 public class AdminController {
 
     private final UsuarioRepository usuarioRepository;
@@ -45,27 +50,26 @@ public class AdminController {
     }
 
     @PostMapping("/cambiar-rol")
-    public ResponseEntity<?> cambiarRol(@RequestBody Map<String, Object> payload) {
-        Long idUsuarioObjetivo = Long.valueOf(payload.get("id_usuario_objetivo").toString());
-        String nuevoRol = payload.get("nuevo_rol").toString();
-
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuarioObjetivo);
+    public ResponseEntity<?> cambiarRol(@RequestBody CambiarRolRequest request) { // <--- Usando DTO
+        
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(request.getIdUsuarioObjetivo());
+        
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Usuario no encontrado."));
         }
 
         Usuario usuario = usuarioOpt.get();
-        usuario.setRol(nuevoRol);
+        usuario.setRol(request.getNuevoRol());
         usuarioRepository.save(usuario);
 
         return ResponseEntity.ok(Map.of("success", true, "mensaje", "Rol actualizado correctamente."));
     }
 
     @PostMapping("/resetear-ruleta")
-    public ResponseEntity<?> resetearRuleta(@RequestBody Map<String, Object> payload) {
-        Long idUsuarioObjetivo = Long.valueOf(payload.get("id_usuario_objetivo").toString());
-
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuarioObjetivo);
+    public ResponseEntity<?> resetearRuleta(@RequestBody ResetearRuletaRequest request) { // <--- Usando DTO
+        
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(request.getIdUsuarioObjetivo());
+        
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Usuario no encontrado."));
         }

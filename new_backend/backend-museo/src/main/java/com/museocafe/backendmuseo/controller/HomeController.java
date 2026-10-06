@@ -7,13 +7,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/publico")
-@CrossOrigin(origins = "*")
+/* =========================================================================================
+   [PRODUCCIÓN - DOMINIO] 
+   Cuando tengas tu dominio, cambia los orígenes para que solo tu web pueda consultar esta API.
+   Ejemplo: @CrossOrigin(origins = {"http://localhost:4200", "https://www.cafeayacuchano.com"})
+   ========================================================================================= */
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:80"})
 public class HomeController {
 
     private final CategoriaRepository categoriaRepository;
@@ -32,15 +36,16 @@ public class HomeController {
         
         respuesta.put("success", true);
         
-        
         respuesta.put("categorias", categoriaRepository.findAll());
-        
         
         respuesta.put("noticias", noticiaRepository.findByEstado(true));
 
-        
         var todosLosProductos = productoRepository.findByActivoTrue();
         
+        var cafeteria = todosLosProductos.stream()
+                .filter(p -> "cafeteria".equalsIgnoreCase(p.getTipo()))
+                .collect(Collectors.toList());
+
         var cactus = todosLosProductos.stream()
                 .filter(p -> "cactus".equalsIgnoreCase(p.getTipo()))
                 .collect(Collectors.toList());
@@ -49,6 +54,7 @@ public class HomeController {
                 .filter(p -> "recuerdo".equalsIgnoreCase(p.getTipo()))
                 .collect(Collectors.toList());
 
+        respuesta.put("cafeteria", cafeteria);
         respuesta.put("cactus", cactus);
         respuesta.put("souvenirs", souvenirs);
 

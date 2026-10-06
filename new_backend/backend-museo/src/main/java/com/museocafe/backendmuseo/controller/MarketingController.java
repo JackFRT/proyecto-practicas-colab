@@ -7,6 +7,8 @@ import com.museocafe.backendmuseo.repository.CuponRepository;
 import com.museocafe.backendmuseo.repository.NoticiaRepository;
 import com.museocafe.backendmuseo.repository.UsuarioRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -15,7 +17,12 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/marketing")
-@CrossOrigin(origins = "*")
+/* =========================================================================================
+   [PRODUCCIÓN - DOMINIO] 
+   Cuando tengas tu dominio, cambia los orígenes para que solo tu web pueda consultar esta API.
+   Ejemplo: @CrossOrigin(origins = {"http://localhost:4200", "https://www.cafeayacuchano.com"})
+   ========================================================================================= */
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:80"})
 public class MarketingController {
 
     private final CuponRepository cuponRepository;
@@ -28,13 +35,25 @@ public class MarketingController {
         this.usuarioRepository = usuarioRepository;
     }
 
-    
-    
+    /* 
+     * =====================================================================================
+     * SEGURIDAD AVANZADA (Para el futuro):
+     * Spring Security ya bloquea estas rutas desde el SecurityConfig. 
+     * Cuando actualices Angular, puedes quitar el {idUsuario} de las URLs y obtener
+     * al usuario real directamente del token así:
+     * 
+     * Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+     * String emailUsuario = auth.getName();
+     * =====================================================================================
+     */
+
+    // ==========================================
+    // GESTIÓN DE CUPONES (Solo Admin)
+    // ==========================================
     
     @PostMapping("/cupones/guardar/{idUsuario}")
     public ResponseEntity<?> guardarCupon(@PathVariable Long idUsuario, @RequestBody Map<String, Object> payload) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
-        
         
         if (usuarioOpt.isEmpty() || !"admin".equals(usuarioOpt.get().getRol())) {
             return ResponseEntity.status(403).body(Map.of("success", false, "mensaje", "Acceso denegado: Solo los administradores pueden crear cupones."));
@@ -63,13 +82,13 @@ public class MarketingController {
         return ResponseEntity.ok(Map.of("success", true, "mensaje", "Cupón eliminado."));
     }
 
-    
-    
+    // ==========================================
+    // GESTIÓN DE NOTICIAS (Admin y Empleado)
+    // ==========================================
     
     @PostMapping("/noticias/guardar/{idUsuario}")
     public ResponseEntity<?> guardarNoticia(@PathVariable Long idUsuario, @RequestBody Noticia noticia) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
-        
         
         if (usuarioOpt.isEmpty() || (!"admin".equals(usuarioOpt.get().getRol()) && !"empleado".equals(usuarioOpt.get().getRol()))) {
             return ResponseEntity.status(403).body(Map.of("success", false, "mensaje", "Acceso denegado: Se requiere rol de administrador o empleado."));

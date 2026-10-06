@@ -51,7 +51,7 @@ export class Catalog implements OnInit {
 
   get userRole(): string {
     if (typeof localStorage === 'undefined') return 'cliente';
-    const user = localStorage.getItem('usuario_cactus');
+    const user = localStorage.getItem('usuario');
     return user ? JSON.parse(user).rol : 'cliente';
   }
 

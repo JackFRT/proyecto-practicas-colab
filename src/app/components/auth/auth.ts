@@ -119,7 +119,12 @@ export class Auth implements OnInit, OnDestroy {
         next: (res) => {
           this.cargando = false;
           if (res.success) {
+            // Guardamos los datos del usuario
             localStorage.setItem('usuario_cactus', JSON.stringify(res.usuario));
+            
+            // === ¡NUEVO! Guardamos el Token JWT ===
+            localStorage.setItem('token_cactus', res.token); 
+            // ======================================
             
             if (res.usuario.rol === 'admin') {
               this.router.navigate(['/admin/panel']);

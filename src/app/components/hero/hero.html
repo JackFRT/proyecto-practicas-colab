@@ -1,39 +1,32 @@
 <main class="relative bg-[#050505]">
   
-  
-  <div class="fixed inset-0 w-full h-screen z-0 bg-[#050505]">
-    <div id="mask-container" class="w-full h-full bg-[#050505]">
-      
+  <div class="fixed inset-0 w-full h-screen z-0 bg-[#232b1e]">
+    <div id="mask-container" class="w-full h-full bg-[#050505]" [style.--mask-size]="isLoggedIn ? '4000vmax' : '35vh'">
       <img src="/assets/images/museo/museo.jpg" class="w-full h-full object-cover opacity-80" alt="Fondo" />
       <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.2)_0%,rgba(0,0,0,0.85)_100%)]"></div>
-      <div id="logo-blanco-overlay" class="absolute inset-0 bg-white pointer-events-none"></div>
+      
+      <div id="logo-blanco-overlay" class="absolute inset-0 bg-white pointer-events-none" [class.opacity-0]="isLoggedIn"></div>
     </div>
   </div>
 
-  
-  <div id="hero-ui" class="fixed inset-0 z-10 flex flex-col items-center justify-center opacity-0 pointer-events-none px-6">
-    
+  <div id="hero-ui" class="fixed inset-0 z-10 flex flex-col items-center justify-center px-6 transition-opacity duration-500"
+       [ngClass]="isLoggedIn ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
     
     <div class="absolute top-10 text-[#d1b88e] text-4xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-      <img 
-          src="/assets/images/museo/logo-cafe.png" 
-          class="w-16 h-16 object-cover rounded-full opacity-80" 
-          alt="Museo"
-      />
+      <img src="/assets/images/museo/logo-cafe.png" class="w-16 h-16 object-cover rounded-full opacity-80" alt="Museo"/>
     </div>
 
     <h1 class="text-white text-6xl md:text-8xl font-black tracking-tighter text-center uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.9)] leading-none mb-4">
       CAFÉ<br>AYACUCHANO
     </h1>
     <p class="text-white/80 text-lg font-medium tracking-widest text-center drop-shadow-md mb-10">
-      DE LAS ALTURAS DIRECTAMENTE A TU TAZA.
+      "MÁS QUE UN CAFÉ..."
     </p>
     
-    <button (click)="irAlCatalogo($event)" class="pointer-events-auto bg-[#d1b88e]/20 backdrop-blur-xl border border-white/20 text-white hover:bg-[#d1b88e] hover:text-black hover:scale-110 transition-all duration-500 rounded-full w-24 h-24 flex items-center justify-center text-2xl shadow-[0_15px_35px_rgba(0,0,0,0.5)]">
-      <i class="fas fa-play ml-1"></i>
+    <button (click)="toggleMapa()" class="pointer-events-auto bg-[#d1b88e]/20 backdrop-blur-xl border border-white/20 text-white hover:bg-[#d1b88e] hover:text-black hover:scale-105 transition-all duration-500 rounded-full px-10 py-5 flex items-center justify-center text-sm font-black tracking-[3px] shadow-[0_15px_35px_rgba(0,0,0,0.5)]">
+      <i class="fas fa-map-marker-alt mr-3 text-lg"></i> ENCUÉNTRANOS
     </button>
 
-    
     <footer class="absolute bottom-10 flex flex-col items-center">
       <span class="text-[#d1b88e] font-bold tracking-[6px] uppercase text-xs md:text-sm drop-shadow-lg mb-4">
         TUESTE DE AUTOR • VRAEM
@@ -44,30 +37,36 @@
         <span>DOM: 3:30PM - 7PM</span>
       </div>
     </footer>
-
-    
-    <button (click)="toggleMapa()" class="absolute bottom-10 right-6 md:right-10 pointer-events-auto border border-white/20 backdrop-blur-md bg-white/5 text-white px-6 py-3 rounded text-sm font-bold tracking-[2px] hover:bg-white hover:text-black transition-all shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
-      <i class="fas fa-map-marker-alt mr-2"></i> ENCUÉNTRANOS
-    </button>
   </div>
 
-  
-  <div class="fixed bottom-[90px] right-6 md:right-10 z-20 transition-all duration-300 origin-bottom-right"
-       [ngClass]="mapaActivo ? 'scale-100 opacity-100 visible pointer-events-auto' : 'scale-95 opacity-0 invisible pointer-events-none'">
-    <div class="bg-black/90 backdrop-blur-xl border border-white/10 p-4 rounded shadow-2xl w-80">
-      <a href="https://maps.app.goo.gl/8vg98K2QtqwCeh4p8" target="_blank" class="block relative w-full h-40 overflow-hidden rounded filter grayscale hover:grayscale-0 transition-all duration-500">
+  <div class="fixed inset-0 z-[9999] flex items-center justify-center transition-all duration-300 opacity-0 invisible pointer-events-none"
+       [ngClass]="{ '!opacity-100 !visible !pointer-events-auto': mapaActivo }">
+    
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" (click)="toggleMapa()"></div>
+    
+    <div class="relative bg-[#0a0a0a] border border-white/10 p-5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] w-[85%] max-w-[340px] transform transition-transform duration-300 ease-out scale-95 translate-y-8"
+         [ngClass]="{ '!scale-100 !translate-y-0': mapaActivo }">
+      
+      <button class="absolute -top-3 -right-3 w-10 h-10 bg-[#d1b88e] text-black border-none rounded-full font-black text-xl flex items-center justify-center shadow-lg hover:scale-110 hover:bg-white transition-all cursor-pointer z-10" (click)="toggleMapa()">
+        &times;
+      </button>
+
+      <h3 class="text-[#d1b88e] font-black text-lg mb-4 m-0 uppercase tracking-[1px] text-center">UBICACIÓN</h3>
+      
+      <a href="https://www.google.com/maps/place/Cactus+Museo+Ayacucho/@-13.1564479,-74.2018571,20.75z/data=!4m15!1m8!3m7!1s0x91127d88f5b2bee9:0xe9b3cb843a70a16e!2sAyacucho!3b1!8m2!3d-13.1638737!4d-74.2235641!16zL20vMDJwZ252!3m5!1s0x9112870070ca3657:0x33920fa99e15b74f!8m2!3d-13.1565313!4d-74.2017623!16s%2Fg%2F11x2kz1ckw!5m1!1e4?hl=es&entry=ttu&g_ep=EgoyMDI2MDkyOC4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="block relative w-full h-[200px] overflow-hidden rounded-xl filter grayscale-[30%] hover:grayscale-0 transition-all duration-500 border border-white/10">
         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31061.04285149372!2d-74.23862214482729!3d-13.15414002766023!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91127d75df0709b1%3A0xcb065ec016b8d41a!2sAyacucho!5e0!3m2!1ses!2spe!4v1713835000000!5m2!1ses!2spe" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
       </a>
-      <div class="text-white text-center mt-3 text-xs font-bold tracking-widest uppercase">
+      
+      <div class="text-white/80 text-center mt-4 text-[0.7rem] font-bold tracking-[2px] uppercase">
         Jr. San Cristóbal, Ayacucho
       </div>
     </div>
   </div>
 
-  
-  <div class="scroll-trigger-zone h-[150vh] w-full relative z-0"></div>
+  @if (!isLoggedIn) {
+    <div class="scroll-trigger-zone h-[150vh] w-full relative z-0"></div>
+  }
 
-  
   <div class="relative z-30 bg-[#050505] shadow-[0_-20px_50px_rgba(0,0,0,0.9)]">
     <app-about></app-about>
     <div id="catalogo-section">
