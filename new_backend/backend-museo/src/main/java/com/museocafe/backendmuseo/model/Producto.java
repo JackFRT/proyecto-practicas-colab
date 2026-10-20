@@ -1,44 +1,57 @@
 package com.museocafe.backendmuseo.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "productos")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Producto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id_producto")
     private Long idProducto;
 
-    @Column(name = "nombre_comun", nullable = false, length = 100)
-    private String nombreComun;
+    // Quitamos el nullable = false temporalmente para evitar el error SQL
+    private String nombre; 
 
-    @Column(name = "nombre_cientifico", length = 100)
-    private String nombreCientifico;
+    private String subtitulo; 
 
-    @Column(name = "precio_base", nullable = false, precision = 10, scale = 2)
-    private BigDecimal precioBase;
-
-    @Column(length = 20)
-    private String tipo; 
+    @JsonProperty("tipo_producto")
+    private String tipoProducto; 
 
     @Column(columnDefinition = "TEXT")
-    private String cuidados;
+    private String descripcion; 
 
-    private Integer stock = 0;
+    @Column(columnDefinition = "TEXT")
+    @JsonProperty("detalles_tecnicos")
+    private String detallesTecnicos; 
 
+    // Quitamos el nullable = false
+    private BigDecimal precio;
+
+    private Integer stock;
+
+    // ¡AQUÍ ESTÁ LA SOLUCIÓN AL CRASHEO PRINCIPAL!
     private Boolean activo = true;
 
-    public Object getCategoria() {
-        
-        throw new UnsupportedOperationException("Unimplemented method 'getCategoria'");
+    @ManyToOne
+    @JoinColumn(name = "id_categoria")
+    private Categoria categoria;
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImagenProducto> imagenes = new ArrayList<>();
+    
+    public void addImagen(ImagenProducto imagen) {
+        imagenes.add(imagen);
+        imagen.setProducto(this);
     }
 }

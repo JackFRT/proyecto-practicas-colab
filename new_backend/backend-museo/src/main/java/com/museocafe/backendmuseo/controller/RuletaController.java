@@ -4,6 +4,8 @@ import com.museocafe.backendmuseo.model.Cupon;
 import com.museocafe.backendmuseo.model.Usuario;
 import com.museocafe.backendmuseo.repository.CuponRepository;
 import com.museocafe.backendmuseo.repository.UsuarioRepository;
+import com.museocafe.backendmuseo.model.PremioRuleta;
+import com.museocafe.backendmuseo.repository.PremioRuletaRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,11 +27,15 @@ public class RuletaController {
 
     private final UsuarioRepository usuarioRepository;
     private final CuponRepository cuponRepository;
+    private final PremioRuletaRepository premioRepository;
 
-    public RuletaController(UsuarioRepository usuarioRepository, CuponRepository cuponRepository) {
-        this.usuarioRepository = usuarioRepository;
+    public RuletaController(CuponRepository cuponRepository, UsuarioRepository usuarioRepository, PremioRuletaRepository premioRepository) {
         this.cuponRepository = cuponRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.premioRepository = premioRepository;
     }
+
+    
 
     @PostMapping("/girar/{idUsuario}")
     public ResponseEntity<?> girarRuleta(@PathVariable Long idUsuario) {
@@ -72,5 +78,16 @@ public class RuletaController {
         respuesta.put("girosRestantes", usuario.getGirosExtra());
 
         return ResponseEntity.ok(respuesta);
+    }
+
+    @PostMapping("/guardar/{idEmpleado}")
+    public ResponseEntity<?> guardarPremio(@PathVariable Long idEmpleado, @RequestBody PremioRuleta premio) {
+        try {
+            // El repositorio que declaramos arriba ahora guarda el premio en PostgreSQL
+            premioRepository.save(premio);
+            return ResponseEntity.ok(Map.of("success", true, "mensaje", "Premio guardado exitosamente."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Error al guardar el premio: " + e.getMessage()));
+        }
     }
 }

@@ -1,0 +1,301 @@
+@if (modalAbierto && modalAbierto !== 'categorias') {
+    <!-- Overlay principal -->
+   <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-[50] overflow-y-auto py-10 px-5" (click)="cerrarModales()">
+        <div class="bg-[var(--bg-card)] p-8 md:p-10 rounded-2xl w-full max-w-3xl relative shadow-2xl border border-[var(--border-light)] my-auto" (click)="$event.stopPropagation()">
+            
+            <button class="absolute top-5 right-6 text-3xl text-[var(--terracota)] hover:scale-110 hover:text-red-700 transition-all font-bold" (click)="cerrarModales()">&times;</button>
+
+            @if (modalAbierto === 'comprobante') {
+                <h2 class="text-2xl font-bold text-[var(--verde-pino)] mt-0 mb-5 flex items-center gap-2"><i class="fas fa-image"></i> Captura de Pago</h2>
+                <div class="text-center mt-5">
+                    <img [src]="getRutaImagen(itemEditando, 'comprobantes')" class="max-w-full max-h-[70vh] rounded-xl shadow-lg border border-gray-200 mx-auto">
+                </div>
+            }
+
+            @if (modalAbierto === 'producto') {
+                <h2 class="text-2xl font-bold text-[var(--verde-pino)] mt-0 mb-6 flex items-center gap-2">
+                    <i class="fas" [ngClass]="vistaInventario === 'cactus' ? 'fa-leaf' : (vistaInventario === 'cafe' ? 'fa-coffee' : 'fa-gift')"></i> 
+                    {{ itemEditando ? 'Editar' : 'Añadir' }} {{ vistaInventario === 'cactus' ? 'Cactus' : (vistaInventario === 'cafe' ? 'Café' : 'Recuerdo') }}
+                </h2>
+                
+                <form (submit)="submitForm($event, 'guardar_producto')" class="flex flex-col gap-4">
+                    <input type="hidden" name="tipo_producto" [value]="vistaInventario">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div [ngClass]="{'md:col-span-2': vistaInventario !== 'cactus'}">
+                            <label class="block font-bold text-[var(--verde-pino)] mb-2">Nombre {{ vistaInventario === 'cafe' ? 'del Producto' : 'Común' }} *</label>
+                            <input type="text" name="nombre_comun" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.nombre_comun || ''" required>
+                        </div>
+                        
+                        @if (vistaInventario === 'cactus') {
+                            <div>
+                                <label class="block font-bold text-[var(--verde-pino)] mb-2">Nombre Científico</label>
+                                <input type="text" name="nombre_cientifico" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.nombre_cientifico || ''">
+                            </div>
+                        }
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-bold text-[var(--verde-pino)] m-0">Categoría *</label>
+                                <span class="text-[var(--terracota)] text-sm cursor-pointer font-bold hover:underline" (click)="gestionarCategorias.emit()">
+                                    <i class="fas fa-cog"></i> Gestionar
+                                </span>
+                            </div>
+                           <select name="id_categoria" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]">
+                                <option value="">Selecciona...</option>
+                                @for (cat of categorias; track $index) { 
+                                    @if (cat.tipo === vistaInventario || cat.tipo_categoria === vistaInventario || cat.tipoCategoria === vistaInventario) {
+                                        <option [value]="cat.id_categoria || cat.idCategoria || cat.id" [selected]="(itemEditando?.id_categoria || itemEditando?.categoria?.id) === (cat.id_categoria || cat.idCategoria || cat.id)">
+                                            {{ cat.nombre || cat.nombreCategoria || cat.nombre_categoria }}
+                                        </option> 
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[var(--verde-pino)] mb-2">Precio (S/) *</label>
+                            <input type="number" step="0.01" name="precio" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.precio_base || itemEditando?.precio || ''" required>
+                        </div>
+                    </div>
+
+                    <label class="block font-bold text-[var(--verde-pino)] mb-2 mt-2">{{ vistaInventario === 'cactus' ? 'Guía de Cuidados' : (vistaInventario === 'cafe' ? 'Descripción del Sabor / Notas' : 'Descripción General') }} *</label>
+                    <textarea name="cuidados" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)] resize-y min-h-[80px]" rows="3">{{ itemEditando?.cuidados || '' }}</textarea>
+                    
+                    <label class="block font-bold text-[var(--verde-pino)] mb-2 mt-2">{{ vistaInventario === 'cactus' ? 'Detalles Técnicos' : (vistaInventario === 'cafe' ? 'Ingredientes / Origen' : 'Materiales y Tamaño') }} *</label>
+                    <textarea name="detalles_tecnicos" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)] resize-y min-h-[80px]" rows="3">{{ itemEditando?.detalles_tecnicos || '' }}</textarea>
+                    
+                    <h4 class="text-lg font-bold text-[var(--verde-pino)] border-b border-dashed border-gray-300 pb-2 mt-6 mb-4 flex items-center gap-2">
+                        <i class="fas fa-layer-group"></i> Variantes y Stock
+                    </h4>
+                    
+                    @if (vistaInventario === 'cactus' || vistaInventario === 'cafe') {
+                        <div class="mb-4">
+                            <label class="block font-bold text-[var(--verde-pino)] mb-2">Stock General *</label>
+                            <input type="number" name="stock" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.stock || 0" required>
+                        </div>
+                    } 
+                    
+                    @if (vistaInventario === 'recuerdo') {
+                        <div class="bg-orange-50 p-4 rounded-lg border border-orange-200 mb-4">
+                            <label class="flex items-center gap-3 cursor-pointer text-[var(--terracota)] font-bold">
+                                <input type="checkbox" name="tiene_estilos" [checked]="tieneEstilos" (change)="toggleEstilos.emit($event)" class="w-4 h-4 accent-[var(--terracota)]"> 
+                                Este recuerdo tiene múltiples variantes (Ej: Colores, Tallas)
+                            </label>
+                        </div> 
+                        
+                        @if (!tieneEstilos) { 
+                            <div class="mb-4">
+                                <label class="block font-bold text-[var(--verde-pino)] mb-2">Stock General *</label>
+                                <input type="number" name="stock" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.stock || 0" required>
+                            </div> 
+                        } @else {
+                            <div class="bg-black/5 border border-gray-200 p-5 rounded-xl mb-4">
+                                <div class="flex justify-between items-center mb-4">
+                                    <label class="font-bold text-[var(--verde-pino)] m-0">Lista de Variantes con Fotos</label>
+                                    <button type="button" class="bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-50 flex items-center gap-2" (click)="agregarVariante.emit()">
+                                        <i class="fas fa-plus"></i> Añadir Variante
+                                    </button>
+                                </div>
+
+                                @for (variante of variantesDinamicas; track $index) {
+                                    <div class="flex gap-4 mb-4 items-center bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">Nombre Variante</label>
+                                            <input type="text" name="nombres_variantes[]" class="w-full p-2.5 rounded border border-gray-300 mb-3 text-sm focus:outline-none focus:border-[var(--verde-oliva)]" placeholder="Ej: Maceta Rosa" [ngModel]="variante.nombre_variante" [ngModelOptions]="{standalone: true}" (ngModelChange)="variante.nombre_variante = $event">
+                                            
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">Stock</label>
+                                            <input type="number" name="stocks_variantes[]" class="w-full p-2.5 rounded border border-gray-300 text-sm focus:outline-none focus:border-[var(--verde-oliva)]" placeholder="Stock" [ngModel]="variante.stock" [ngModelOptions]="{standalone: true}" (ngModelChange)="variante.stock = $event">
+                                        </div>
+
+                                        <div class="flex-[1.5]">
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">Foto Específica de esta variante</label>
+                                            <input type="hidden" name="antiguas_fotos_variantes[]" [value]="variante.ruta_imagen || ''">
+                                            
+                                            <div class="flex items-center gap-3 mt-2">
+                                                @if (variante.ruta_imagen) {
+                                                    <img [src]="getRutaImagen(variante.ruta_imagen, 'var')" class="w-14 h-14 object-cover rounded-md border border-gray-300">
+                                                }
+                                                <input type="file" name="fotos_variantes[]" class="bg-gray-50 border border-dashed border-gray-300 p-2 rounded text-sm w-full file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:font-bold file:mr-3 cursor-pointer" accept="image/*">
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0 hover:bg-red-500 hover:text-white transition-colors" (click)="eliminarVariante.emit($index)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                }
+                                @if(variantesDinamicas.length === 0) { <p class="text-gray-500 text-sm m-0">Haz clic en "Añadir Variante" para empezar.</p> }
+                            </div>
+                        }
+                    }
+                    
+                    <h4 class="text-lg font-bold text-[var(--verde-pino)] border-b border-dashed border-gray-300 pb-2 mt-6 mb-4 flex items-center gap-2">
+                        <i class="fas fa-images"></i> Fotografías Generales
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                        <div class="bg-white border border-[var(--border-light)] p-5 rounded-xl shadow-sm">
+                            <label class="block font-bold text-[var(--verde-pino)] mb-3">Foto Principal (Portada) *</label>
+                            <input type="file" name="foto_principal" class="w-full bg-gray-50 border border-dashed border-gray-300 p-3 rounded file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-4 file:py-1.5 file:font-bold file:mr-3 cursor-pointer" accept="image/*" [required]="!itemEditando">
+                            @if(itemEditando) { <small class="text-gray-500 block mt-2">Sube una para reemplazar la actual.</small> }
+                        </div>
+                        <div class="bg-white border border-[var(--border-light)] p-5 rounded-xl shadow-sm">
+                            <label class="block font-bold text-[var(--verde-pino)] mb-3">Fotos Adicionales (Galería)</label>
+                            <input type="file" name="fotos_adicionales[]" class="w-full bg-gray-50 border border-dashed border-gray-300 p-3 rounded file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-4 file:py-1.5 file:font-bold file:mr-3 cursor-pointer" accept="image/*" multiple>
+                            <small class="text-gray-500 block mt-2">Puedes seleccionar varios archivos a la vez.</small>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-[var(--verde-oscuro)] text-white py-3.5 rounded-lg font-bold text-lg hover:brightness-110 transition-all shadow-md mt-4" [disabled]="cargando">
+                        @if(cargando){ <i class="fas fa-spinner fa-spin mr-2"></i> Guardando... } @else { Guardar Producto }
+                    </button>
+                </form>
+            }
+
+            @if (modalAbierto === 'cupon') {
+                <h2 class="text-2xl font-bold text-[var(--verde-pino)] mt-0 mb-6 flex items-center gap-2"><i class="fas fa-ticket-alt"></i> Crear Cupón</h2>
+                <form (submit)="submitForm($event, 'guardar_cupon')" class="flex flex-col gap-4">
+                    <div>
+                        <label class="block font-bold text-[var(--terracota)] mb-2">Código (Ej: TIKTOK20)</label>
+                        <input type="text" name="codigo_cupon" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-[var(--cafe-oscuro)] uppercase focus:outline-none" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-5">
+                        <div>
+                            <label class="block font-bold text-[var(--terracota)] mb-2">% Descuento</label>
+                            <input type="number" name="descuento" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-[var(--cafe-oscuro)] focus:outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[var(--terracota)] mb-2">Límite de Usos</label>
+                            <input type="number" name="limite_usos" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-[var(--cafe-oscuro)] focus:outline-none" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[var(--terracota)] mb-2">Días de Validez</label>
+                        <input type="number" name="dias_validez" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-[var(--cafe-oscuro)] focus:outline-none" value="30" required>
+                    </div>
+                    <button type="submit" class="w-full bg-[var(--verde-oscuro)] text-white py-3.5 rounded-lg font-bold text-lg hover:brightness-110 transition-all mt-4" [disabled]="cargando">
+                        @if(cargando){ <i class="fas fa-spinner fa-spin mr-2"></i> } Generar Código
+                    </button>
+                </form>
+            }
+
+            @if (modalAbierto === 'noticia') {
+                <h2 class="text-2xl font-bold text-[var(--verde-pino)] mt-0 mb-6 flex items-center gap-2"><i class="fas fa-newspaper"></i> {{ itemEditando ? 'Editar' : 'Añadir Nueva' }} Publicación</h2>
+                <form (submit)="submitForm($event, 'guardar_noticia')" class="flex flex-col gap-4">
+                    <input type="hidden" name="id_noticia" [value]="itemEditando?.id_noticia || ''">
+                    
+                    <div>
+                        <label class="block font-bold text-[var(--verde-pino)] mb-2">Título del Anuncio *</label>
+                        <input type="text" name="titulo" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.titulo || ''" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[var(--verde-pino)] mb-2">Descripción Breve</label>
+                        <textarea name="descripcion" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none resize-y min-h-[100px]" required>{{ itemEditando?.descripcion || '' }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[var(--verde-pino)] mb-2">Enlace Adicional (Opcional)</label>
+                        <input type="text" name="link_destino" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.link_destino || ''" placeholder="https://...">
+                    </div>
+                    <div class="bg-white border border-[var(--border-light)] p-5 rounded-xl shadow-sm">
+                        <label class="block font-bold text-[var(--verde-pino)] mb-3">Imagen del Banner {{ itemEditando ? '(Vacío para mantener actual)' : '*' }}</label>
+                        <input type="file" name="foto_noticia" class="w-full bg-gray-50 border border-dashed border-gray-300 p-3 rounded file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-4 file:py-1.5 file:font-bold file:mr-3 cursor-pointer" accept="image/*" [required]="!itemEditando">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-[var(--verde-oscuro)] text-white py-3.5 rounded-lg font-bold text-lg hover:brightness-110 transition-all mt-4" [disabled]="cargando">
+                        @if(cargando){ <i class="fas fa-spinner fa-spin mr-2"></i> } {{ itemEditando ? 'Actualizar' : 'Publicar' }} Noticia
+                    </button>
+                </form>
+            }
+
+            @if (modalAbierto === 'premio_ruleta') {
+                <h2 class="text-2xl font-bold text-[var(--verde-pino)] mt-0 mb-6 flex items-center gap-2"><i class="fas fa-gift"></i> Editar Rebanada</h2>
+                <form (submit)="submitForm($event, 'guardar_premio_ruleta')" class="flex flex-col gap-4">
+                    <input type="hidden" name="id_premio" [value]="itemEditando?.id_premio">
+                    <div>
+                        <label class="block font-bold text-[var(--verde-pino)] mb-2">Título del Premio</label>
+                        <input type="text" name="titulo_premio" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.titulo || ''" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[var(--verde-pino)] mb-2">Descuento (%)</label>
+                        <input type="number" name="descuento_premio" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.descuento_porcentaje || ''" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[var(--verde-pino)] mb-2">Color de la Sección</label>
+                        <input type="color" name="color_premio" class="w-full h-14 p-1 rounded-lg border border-gray-300 bg-white cursor-pointer" [value]="itemEditando?.color_seccion || '#e2e8f0'">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        @if(itemEditando?.id_premio) {
+                            <button type="button" class="w-full bg-transparent border border-red-500 text-red-500 py-3.5 rounded-lg font-bold hover:bg-red-50 transition-colors flex justify-center items-center gap-2" (click)="ejecutarAccion('eliminar_premio_ruleta', {id_premio: itemEditando.id_premio})"><i class="fas fa-trash"></i> Eliminar</button>
+                            <button type="submit" class="w-full bg-[var(--verde-oscuro)] text-white py-3.5 rounded-lg font-bold hover:brightness-110 transition-all" [disabled]="cargando">Guardar</button>
+                        } @else {
+                            <button type="submit" class="col-span-2 w-full bg-[var(--verde-oscuro)] text-white py-3.5 rounded-lg font-bold hover:brightness-110 transition-all" [disabled]="cargando">Crear Rebanada</button>
+                        }
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+}
+
+<!-- Modal de Categorías (Diseño centrado e independiente) -->
+@if (verCategorias) {
+    <!-- Overlay de categorías (Z-Index 60, más alto) -->
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4" (click)="cerrarModalCategorias()">
+        <div class="bg-[var(--bg-card)] p-8 rounded-2xl w-full max-w-lg relative shadow-2xl border border-[var(--border-light)]" (click)="$event.stopPropagation()">
+            
+            <button class="absolute top-5 right-6 text-3xl text-[var(--terracota)] hover:scale-110 hover:text-red-700 transition-all font-bold" (click)="cerrarModalCategorias()">&times;</button>
+            
+            <h2 class="text-2xl font-bold text-[var(--verde-pino)] mt-0 mb-6 flex items-center gap-2">
+                <i class="fas fa-tags"></i> Gestionar Categorías de {{ vistaInventario === 'cactus' ? 'Cactus' : (vistaInventario === 'cafe' ? 'Café' : 'Recuerdos') }}
+            </h2>
+            
+            <!-- Asegúrate de usar catEditando en lugar de itemEditando para este formulario -->
+            <form (submit)="submitForm($event, 'guardar_categoria')" class="bg-white border border-[var(--border-light)] p-5 rounded-xl mb-6 shadow-sm">
+                <label class="block font-bold text-[var(--verde-pino)] mb-3">Añadir / Editar Categoría</label>
+                <div class="flex gap-3">
+                    <input type="hidden" name="id_categoria" [value]="catEditando?.id_categoria || ''">
+                    <input type="hidden" name="tipo_categoria" [value]="vistaInventario">
+                    
+                    <input type="text" name="nombre_categoria" class="flex-1 p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" placeholder="Ej: {{ vistaInventario === 'cactus' ? 'Suculentas...' : (vistaInventario === 'cafe' ? 'Bebidas Calientes...' : 'Tazas...') }}" [value]="catEditando?.nombre || ''" required>
+                    
+                    <button type="submit" class="bg-[var(--verde-oscuro)] text-white px-5 rounded-lg font-bold hover:brightness-110 transition-all" [disabled]="cargando">Guardar</button>
+                </div>
+                @if (catEditando) { <p class="text-sm text-gray-500 mt-2 mb-0 cursor-pointer hover:text-gray-800" (click)="seleccionarCatParaEditar.emit(null)"><i class="fas fa-times"></i> Limpiar para crear nueva</p> }
+            </form>
+            
+            <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-xl bg-white shadow-inner">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-[var(--verde-pino)] text-white sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 font-semibold">Nombre</th>
+                            <th class="p-3 font-semibold text-center w-24">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (cat of categorias; track $index) {
+                            @if (cat.tipo === vistaInventario || cat.tipo_categoria === vistaInventario || cat.tipoCategoria === vistaInventario) {
+                                <tr class="border-b border-gray-100 hover:bg-[#fdfbf7]">
+                                    <td class="p-3"><strong class="text-[var(--cafe-oscuro)]">{{ cat.nombre || cat.nombreCategoria || cat.nombre_categoria }}</strong></td>
+                                    <td class="p-3">
+                                        <div class="flex gap-2 justify-center">
+                                            <button type="button" class="w-8 h-8 rounded-full bg-[#E0A96D] text-white flex items-center justify-center hover:scale-110 transition-transform text-sm" (click)="seleccionarCatParaEditar.emit(cat)"><i class="fas fa-edit"></i></button>
+                                            <button type="button" class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform text-sm" (click)="ejecutarAccion('eliminar_categoria', {id_categoria: cat.id_categoria || cat.idCategoria || cat.id})"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        @if (categorias.length === 0) {
+                            <tr>
+                                <td colspan="2" class="p-4 text-center text-gray-500">No hay categorías creadas para esta sección.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

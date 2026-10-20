@@ -2,7 +2,6 @@ package com.museocafe.backendmuseo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +12,6 @@ import java.time.LocalDateTime;
 @Table(name = "usuarios")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Usuario {
 
     @Id

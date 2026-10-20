@@ -37,7 +37,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Rutas Públicas
-                .requestMatchers("/api/auth/**", "/api/publico/**", "/images/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/publico/**", "/images/**", "/error").permitAll()
                 
                 // === AQUÍ ESTÁ EL CAMBIO ===
                 // Ahora tanto Empleados como Admins tienen acceso al inventario y dashboard

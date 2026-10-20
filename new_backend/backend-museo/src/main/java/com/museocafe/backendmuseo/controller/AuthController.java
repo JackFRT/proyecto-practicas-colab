@@ -61,17 +61,36 @@ public class AuthController {
     }
 
     @PostMapping("/registro")
-    public ResponseEntity<?> registro(@RequestBody Usuario nuevoUsuario) {
-        if (usuarioRepository.findByEmail(nuevoUsuario.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "El correo ya está registrado."));
+    public ResponseEntity<?> registro(@RequestBody Map<String, String> payload) {
+        try {
+            String email = payload.get("email");
+            
+            // 1. Verificamos que el correo no exista ya
+            if (usuarioRepository.findByEmail(email).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "El correo ya está registrado."));
+            }
+
+            // 2. Extraemos la contraseña cruda que envió Angular
+            String passwordPlano = payload.get("password");
+            if (passwordPlano == null || passwordPlano.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "La contraseña es obligatoria."));
+            }
+
+            // 3. Armamos el usuario y encriptamos la contraseña
+            Usuario nuevoUsuario = new Usuario();
+            nuevoUsuario.setNombre(payload.get("nombre"));
+            nuevoUsuario.setEmail(email);
+            nuevoUsuario.setPassword(passwordEncoder.encode(passwordPlano)); // ¡BCrypt en acción!
+            nuevoUsuario.setDni(payload.get("dni"));
+            nuevoUsuario.setTelefono(payload.get("telefono"));
+            nuevoUsuario.setRol("cliente"); // Rol seguro por defecto
+
+            usuarioRepository.save(nuevoUsuario);
+            return ResponseEntity.ok(Map.of("success", true, "mensaje", "Cuenta creada exitosamente."));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Error interno al registrar: " + e.getMessage()));
         }
-        
-        nuevoUsuario.setPassword(passwordEncoder.encode(nuevoUsuario.getPassword()));
-        nuevoUsuario.setRol("cliente");
-        
-        usuarioRepository.save(nuevoUsuario);
-        
-        return ResponseEntity.ok(Map.of("success", true, "mensaje", "Cuenta creada exitosamente."));
     }
 
     @PostMapping("/recuperar/solicitar")

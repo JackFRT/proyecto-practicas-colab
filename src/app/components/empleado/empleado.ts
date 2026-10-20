@@ -3,13 +3,14 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ModalesEmpleadoComponent } from '../../modales-empleado/modales-empleado';
 
 @Component({
   selector: 'app-empleado',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalesEmpleadoComponent],
   templateUrl: './empleado.html',
-  styleUrl: './empleado.css'
+  styleUrl: './empleado.css',
 })
 export class Empleado implements OnInit {
   router = inject(Router);
@@ -22,7 +23,7 @@ export class Empleado implements OnInit {
   tabActivo: string = 'ordenes';
   cargando: boolean = true;
   
-  vistaInventario: 'cactus' | 'recuerdo' = 'cactus';
+  vistaInventario: 'cactus' | 'cafe' | 'recuerdo' = 'cactus';
   terminoBusqueda: string = '';
   categoriaFiltro: string = 'todas';
 
@@ -71,6 +72,12 @@ export class Empleado implements OnInit {
     const user = JSON.parse(usuarioGuardado);
     if (user.rol !== 'empleado' && user.rol !== 'admin') { this.router.navigate(['/']); return; }
 
+    this.idEmpleado = user.id_usuario || user.idUsuario || user.id || 0; 
+    
+    if (this.idEmpleado === 0) {
+        console.error("CRÍTICO: No se pudo obtener el ID del usuario del localStorage:", user);
+    }
+
     this.nombreEmpleado = user.nombre.toUpperCase();
     this.idEmpleado = user.id_usuario || user.id || 0; 
     this.rolEmpleado = user.rol;
@@ -86,6 +93,7 @@ export class Empleado implements OnInit {
   
   cerrarSesion() {
     localStorage.removeItem('usuario_cactus');
+    localStorage.removeItem('token_cactus');
     this.router.navigate(['/login']);
   }
 
@@ -103,7 +111,7 @@ export class Empleado implements OnInit {
 
   getRutaImagen(nombreArchivo: string, carpeta: string = 'cactus'): string {
     if (!nombreArchivo) return ''; 
-    return `http://localhost/cactus-api/images/${carpeta}/${nombreArchivo}`;
+    return `http://localhost:8080/images/${carpeta}/${nombreArchivo}`;
   }
 
   aplicarFiltros() {
@@ -113,12 +121,11 @@ export class Empleado implements OnInit {
         const matchBusqueda = nombreCompleto.includes(this.terminoBusqueda.toLowerCase());
         const matchCategoria = this.categoriaFiltro === 'todas' || item.nombre_categoria === this.categoriaFiltro;
         
-        
         return matchTipo && matchBusqueda && matchCategoria;
     });
   }
 
-  cambiarVistaInventario(tipo: 'cactus' | 'recuerdo') {
+  cambiarVistaInventario(tipo: 'cactus' | 'cafe' | 'recuerdo') {
     this.vistaInventario = tipo;
     this.categoriaFiltro = 'todas';
     this.aplicarFiltros();
@@ -193,12 +200,12 @@ export class Empleado implements OnInit {
   }
 
   abrirModalCategorias() { 
-      this.verCategorias = true; 
+      this.verCategorias = true;
       this.catEditando = null; 
   }
   
   cerrarCategorias() { 
-      this.verCategorias = false; 
+      this.verCategorias = false;
       this.catEditando = null; 
   }
 
@@ -227,7 +234,8 @@ export class Empleado implements OnInit {
       this.noticias.splice(index, 0, draggedItem);
       
       const ordenIds = this.noticias.map(n => n.id_noticia);
-      this.http.post<any>('http://localhost/cactus-api/marketing_api.php', { accion: 'reordenar_noticias', orden: ordenIds }).subscribe({
+      // Actualizado a ruta REST (Asegúrate de que este endpoint exista en MarketingController)
+      this.http.post<any>('http://localhost:8080/api/marketing/noticias/reordenar', { orden: ordenIds }).subscribe({
         next: (res) => { if(res.success) this.mostrarToast("Prioridad actualizada"); }
       });
     }
@@ -244,12 +252,11 @@ export class Empleado implements OnInit {
       return;
     }
 
-    this.http.post<any>('http://localhost/cactus-api/ordenes_api.php', { accion: 'buscar_clientes', termino: valor }).subscribe({
+    // Adaptado a la API REST de Usuarios
+    this.http.get<any>(`http://localhost:8080/api/usuarios?termino=${valor}`).subscribe({
       next: (res) => { 
-        if (res.success) { 
-            this.sugerenciasClientes = res.clientes; 
-            this.cdr.detectChanges();
-        } 
+        this.sugerenciasClientes = res || []; 
+        this.cdr.detectChanges();
       }
     });
   }
@@ -262,40 +269,33 @@ export class Empleado implements OnInit {
 
   registrarVisita() {
     if (!this.clienteSeleccionado) return;
-    
-    this.ejecutarAccion('registrar_visita', { id_cliente: this.clienteSeleccionado.id_usuario });
-    
+    this.ejecutarAccion('registrar_visita', { id_cliente: this.clienteSeleccionado.idUsuario || this.clienteSeleccionado.id_usuario });
     this.clienteSeleccionado = null;
     this.terminoFidelidad = '';
   }
 
-  obtenerEndpoint(accion: string): string {
-    if (accion === 'cargar') return 'obtener_dashboard.php';
-    if (accion.includes('producto') || accion.includes('categoria')) return 'inventario_api.php';
-    if (accion.includes('cupon') || accion.includes('noticia') || accion.includes('ruleta')) return 'marketing_api.php';
-    return 'ordenes_api.php'; 
-  }
-
   cargarDashboard() {
     this.cargando = true;
-    // NUEVO: Petición GET limpia a la ruta REST de Java
     this.http.get<any>(`http://localhost:8080/api/empleado/dashboard/${this.idEmpleado}`).subscribe({
       next: (res) => {
         if (res.success) {
-          // El backend de Java (EmpleadoController) devuelve 'ordenesActivas' y 'historial'
           this.reservas_activas = res.ordenesActivas || [];
           this.historial_atendidas = res.historial || [];
           this.stats_empleado = { total_atendidas: res.totalAtendidas || 0 };
           this.num_notificaciones = this.reservas_activas.length;
-          
-          // Nota: Para llenar inventario, cupones y noticias, ahora se hacen 
-          // peticiones a sus respectivos controladores si los necesitas cargar de golpe.
+
+          this.inventario = res.inventario || res.productos || [];
+          this.categorias = res.categorias || [];
+          this.cupones = res.cupones || [];
+          this.noticias = res.noticias || [];
+          this.premios_ruleta = res.ruleta || res.premios_ruleta || [];
           
           this.autoRepararRuleta();
           this.prepararRuleta();
           this.aplicarFiltros();
         }
         this.cargando = false;
+        this.cdr.detectChanges();
       },
       error: (err) => { console.error("Error BD", err); this.cargando = false; }
     });
@@ -305,48 +305,112 @@ export class Empleado implements OnInit {
     event.preventDefault();
     this.cargando = true;
     const form = event.target as HTMLFormElement;
-    const formData = new FormData(form);
-    formData.append('accion', accion);
-    formData.append('id_empleado', this.idEmpleado.toString());
+    
+    let urlTarget = '';
+    if (accion === 'guardar_categoria') urlTarget = 'http://localhost:8080/api/inventario/categorias/guardar';
+    else if (accion === 'guardar_producto') urlTarget = 'http://localhost:8080/api/inventario/productos/guardar';
+    else if (accion === 'guardar_noticia') urlTarget = `http://localhost:8080/api/marketing/noticias/guardar/${this.idEmpleado}`;
+    else if (accion === 'guardar_cupon') urlTarget = `http://localhost:8080/api/marketing/cupones/guardar/${this.idEmpleado}`;
+    else if (accion === 'guardar_premio_ruleta') urlTarget = `http://localhost:8080/api/ruleta/guardar/${this.idEmpleado}`;
 
-    if (this.itemEditando && accion === 'guardar_producto') {
-        formData.append('id_cactus', this.itemEditando.id_producto || this.itemEditando.id_cactus);
+    if (urlTarget === '') {
+        alert("Acción no reconocida: " + accion);
+        this.cargando = false;
+        return;
     }
 
-    this.http.post<any>(`http://localhost/cactus-api/${this.obtenerEndpoint(accion)}`, formData).subscribe({
-        next: (res) => {
-            if (res.success) { 
-                this.mostrarToast(res.mensaje);
-                
-                if (accion === 'guardar_categoria') {
-                    this.catEditando = null;
-                    form.reset();
-                } else {
-                    this.cerrarModales(); 
-                }
-                
-                this.cargarDashboard(); 
-            } else { alert(res.mensaje); }
-            this.cargando = false;
-        },
-        error: () => { alert("Error de conexión"); this.cargando = false; }
-    });
+    // 🌟 RUTA A: PRODUCTOS Y NOTICIAS (Envían Archivos/Fotos intactos)
+    if (accion === 'guardar_producto' || accion === 'guardar_noticia') {
+        const formData = new FormData(form);
+        formData.append('id_empleado', this.idEmpleado.toString());
+        
+        if (accion === 'guardar_producto') {
+            if (this.itemEditando) formData.append('id_producto', this.itemEditando.id_producto || this.itemEditando.id_cactus || '');
+            if (this.tieneEstilos) formData.append('variantes_json', JSON.stringify(this.variantesDinamicas));
+            if (formData.get('id_categoria') === '') formData.delete('id_categoria');
+        }
+
+        this.http.post<any>(urlTarget, formData).subscribe({
+            next: (res) => this.manejarRespuesta(res, accion, form),
+            error: () => { alert("Error de conexión"); this.cargando = false; }
+        });
+    } 
+    // 🌟 RUTA B: CATEGORÍAS, RULETA Y CUPONES (Envían JSON Ligero)
+    else {
+        const formData = new FormData(form);
+        const payload: any = {};
+        formData.forEach((value, key) => payload[key] = value);
+        payload.id_empleado = this.idEmpleado;
+
+        // Limpieza para evitar errores 500 en Spring Boot
+        if (payload.id_categoria === '') delete payload.id_categoria;
+        if (payload.id_premio === '') delete payload.id_premio;
+        
+        // Adaptar nombres para que calcen perfecto con los modelos de Java
+        if (payload.nombre_categoria) { payload.nombre = payload.nombre_categoria; delete payload.nombre_categoria; }
+        if (payload.tipo_categoria) { payload.tipo = payload.tipo_categoria; delete payload.tipo_categoria; }
+
+        this.http.post<any>(urlTarget, payload).subscribe({
+            next: (res) => this.manejarRespuesta(res, accion, form),
+            error: () => { alert("Error de conexión"); this.cargando = false; }
+        });
+    }
+  }
+
+  manejarRespuesta(res: any, accion: string, form: HTMLFormElement) {
+      if (res.success) { 
+          this.mostrarToast(res.mensaje);
+          if (accion === 'guardar_categoria') {
+              this.catEditando = null;
+              form.reset();
+          } else {
+              this.cerrarModales(); 
+          }
+          this.cargarDashboard(); 
+      } else { 
+          alert(res.mensaje); 
+      }
+      this.cargando = false;
+      this.cdr.detectChanges();
   }
 
   ejecutarAccion(accion: string, extraData: any = {}) {
       if ((accion.includes('eliminar') || accion === 'cancelar') && !confirm("¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.")) return;
       if (accion === 'reportar' && !confirm("ALERTA: ¿Bloquear usuario por 7 días?")) return;
       
-      const payload = { accion, id_empleado: this.idEmpleado, ...extraData };
+      let urlTarget = '';
+      let metodo = 'POST';
 
-      this.http.post<any>(`http://localhost/cactus-api/${this.obtenerEndpoint(accion)}`, payload).subscribe({
+      if (accion.includes('eliminar_producto')) {
+          urlTarget = `http://localhost:8080/api/inventario/productos/eliminar/${extraData.id}`;
+          metodo = 'DELETE';
+      } else if (accion.includes('eliminar_categoria')) {
+          urlTarget = `http://localhost:8080/api/inventario/categorias/eliminar/${extraData.id}`;
+          metodo = 'DELETE';
+      } else if (accion === 'aprobar' || accion === 'listo' || accion === 'completar') {
+          urlTarget = `http://localhost:8080/api/empleado/ordenes/${extraData.id_reserva}/estado`;
+          extraData.nuevo_estado = accion;
+      } else if (accion === 'registrar_visita') {
+          urlTarget = `http://localhost:8080/api/usuarios/${extraData.id_cliente}/visita`;
+      } else if (accion === 'toggle_noticia') {
+          urlTarget = `http://localhost:8080/api/marketing/noticias/toggle/${extraData.id}/usuario/${this.idEmpleado}`;
+      } else if (accion === 'eliminar_premio_ruleta') { // <--- ¡AÑADE ESTO!
+          urlTarget = `http://localhost:8080/api/ruleta/eliminar/${extraData.id}`;
+          metodo = 'DELETE';
+      } else if (accion === 'guardar_probabilidades_ruleta') { // <--- ¡Y ESTO!
+          urlTarget = `http://localhost:8080/api/ruleta/probabilidades`;
+    }
+
+      const request = metodo === 'DELETE' ? this.http.delete<any>(urlTarget) : this.http.post<any>(urlTarget, extraData);
+
+      request.subscribe({
           next: (res) => { 
               if(res.success) { 
                   this.mostrarToast(res.mensaje); 
                   this.cerrarModales();
                   this.cargarDashboard(); 
-              }
-              else { alert(res.mensaje); }
+              } else { alert(res.mensaje); }
+              this.cdr.detectChanges();
           },
           error: () => alert("Error de servidor.")
       });
@@ -357,7 +421,7 @@ export class Empleado implements OnInit {
   }
 
   abrirPDF(id_reserva: number) {
-    window.open(`http://localhost/cactus-api/generar_comprobante.php?id=${id_reserva}`, '_blank');
+    window.open(`http://localhost:8080/api/pedidos/ticket/${id_reserva}`, '_blank');
   }
 
   enviarWhatsApp(telefono: string, cliente: string, total_pagado: number) {
@@ -399,7 +463,7 @@ export class Empleado implements OnInit {
 
   onPointerDown(index: number, event: PointerEvent) { event.preventDefault(); this.draggingIndex = index; }
 
-  @HostListener('document:pointermove', ['$event'])
+  @HostListener('document:pointermove', ['\$event'])
   onPointerMove(event: PointerEvent) {
     if (this.draggingIndex === null) return;
     const svgElement = document.getElementById('ruleta-svg');
@@ -498,4 +562,3 @@ export class Empleado implements OnInit {
       }
   }
 }
-

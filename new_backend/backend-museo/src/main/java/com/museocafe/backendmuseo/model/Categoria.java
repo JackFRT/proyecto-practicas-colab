@@ -1,5 +1,6 @@
 package com.museocafe.backendmuseo.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -9,11 +10,11 @@ import lombok.Data;
 public class Categoria {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id_categoria")
     private Long idCategoria;
 
-    @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(length = 50)
-    private String tipo;
+    @JsonProperty("tipo")
+    private String tipo; // Debe llamarse así para que guarde 'cactus', 'cafe', o 'recuerdo'
 }

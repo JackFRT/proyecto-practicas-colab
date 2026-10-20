@@ -11,3 +11,7 @@ public class BackendMuseoApplication {
 	}
 
 }
+	
+
+
+// Este comando para iniciar ----> .\mvnw clean spring-boot:run

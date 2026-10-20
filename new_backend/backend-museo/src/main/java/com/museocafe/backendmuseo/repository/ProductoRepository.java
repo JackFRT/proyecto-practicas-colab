@@ -8,7 +8,10 @@ import java.util.List;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
-    List<Producto> findByActivoTrue();
-    List<Producto> findByTipoAndActivoTrue(String tipo);
     
+    // Cambiamos "findByTipo..." por "findByTipoProducto..."
+    List<Producto> findByTipoProductoAndActivoTrue(String tipoProducto);
+    
+    // Si tienes este otro, asegúrate de que también coincida:
+    List<Producto> findByActivoTrue();
 }

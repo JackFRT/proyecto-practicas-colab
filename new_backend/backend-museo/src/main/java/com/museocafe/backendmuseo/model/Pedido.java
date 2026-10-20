@@ -1,7 +1,6 @@
 package com.museocafe.backendmuseo.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +12,6 @@ import java.util.UUID;
 @Table(name = "pedidos")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Pedido {
 
     @Id

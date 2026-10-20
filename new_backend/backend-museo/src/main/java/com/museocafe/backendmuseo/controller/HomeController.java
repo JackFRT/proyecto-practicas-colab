@@ -43,15 +43,15 @@ public class HomeController {
         var todosLosProductos = productoRepository.findByActivoTrue();
         
         var cafeteria = todosLosProductos.stream()
-                .filter(p -> "cafeteria".equalsIgnoreCase(p.getTipo()))
+                .filter(p -> "cafeteria".equalsIgnoreCase(p.getTipoProducto()))
                 .collect(Collectors.toList());
 
         var cactus = todosLosProductos.stream()
-                .filter(p -> "cactus".equalsIgnoreCase(p.getTipo()))
+                .filter(p -> "cactus".equalsIgnoreCase(p.getTipoProducto()))
                 .collect(Collectors.toList());
                 
         var souvenirs = todosLosProductos.stream()
-                .filter(p -> "recuerdo".equalsIgnoreCase(p.getTipo()))
+                .filter(p -> "recuerdo".equalsIgnoreCase(p.getTipoProducto()))
                 .collect(Collectors.toList());
 
         respuesta.put("cafeteria", cafeteria);

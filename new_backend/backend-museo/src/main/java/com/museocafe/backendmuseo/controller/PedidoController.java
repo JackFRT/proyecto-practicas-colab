@@ -3,8 +3,6 @@ package com.museocafe.backendmuseo.controller;
 import com.museocafe.backendmuseo.model.*;
 import com.museocafe.backendmuseo.repository.*;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
