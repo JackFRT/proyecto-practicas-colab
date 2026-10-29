@@ -3,7 +3,7 @@
    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-[50] overflow-y-auto py-10 px-5" (click)="cerrarModales()">
         <div class="bg-[var(--bg-card)] p-8 md:p-10 rounded-2xl w-full max-w-3xl relative shadow-2xl border border-[var(--border-light)] my-auto" (click)="$event.stopPropagation()">
             
-            <button class="absolute top-5 right-6 text-3xl text-[var(--terracota)] hover:scale-110 hover:text-red-700 transition-all font-bold" (click)="cerrarModales()">&times;</button>
+            <button type="button" class="absolute top-5 right-6 text-3xl text-[var(--terracota)] hover:scale-110 hover:text-red-700 transition-all font-bold" (click)="cerrarModales()">&times;</button>
 
             @if (modalAbierto === 'comprobante') {
                 <h2 class="text-2xl font-bold text-[var(--verde-pino)] mt-0 mb-5 flex items-center gap-2"><i class="fas fa-image"></i> Captura de Pago</h2>
@@ -24,13 +24,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div [ngClass]="{'md:col-span-2': vistaInventario !== 'cactus'}">
                             <label class="block font-bold text-[var(--verde-pino)] mb-2">Nombre {{ vistaInventario === 'cafe' ? 'del Producto' : 'Común' }} *</label>
-                            <input type="text" name="nombre_comun" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.nombre_comun || ''" required>
+                            <input type="text" name="nombre_comun" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.nombre_comun || itemEditando?.nombre || ''" required>
                         </div>
                         
                         @if (vistaInventario === 'cactus') {
                             <div>
                                 <label class="block font-bold text-[var(--verde-pino)] mb-2">Nombre Científico</label>
-                                <input type="text" name="nombre_cientifico" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.nombre_cientifico || ''">
+                                <input type="text" name="nombre_cientifico" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.nombre_cientifico || itemEditando?.subtitulo || ''">
                             </div>
                         }
                     </div>
@@ -43,7 +43,7 @@
                                     <i class="fas fa-cog"></i> Gestionar
                                 </span>
                             </div>
-                           <select name="id_categoria" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]">
+                            <select name="id_categoria" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]">
                                 <option value="">Selecciona...</option>
                                 @for (cat of categorias; track $index) { 
                                     @if (cat.tipo === vistaInventario || cat.tipo_categoria === vistaInventario || cat.tipoCategoria === vistaInventario) {
@@ -56,28 +56,36 @@
                         </div>
                         <div>
                             <label class="block font-bold text-[var(--verde-pino)] mb-2">Precio (S/) *</label>
-                            <input type="number" step="0.01" name="precio" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.precio_base || itemEditando?.precio || ''" required>
+                            <input type="number" step="0.01" name="precio" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.precio_base || itemEditando?.precio || ''" required>
                         </div>
                     </div>
 
                     <label class="block font-bold text-[var(--verde-pino)] mb-2 mt-2">{{ vistaInventario === 'cactus' ? 'Guía de Cuidados' : (vistaInventario === 'cafe' ? 'Descripción del Sabor / Notas' : 'Descripción General') }} *</label>
-                    <textarea name="cuidados" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)] resize-y min-h-[80px]" rows="3">{{ itemEditando?.cuidados || '' }}</textarea>
+                    <textarea name="cuidados" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)] resize-y min-h-[80px]" rows="3">{{ itemEditando?.cuidados || itemEditando?.descripcion || '' }}</textarea>
                     
                     <label class="block font-bold text-[var(--verde-pino)] mb-2 mt-2">{{ vistaInventario === 'cactus' ? 'Detalles Técnicos' : (vistaInventario === 'cafe' ? 'Ingredientes / Origen' : 'Materiales y Tamaño') }} *</label>
-                    <textarea name="detalles_tecnicos" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)] resize-y min-h-[80px]" rows="3">{{ itemEditando?.detalles_tecnicos || '' }}</textarea>
+                    <textarea name="detalles_tecnicos" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)] resize-y min-h-[80px]" rows="3">{{ itemEditando?.detalles_tecnicos || itemEditando?.detallesTecnicos || '' }}</textarea>
                     
                     <h4 class="text-lg font-bold text-[var(--verde-pino)] border-b border-dashed border-gray-300 pb-2 mt-6 mb-4 flex items-center gap-2">
-                        <i class="fas fa-layer-group"></i> Variantes y Stock
+                        <i class="fas fa-layer-group"></i> {{ vistaInventario === 'cafe' ? 'Disponibilidad' : 'Variantes y Stock' }}
                     </h4>
                     
-                    @if (vistaInventario === 'cactus' || vistaInventario === 'cafe') {
+                    @if (vistaInventario === 'cafe') {
+                        <!-- Para Café: Estado Habilitado/Deshabilitado en lugar de Stock -->
+                        <div class="mb-4">
+                            <label class="block font-bold text-[var(--verde-pino)] mb-2">Estado del Producto *</label>
+                            <select name="activo" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]">
+                                <option value="true" [selected]="itemEditando?.activo !== false">Disponible (Habilitado)</option>
+                                <option value="false" [selected]="itemEditando?.activo === false">Agotado (Deshabilitado)</option>
+                            </select>
+                            <input type="hidden" name="stock" value="0">
+                        </div>
+                    } @else if (vistaInventario === 'cactus') {
                         <div class="mb-4">
                             <label class="block font-bold text-[var(--verde-pino)] mb-2">Stock General *</label>
-                            <input type="number" name="stock" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.stock || 0" required>
+                            <input type="number" name="stock" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.stock || 0" required>
                         </div>
-                    } 
-                    
-                    @if (vistaInventario === 'recuerdo') {
+                    } @else if (vistaInventario === 'recuerdo') {
                         <div class="bg-orange-50 p-4 rounded-lg border border-orange-200 mb-4">
                             <label class="flex items-center gap-3 cursor-pointer text-[var(--terracota)] font-bold">
                                 <input type="checkbox" name="tiene_estilos" [checked]="tieneEstilos" (change)="toggleEstilos.emit($event)" class="w-4 h-4 accent-[var(--terracota)]"> 
@@ -88,13 +96,13 @@
                         @if (!tieneEstilos) { 
                             <div class="mb-4">
                                 <label class="block font-bold text-[var(--verde-pino)] mb-2">Stock General *</label>
-                                <input type="number" name="stock" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-[var(--cafe-oscuro)] focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.stock || 0" required>
+                                <input type="number" name="stock" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" [value]="itemEditando?.stock || 0" required>
                             </div> 
                         } @else {
                             <div class="bg-black/5 border border-gray-200 p-5 rounded-xl mb-4">
                                 <div class="flex justify-between items-center mb-4">
                                     <label class="font-bold text-[var(--verde-pino)] m-0">Lista de Variantes con Fotos</label>
-                                    <button type="button" class="bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-50 flex items-center gap-2" (click)="agregarVariante.emit()">
+                                    <button type="button" class="bg-white border border-gray-300 text-gray-900 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-50 flex items-center gap-2" (click)="agregarVariante.emit()">
                                         <i class="fas fa-plus"></i> Añadir Variante
                                     </button>
                                 </div>
@@ -103,10 +111,10 @@
                                     <div class="flex gap-4 mb-4 items-center bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                                         <div class="flex-1">
                                             <label class="block text-xs font-bold text-gray-500 mb-1">Nombre Variante</label>
-                                            <input type="text" name="nombres_variantes[]" class="w-full p-2.5 rounded border border-gray-300 mb-3 text-sm focus:outline-none focus:border-[var(--verde-oliva)]" placeholder="Ej: Maceta Rosa" [ngModel]="variante.nombre_variante" [ngModelOptions]="{standalone: true}" (ngModelChange)="variante.nombre_variante = $event">
+                                            <input type="text" name="nombres_variantes[]" class="w-full p-2.5 rounded border border-gray-300 mb-3 text-sm text-gray-900 focus:outline-none focus:border-[var(--verde-oliva)]" placeholder="Ej: Maceta Rosa" [ngModel]="variante.nombre_variante" [ngModelOptions]="{standalone: true}" (ngModelChange)="variante.nombre_variante = $event">
                                             
                                             <label class="block text-xs font-bold text-gray-500 mb-1">Stock</label>
-                                            <input type="number" name="stocks_variantes[]" class="w-full p-2.5 rounded border border-gray-300 text-sm focus:outline-none focus:border-[var(--verde-oliva)]" placeholder="Stock" [ngModel]="variante.stock" [ngModelOptions]="{standalone: true}" (ngModelChange)="variante.stock = $event">
+                                            <input type="number" name="stocks_variantes[]" class="w-full p-2.5 rounded border border-gray-300 text-sm text-gray-900 focus:outline-none focus:border-[var(--verde-oliva)]" placeholder="Stock" [ngModel]="variante.stock" [ngModelOptions]="{standalone: true}" (ngModelChange)="variante.stock = $event">
                                         </div>
 
                                         <div class="flex-[1.5]">
@@ -117,7 +125,7 @@
                                                 @if (variante.ruta_imagen) {
                                                     <img [src]="getRutaImagen(variante.ruta_imagen, 'var')" class="w-14 h-14 object-cover rounded-md border border-gray-300">
                                                 }
-                                                <input type="file" name="fotos_variantes[]" class="bg-gray-50 border border-dashed border-gray-300 p-2 rounded text-sm w-full file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:font-bold file:mr-3 cursor-pointer" accept="image/*">
+                                                <input type="file" name="fotos_variantes[]" class="bg-gray-50 border border-dashed border-gray-300 p-2 rounded text-sm text-gray-900 w-full file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:font-bold file:mr-3 cursor-pointer" accept="image/*">
                                             </div>
                                         </div>
 
@@ -136,15 +144,54 @@
                     </h4>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-                        <div class="bg-white border border-[var(--border-light)] p-5 rounded-xl shadow-sm">
+                        <!-- FOTO PRINCIPAL (PORTADA) -->
+                        <div class="bg-white border border-[var(--border-light)] p-5 rounded-xl shadow-sm flex flex-col">
                             <label class="block font-bold text-[var(--verde-pino)] mb-3">Foto Principal (Portada) *</label>
-                            <input type="file" name="foto_principal" class="w-full bg-gray-50 border border-dashed border-gray-300 p-3 rounded file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-4 file:py-1.5 file:font-bold file:mr-3 cursor-pointer" accept="image/*" [required]="!itemEditando">
-                            @if(itemEditando) { <small class="text-gray-500 block mt-2">Sube una para reemplazar la actual.</small> }
+                            
+                            <!-- Mostramos la vista previa si existe, o la imagen actual de la BD -->
+                            @if (previewFotoPrincipal || (itemEditando && getFotoPortada(itemEditando))) {
+                                <div class="mb-4 relative group inline-block w-full max-w-[180px] mx-auto text-center">
+                                    <img [src]="previewFotoPrincipal || getRutaImagen(getFotoPortada(itemEditando), vistaInventario)" 
+                                         class="w-full h-32 object-cover rounded-lg border border-gray-200 shadow-sm mx-auto"
+                                         onerror="this.src='/assets/images/mascota_cactus/mascota.jpg'">
+                                    <span class="absolute top-2 left-2 bg-[var(--verde-pino)] text-white text-xs px-2 py-1 rounded shadow">
+                                        {{ previewFotoPrincipal ? 'Nueva (Vista previa)' : 'Actual' }}
+                                    </span>
+                                </div>
+                            }
+                            
+                            <!-- Añadimos (change)="onFileSelected($event)" -->
+                            <input type="file" name="foto_principal" (change)="onFileSelected($event)" class="w-full bg-gray-50 border border-dashed border-gray-300 text-gray-900 p-3 rounded file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-4 file:py-1.5 file:font-bold file:mr-3 cursor-pointer mt-auto" accept="image/*" [required]="!itemEditando">
+                            @if(itemEditando) { <small class="text-[var(--terracota)] block mt-2 text-center font-bold">Subir un archivo aquí reemplazará la portada actual.</small> }
                         </div>
-                        <div class="bg-white border border-[var(--border-light)] p-5 rounded-xl shadow-sm">
+                        
+                        <!-- FOTOS ADICIONALES (GALERÍA) -->
+                        <div class="bg-white border border-[var(--border-light)] p-5 rounded-xl shadow-sm flex flex-col">
                             <label class="block font-bold text-[var(--verde-pino)] mb-3">Fotos Adicionales (Galería)</label>
-                            <input type="file" name="fotos_adicionales[]" class="w-full bg-gray-50 border border-dashed border-gray-300 p-3 rounded file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-4 file:py-1.5 file:font-bold file:mr-3 cursor-pointer" accept="image/*" multiple>
-                            <small class="text-gray-500 block mt-2">Puedes seleccionar varios archivos a la vez.</small>
+                            
+                            @if (itemEditando && getFotosAdicionales(itemEditando).length > 0) {
+                                <div class="flex gap-3 overflow-x-auto mb-4 pb-3">
+                                    @for (img of getFotosAdicionales(itemEditando); track $index) {
+                                        <div class="relative group shrink-0">
+                                            <img [src]="getRutaImagen(img.rutaImagen || img.ruta_imagen, vistaInventario)" 
+                                                 class="w-20 h-20 object-cover rounded-lg border border-gray-200 shadow-sm"
+                                                 onerror="this.src='/assets/images/mascota_cactus/mascota.jpg'">
+                                            
+                                            <button type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600 hover:scale-110"
+                                                    (click)="accionEspecial.emit({accion: 'eliminar_imagen', data: {id_imagen: img.idImagen || img.id_imagen || img.id, id_producto: itemEditando.id_producto || itemEditando.id_cactus || itemEditando.id}})">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            } @else {
+                                <div class="mb-4 text-center p-4 bg-gray-50 rounded border border-dashed border-gray-200">
+                                    <span class="text-sm text-gray-400">No hay fotos extra.</span>
+                                </div>
+                            }
+                            
+                            <input type="file" name="fotos_adicionales[]" class="w-full bg-gray-50 border border-dashed border-gray-300 text-gray-900 p-3 rounded file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-4 file:py-1.5 file:font-bold file:mr-3 cursor-pointer mt-auto" accept="image/*" multiple>
+                            <small class="text-gray-500 block mt-2 text-center">Selecciona varios archivos a la vez para añadir más.</small>
                         </div>
                     </div>
                     
@@ -159,21 +206,21 @@
                 <form (submit)="submitForm($event, 'guardar_cupon')" class="flex flex-col gap-4">
                     <div>
                         <label class="block font-bold text-[var(--terracota)] mb-2">Código (Ej: TIKTOK20)</label>
-                        <input type="text" name="codigo_cupon" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-[var(--cafe-oscuro)] uppercase focus:outline-none" required>
+                        <input type="text" name="codigo_cupon" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-gray-900 uppercase focus:outline-none" required>
                     </div>
                     <div class="grid grid-cols-2 gap-5">
                         <div>
                             <label class="block font-bold text-[var(--terracota)] mb-2">% Descuento</label>
-                            <input type="number" name="descuento" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-[var(--cafe-oscuro)] focus:outline-none" required>
+                            <input type="number" name="descuento" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-gray-900 focus:outline-none" required>
                         </div>
                         <div>
                             <label class="block font-bold text-[var(--terracota)] mb-2">Límite de Usos</label>
-                            <input type="number" name="limite_usos" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-[var(--cafe-oscuro)] focus:outline-none" required>
+                            <input type="number" name="limite_usos" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-gray-900 focus:outline-none" required>
                         </div>
                     </div>
                     <div>
                         <label class="block font-bold text-[var(--terracota)] mb-2">Días de Validez</label>
-                        <input type="number" name="dias_validez" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-[var(--cafe-oscuro)] focus:outline-none" value="30" required>
+                        <input type="number" name="dias_validez" class="w-full p-3 rounded-lg border-2 border-[var(--terracota)] bg-white text-gray-900 focus:outline-none" value="30" required>
                     </div>
                     <button type="submit" class="w-full bg-[var(--verde-oscuro)] text-white py-3.5 rounded-lg font-bold text-lg hover:brightness-110 transition-all mt-4" [disabled]="cargando">
                         @if(cargando){ <i class="fas fa-spinner fa-spin mr-2"></i> } Generar Código
@@ -188,19 +235,19 @@
                     
                     <div>
                         <label class="block font-bold text-[var(--verde-pino)] mb-2">Título del Anuncio *</label>
-                        <input type="text" name="titulo" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.titulo || ''" required>
+                        <input type="text" name="titulo" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.titulo || ''" required>
                     </div>
                     <div>
                         <label class="block font-bold text-[var(--verde-pino)] mb-2">Descripción Breve</label>
-                        <textarea name="descripcion" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none resize-y min-h-[100px]" required>{{ itemEditando?.descripcion || '' }}</textarea>
+                        <textarea name="descripcion" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none resize-y min-h-[100px]" required>{{ itemEditando?.descripcion || '' }}</textarea>
                     </div>
                     <div>
                         <label class="block font-bold text-[var(--verde-pino)] mb-2">Enlace Adicional (Opcional)</label>
-                        <input type="text" name="link_destino" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.link_destino || ''" placeholder="https://...">
+                        <input type="text" name="link_destino" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.link_destino || ''" placeholder="https://...">
                     </div>
                     <div class="bg-white border border-[var(--border-light)] p-5 rounded-xl shadow-sm">
                         <label class="block font-bold text-[var(--verde-pino)] mb-3">Imagen del Banner {{ itemEditando ? '(Vacío para mantener actual)' : '*' }}</label>
-                        <input type="file" name="foto_noticia" class="w-full bg-gray-50 border border-dashed border-gray-300 p-3 rounded file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-4 file:py-1.5 file:font-bold file:mr-3 cursor-pointer" accept="image/*" [required]="!itemEditando">
+                        <input type="file" name="foto_noticia" class="w-full bg-gray-50 border border-dashed border-gray-300 text-gray-900 p-3 rounded file:bg-[var(--verde-oliva)] file:text-white file:border-0 file:rounded file:px-4 file:py-1.5 file:font-bold file:mr-3 cursor-pointer" accept="image/*" [required]="!itemEditando">
                     </div>
                     
                     <button type="submit" class="w-full bg-[var(--verde-oscuro)] text-white py-3.5 rounded-lg font-bold text-lg hover:brightness-110 transition-all mt-4" [disabled]="cargando">
@@ -215,11 +262,11 @@
                     <input type="hidden" name="id_premio" [value]="itemEditando?.id_premio">
                     <div>
                         <label class="block font-bold text-[var(--verde-pino)] mb-2">Título del Premio</label>
-                        <input type="text" name="titulo_premio" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.titulo || ''" required>
+                        <input type="text" name="titulo_premio" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.titulo || ''" required>
                     </div>
                     <div>
                         <label class="block font-bold text-[var(--verde-pino)] mb-2">Descuento (%)</label>
-                        <input type="number" name="descuento_premio" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.descuento_porcentaje || ''" required>
+                        <input type="number" name="descuento_premio" class="w-full p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-[var(--verde-oliva)] outline-none" [value]="itemEditando?.descuento_porcentaje || ''" required>
                     </div>
                     <div>
                         <label class="block font-bold text-[var(--verde-pino)] mb-2">Color de la Sección</label>
@@ -246,21 +293,18 @@
     <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4" (click)="cerrarModalCategorias()">
         <div class="bg-[var(--bg-card)] p-8 rounded-2xl w-full max-w-lg relative shadow-2xl border border-[var(--border-light)]" (click)="$event.stopPropagation()">
             
-            <button class="absolute top-5 right-6 text-3xl text-[var(--terracota)] hover:scale-110 hover:text-red-700 transition-all font-bold" (click)="cerrarModalCategorias()">&times;</button>
+            <button type="button" class="absolute top-5 right-6 text-3xl text-[var(--terracota)] hover:scale-110 hover:text-red-700 transition-all font-bold" (click)="cerrarModalCategorias()">&times;</button>
             
             <h2 class="text-2xl font-bold text-[var(--verde-pino)] mt-0 mb-6 flex items-center gap-2">
                 <i class="fas fa-tags"></i> Gestionar Categorías de {{ vistaInventario === 'cactus' ? 'Cactus' : (vistaInventario === 'cafe' ? 'Café' : 'Recuerdos') }}
             </h2>
             
-            <!-- Asegúrate de usar catEditando en lugar de itemEditando para este formulario -->
             <form (submit)="submitForm($event, 'guardar_categoria')" class="bg-white border border-[var(--border-light)] p-5 rounded-xl mb-6 shadow-sm">
                 <label class="block font-bold text-[var(--verde-pino)] mb-3">Añadir / Editar Categoría</label>
                 <div class="flex gap-3">
-                    <input type="hidden" name="id_categoria" [value]="catEditando?.id_categoria || ''">
-                    <input type="hidden" name="tipo_categoria" [value]="vistaInventario">
-                    
-                    <input type="text" name="nombre_categoria" class="flex-1 p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" placeholder="Ej: {{ vistaInventario === 'cactus' ? 'Suculentas...' : (vistaInventario === 'cafe' ? 'Bebidas Calientes...' : 'Tazas...') }}" [value]="catEditando?.nombre || ''" required>
-                    
+                    <input type="hidden" name="id_categoria" [value]="catEditando?.id_categoria || catEditando?.idCategoria || catEditando?.id || ''">
+                    <input type="hidden" name="tipo" [value]="vistaInventario">
+                    <input type="text" name="nombre" class="flex-1 p-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--verde-oliva)]" placeholder="Ej: {{ vistaInventario === 'cactus' ? 'Suculentas...' : (vistaInventario === 'cafe' ? 'Bebidas Calientes...' : 'Tazas...') }}" [value]="catEditando?.nombre || catEditando?.nombre_categoria || catEditando?.nombreCategoria || ''" required>
                     <button type="submit" class="bg-[var(--verde-oscuro)] text-white px-5 rounded-lg font-bold hover:brightness-110 transition-all" [disabled]="cargando">Guardar</button>
                 </div>
                 @if (catEditando) { <p class="text-sm text-gray-500 mt-2 mb-0 cursor-pointer hover:text-gray-800" (click)="seleccionarCatParaEditar.emit(null)"><i class="fas fa-times"></i> Limpiar para crear nueva</p> }
@@ -275,22 +319,25 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @for (cat of categorias; track $index) {
-                            @if (cat.tipo === vistaInventario || cat.tipo_categoria === vistaInventario || cat.tipoCategoria === vistaInventario) {
-                                <tr class="border-b border-gray-100 hover:bg-[#fdfbf7]">
-                                    <td class="p-3"><strong class="text-[var(--cafe-oscuro)]">{{ cat.nombre || cat.nombreCategoria || cat.nombre_categoria }}</strong></td>
-                                    <td class="p-3">
-                                        <div class="flex gap-2 justify-center">
-                                            <button type="button" class="w-8 h-8 rounded-full bg-[#E0A96D] text-white flex items-center justify-center hover:scale-110 transition-transform text-sm" (click)="seleccionarCatParaEditar.emit(cat)"><i class="fas fa-edit"></i></button>
-                                            <button type="button" class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform text-sm" (click)="ejecutarAccion('eliminar_categoria', {id_categoria: cat.id_categoria || cat.idCategoria || cat.id})"><i class="fas fa-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        @if (categorias.length === 0) {
+                        @for (cat of getCategoriasFiltradas(); track $index) {
+                            <tr class="border-b border-gray-100 hover:bg-[#fdfbf7]">
+                                <td class="p-3">
+                                    <strong class="text-gray-900">
+                                        {{ cat.nombre || cat.nombreCategoria || cat.nombre_categoria }}
+                                    </strong>
+                                </td>
+                                <td class="p-3">
+                                    <div class="flex gap-2 justify-center">
+                                        <button type="button" class="w-8 h-8 rounded-full bg-[#E0A96D] text-white flex items-center justify-center hover:scale-110 transition-transform text-sm" (click)="seleccionarCatParaEditar.emit(cat)"><i class="fas fa-edit"></i></button>
+                                        <button type="button" class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform text-sm" (click)="ejecutarAccion('eliminar_categoria', {id_categoria: cat.id_categoria || cat.idCategoria || cat.id})"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        } @empty {
                             <tr>
-                                <td colspan="2" class="p-4 text-center text-gray-500">No hay categorías creadas para esta sección.</td>
+                                <td colspan="2" class="p-4 text-center text-gray-500">
+                                    No hay categorías creadas para la sección de <span class="capitalize font-bold">{{ vistaInventario }}</span>.
+                                </td>
                             </tr>
                         }
                     </tbody>

@@ -54,6 +54,11 @@ public class ProductoController {
         return ResponseEntity.ok(productoRepository.findAll());
     }
 
+    @GetMapping("/categorias")
+    public ResponseEntity<List<Categoria>> obtenerCategorias() {
+        return ResponseEntity.ok(categoriaRepository.findAll());
+    }
+
     // --- NUEVO ENDPOINT PARA RECIBIR FORM DATA CON FOTOS ---
     @PostMapping("/productos/guardar")
     public ResponseEntity<?> guardarProducto(
@@ -66,6 +71,7 @@ public class ProductoController {
             @RequestParam("detalles_tecnicos") String detallesTecnicos,
             @RequestParam(value = "stock", required = false) Integer stock,
             @RequestParam("tipo_producto") String tipoProducto,
+            @RequestParam(value = "activo", required = false) Boolean activo,
             @RequestParam(value = "variantes_json", required = false) String variantesJson,
             @RequestParam(value = "foto_principal", required = false) MultipartFile fotoPrincipal,
             @RequestParam(value = "fotos_adicionales[]", required = false) MultipartFile[] fotosAdicionales
@@ -79,12 +85,18 @@ public class ProductoController {
             producto.setNombre(nombreComun);
             producto.setSubtitulo(nombreCientifico);
             producto.setPrecio(precio);
-            producto.setDescripcion(cuidados);
+            producto.setCuidados(cuidados);
             producto.setDetallesTecnicos(detallesTecnicos);
             producto.setStock(stock != null ? stock : 0);
             producto.setTipoProducto(tipoProducto);
             // Si añadiste este campo a Producto.java para los estilos de recuerdos:
             // producto.setVariantesJson(variantesJson); 
+
+            if (activo != null) {
+                producto.setActivo(activo);
+            } else {
+                producto.setActivo(true);
+            }
 
             if (idCategoria != null) {
                 Categoria cat = categoriaRepository.findById(idCategoria).orElse(null);
@@ -93,6 +105,7 @@ public class ProductoController {
 
             // 3. Procesamos y guardamos la Foto Principal
             if (fotoPrincipal != null && !fotoPrincipal.isEmpty()) {
+                producto.getImagenes().removeIf(img -> img.getEsPrincipal() != null && img.getEsPrincipal());
                 String nombreFoto = guardarArchivo(fotoPrincipal, tipoProducto);
                 ImagenProducto img = new ImagenProducto();
                 img.setRutaImagen(nombreFoto);
@@ -143,5 +156,25 @@ public class ProductoController {
         
         categoriaRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("success", true, "mensaje", "Categoría eliminada."));
+    }
+
+    @DeleteMapping("/productos/{idProducto}/imagen/{idImagen}")
+    public ResponseEntity<?> eliminarImagenProducto(@PathVariable Long idProducto, @PathVariable Long idImagen) {
+        try {
+            Producto producto = productoRepository.findById(idProducto).orElse(null);
+            if (producto == null) return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Producto no encontrado"));
+            
+            // Si tu clase ImagenProducto usa otro nombre para el ID, cámbialo aquí (ej: getId())
+            boolean eliminada = producto.getImagenes().removeIf(img -> img.getIdImagen().equals(idImagen));
+            
+            if (eliminada) {
+                productoRepository.save(producto);
+                return ResponseEntity.ok(Map.of("success", true, "mensaje", "Imagen eliminada con éxito"));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "No se encontró la imagen"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "mensaje", "Error: " + e.getMessage()));
+        }
     }
 }

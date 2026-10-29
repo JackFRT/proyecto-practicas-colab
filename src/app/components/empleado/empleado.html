@@ -141,27 +141,70 @@
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-[var(--verde-pino)] text-white">
                                 <tr>
-                                    <th class="p-4 font-semibold">Foto</th>
+                                    <th class="p-4 font-semibold w-16">Foto</th>
                                     <th class="p-4 font-semibold">Nombre</th>
                                     <th class="p-4 font-semibold">Categoría</th>
                                     <th class="p-4 font-semibold">Precio</th>
                                     <th class="p-4 font-semibold">Stock</th>
-                                    <th class="p-4 font-semibold text-center">Acciones</th>
+                                    <th class="p-4 font-semibold text-center w-28">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @for (item of inventarioFiltrado; track item.id_cactus) {
+                                @for (item of inventarioFiltrado; track item.id_producto || item.id_cactus || item.id || $index) {
                                     <tr class="border-b border-gray-100 hover:bg-[#fdfbf7] transition-colors">
-                                        <td class="p-3">@if(item.imagen_url) { <img [src]="getRutaImagen(item.imagen_url)" class="w-12 h-12 object-cover rounded-lg border border-gray-200"> }</td>
-                                        <td class="p-3"><strong class="text-[var(--cafe-oscuro)] block">{{ item.nombre_comun }}</strong> <small class="text-gray-500">{{ item.nombre_cientifico }}</small></td>
-                                        <td class="p-3"><span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">{{ item.nombre_categoria || 'Otros' }}</span></td>
-                                        <td class="p-3 font-medium">S/ {{ item.precio }}</td>
-                                        <td class="p-3 font-bold" [ngClass]="item.stock == 0 ? 'text-red-500' : 'text-gray-700'">{{ item.stock }}</td>
+                                        
+                                        <td class="p-3">
+                                            <div class="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
+                                                <img [src]="getRutaImagen(getFotoPortada(item), item.tipo_producto)" class="w-full h-full object-cover" onerror="this.src='/assets/images/mascota_cactus/mascota.jpg'">
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- CELDA DE NOMBRE CORREGIDA -->
+                                        <td class="p-3">
+                                            <strong class="text-[var(--cafe-oscuro)] block">{{ item.nombre_comun || item.nombre }}</strong>
+                                            @if (item.nombre_cientifico || item.subtitulo) {
+                                                <small class="text-gray-500">{{ item.nombre_cientifico || item.subtitulo }}</small>
+                                            }
+                                        </td>
+                                        
+                                        <!-- CELDA DE CATEGORÍA CORREGIDA -->
+                                        <td class="p-3">
+                                            <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">
+                                                {{ item.categoria?.nombre || item.nombre_categoria || 'Sin Categoría' }}
+                                            </span>
+                                        </td>
+                                        
+                                        <!-- CELDA DE PRECIO -->
+                                        <td class="p-3 font-medium">S/ {{ item.precio_base || item.precio }}</td>
+                                        
+                                        <!-- CELDA DE STOCK / ESTADO -->
+                                        <td class="p-3 font-bold" [ngClass]="item.stock == 0 ? 'text-red-500' : 'text-gray-700'">
+                                            @if (vistaInventario === 'cafe') {
+                                                <span [ngClass]="item.activo !== false ? 'text-green-600' : 'text-red-500'">
+                                                    {{ item.activo !== false ? 'Disponible' : 'Agotado' }}
+                                                </span>
+                                            } @else {
+                                                {{ item.stock || 0 }}
+                                            }
+                                        </td>
+                                        
+                                        <!-- CELDA DE ACCIONES CORREGIDA -->
                                         <td class="p-3">
                                             <div class="flex gap-2 justify-center">
-                                                <button class="w-9 h-9 rounded-full bg-[#E0A96D] text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="abrirModal('producto', item)"><i class="fas fa-edit"></i></button>
-                                                <button class="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="ejecutarAccion('eliminar_producto', {id_cactus: item.id_cactus})"><i class="fas fa-trash"></i></button>
+                                                <button class="w-9 h-9 rounded-full bg-[#E0A96D] text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="abrirModal('producto', item)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="ejecutarAccion('eliminar_producto', {id_producto: item.id_producto || item.id_cactus || item.id})">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                             </div>
+                                        </td>
+                                    </tr>
+                                } @empty {
+                                    <tr>
+                                        <td colspan="6" class="p-10 text-center text-gray-500 bg-gray-50">
+                                            <i class="fas fa-box-open text-4xl text-gray-300 mb-3 block"></i>
+                                            No hay productos en esta sección.
                                         </td>
                                     </tr>
                                 }
@@ -207,72 +250,115 @@
                 </div>
             }
 
-            @if (tabActivo === 'marketing') {
-                <div class="animate-fade-in">
-                    <!-- Cupones -->
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2"><i class="fas fa-ticket-alt"></i> Cupones Públicos</h2>
-                        <button class="bg-[var(--verde-oscuro)] text-white px-5 py-2.5 rounded-full font-bold hover:bg-[var(--verde-pino)] transition-all shadow-md flex items-center gap-2" (click)="abrirModal('cupon')"><i class="fas fa-plus"></i> Nuevo Cupón</button>
-                    </div>
-                    
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-[var(--border-light)] mb-10">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-[var(--verde-pino)] text-white"><tr><th class="p-4">Código</th><th class="p-4">Dcto</th><th class="p-4">Usos</th><th class="p-4">Acción</th></tr></thead>
-                            <tbody>
-                                @for (cupon of cupones; track cupon.codigo) {
-                                    <tr class="border-b border-gray-100 hover:bg-[#fdfbf7]">
-                                        <td class="p-4"><strong class="text-[var(--terracota)]">{{ cupon.codigo }}</strong></td>
-                                        <td class="p-4">{{ cupon.descuento_porcentaje }}%</td>
-                                        <td class="p-4">{{ cupon.usos_actuales }} / {{ cupon.limite_usos }}</td>
-                                        <td class="p-4"><button class="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="ejecutarAccion('eliminar_cupon', {codigo: cupon.codigo})"><i class="fas fa-trash"></i></button></td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+            <!-- ========================================== -->
+<!-- VISTA DE MARKETING (CUPONES Y NOTICIAS) -->
+<!-- ========================================== -->
+@if (tabActivo === 'marketing') {
+    <div class="bg-[var(--bg-card)] p-6 md:p-8 rounded-2xl shadow-sm border border-[var(--border-light)]">
+        
+        <!-- SECCIÓN 1: CUPONES PÚBLICOS -->
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-[var(--verde-pino)] m-0 flex items-center gap-2">
+                <i class="fas fa-ticket-alt"></i> Cupones Públicos
+            </h3>
+            <button type="button" class="bg-[var(--verde-oscuro)] text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:brightness-110 transition-all flex items-center gap-2 shadow-sm" (click)="abrirModal('cupon')">
+                <i class="fas fa-plus"></i> Nuevo Cupón
+            </button>
+        </div>
 
-                    <hr class="border-t-2 border-dashed border-[var(--border-light)] my-8">
+        <div class="overflow-x-auto mb-10 border border-gray-200 rounded-xl bg-white shadow-inner">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-[var(--verde-pino)] text-white">
+                    <tr>
+                        <th class="p-3.5 font-semibold">Código</th>
+                        <th class="p-3.5 font-semibold">Dcto</th>
+                        <th class="p-3.5 font-semibold">Usos</th>
+                        <th class="p-3.5 font-semibold">Vencimiento</th>
+                        <th class="p-3.5 font-semibold text-center w-24">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (cupon of cupones; track $index) {
+                        <tr class="border-b border-gray-100 hover:bg-[#fdfbf7]">
+                            <td class="p-3.5 font-bold text-[var(--verde-pino)]">{{ cupon.codigo }}</td>
+                            <td class="p-3.5"><span class="bg-orange-100 text-[var(--terracota)] px-2.5 py-1 rounded-full text-xs font-bold">{{ cupon.descuentoPorcentaje || cupon.descuento }}%</span></td>
+                            <td class="p-3.5 text-gray-700">{{ cupon.usosActuales || 0 }} / {{ cupon.limiteUsos }}</td>
+                            <td class="p-3.5 text-gray-500 text-sm">{{ cupon.fechaVencimiento ? (cupon.fechaVencimiento | date:'dd/MM/yyyy') : 'Sin límite' }}</td>
+                            <td class="p-3.5 text-center">
+                                <button type="button" class="w-8 h-8 rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-colors inline-flex items-center justify-center text-sm" (click)="ejecutarAccion('eliminar_cupon', {id: cupon.idCupon || cupon.id_cupon})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    } @empty {
+                        <tr>
+                            <td colspan="5" class="p-6 text-center text-gray-400">No hay cupones activos en este momento.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-                    <!-- Noticias -->
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 class="text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2"><i class="fas fa-newspaper"></i> Boletín / Carrusel</h2>
-                            <p class="text-gray-500 text-sm mt-1">Arrastra las noticias para cambiar su orden de prioridad.</p>
-                        </div>
-                        <button class="bg-[var(--verde-oscuro)] text-white px-5 py-2.5 rounded-full font-bold hover:bg-[var(--verde-pino)] transition-all shadow-md flex items-center gap-2" (click)="abrirModal('noticia')"><i class="fas fa-plus"></i> Nueva Publicación</button>
-                    </div>
+        <hr class="border-dashed border-gray-300 my-8">
+
+        <!-- SECCIÓN 2: BOLETÍN / CARRUSEL (NOTICIAS) -->
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <h3 class="text-xl font-bold text-[var(--verde-pino)] m-0 flex items-center gap-2">
+                    <i class="fas fa-newspaper"></i> Boletín / Carrusel
+                </h3>
+                <p class="text-gray-500 text-sm m-0 mt-1">Arrastra las noticias para cambiar su orden de prioridad o edítalas directamente.</p>
+            </div>
+            <button type="button" class="bg-[var(--verde-oscuro)] text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:brightness-110 transition-all flex items-center gap-2 shadow-sm" (click)="abrirModal('noticia')">
+                <i class="fas fa-plus"></i> Nueva Publicación
+            </button>
+        </div>
+
+        <div class="space-y-3">
+            @for (noticia of noticias; track $index) {
+                <div class="flex items-center justify-between bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:border-[var(--verde-oliva)] transition-all cursor-move"
+                     draggable="true"
+                     (dragstart)="onDragStartNews($index)"
+                     (dragover)="onDragOverNews($event)"
+                     (drop)="onDropNews($index)">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        @for (noticia of noticias; track noticia.id_noticia; let idx = $index) {
-                            <div class="bg-white rounded-xl shadow-sm border border-[var(--border-light)] overflow-hidden flex flex-col cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:shadow-md transition-all"
-                                 draggable="true" (dragstart)="onDragStartNews(idx)" (dragover)="onDragOverNews($event)" (drop)="onDropNews(idx)"
-                                 [ngClass]="{'border-2 border-dashed border-[var(--terracota)] opacity-50 scale-95': draggedNewsIndex !== null && draggedNewsIndex !== idx}"
-                                 [style.opacity]="noticia.estado == 0 ? '0.6' : '1'"> 
-                                <div class="h-40 bg-cover bg-center relative" [style.background-image]="'url(' + getRutaImagen(noticia.imagen_url, 'news') + ')'">
-                                    <span class="absolute top-3 left-3 bg-[var(--verde-oliva)] text-white px-2 py-1 rounded-lg text-xs font-bold">#{{ idx + 1 }}</span>
-                                    @if (noticia.estado == 0) {
-                                        <span class="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 rounded-lg text-xs font-bold"><i class="fas fa-eye-slash"></i> Oculto</span>
-                                    }
-                                </div>
-                                <div class="p-5 flex-1 flex flex-col">
-                                    <h4 class="font-bold text-[var(--cafe-oscuro)] m-0 mb-2">{{ noticia.titulo }}</h4>
-                                    <p class="text-sm text-gray-500 mb-4 flex-1 line-clamp-3">{{ noticia.descripcion }}</p>
-                                    
-                                    <div class="flex justify-end gap-2 border-t border-gray-100 pt-4 mt-auto">
-                                        <button class="w-9 h-9 rounded-full flex items-center justify-center transition-colors" 
-                                                [ngClass]="noticia.estado == 1 ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' : 'bg-red-100 text-red-600 hover:bg-red-200'" 
-                                                (click)="ejecutarAccion('toggle_noticia', { id_noticia: noticia.id_noticia, estado_actual: noticia.estado })" title="{{ noticia.estado == 1 ? 'Ocultar noticia' : 'Mostrar noticia' }}">
-                                            <i class="fas" [ngClass]="noticia.estado == 1 ? 'fa-eye' : 'fa-eye-slash'"></i>
-                                        </button>
-                                        <button class="w-9 h-9 rounded-full bg-[#E0A96D] text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="abrirModal('noticia', noticia)"><i class="fas fa-edit"></i></button>
-                                        <button class="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="ejecutarAccion('eliminar_noticia', {id_noticia: noticia.id_noticia})"><i class="fas fa-trash"></i></button>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-gray-300 font-bold"><i class="fas fa-grip-vertical"></i></span>
+                        @if (noticia.imagenUrl || noticia.imagen_url) {
+                            <img [src]="getRutaImagen(noticia.imagenUrl || noticia.imagen_url, 'noticias')" class="w-14 h-14 object-cover rounded-lg border border-gray-200">
                         }
+                        <div>
+                            <h4 class="font-bold text-gray-900 m-0 text-base">{{ noticia.titulo }}</h4>
+                            <p class="text-gray-500 text-sm m-0 line-clamp-1">{{ noticia.descripcion }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <!-- Toggle de estado público/oculto -->
+                        <button type="button" class="px-3 py-1 rounded-full text-xs font-bold transition-colors"
+                                [ngClass]="noticia.estado ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+                                (click)="ejecutarAccion('toggle_noticia', {id: noticia.idNoticia || noticia.id_noticia})">
+                            {{ noticia.estado ? 'Público' : 'Oculto' }}
+                        </button>
+
+                        <button type="button" class="w-9 h-9 rounded-lg bg-orange-100 text-[var(--terracota)] hover:bg-[var(--terracota)] hover:text-white transition-colors flex items-center justify-center" (click)="abrirModal('noticia', noticia)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+
+                        <button type="button" class="w-9 h-9 rounded-lg bg-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center" (click)="ejecutarAccion('eliminar_noticia', {id: noticia.idNoticia || noticia.id_noticia})">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
+            } @empty {
+                <div class="text-center p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <span class="text-gray-400 text-sm">No hay publicaciones en el boletín.</span>
+                </div>
             }
+        </div>
+
+    </div>
+}
 
             @if (tabActivo === 'perfil') {
                 <div class="animate-fade-in">

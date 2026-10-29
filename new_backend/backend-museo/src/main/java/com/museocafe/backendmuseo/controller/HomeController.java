@@ -35,15 +35,14 @@ public class HomeController {
         Map<String, Object> respuesta = new HashMap<>();
         
         respuesta.put("success", true);
-        
         respuesta.put("categorias", categoriaRepository.findAll());
-        
         respuesta.put("noticias", noticiaRepository.findByEstado(true));
 
         var todosLosProductos = productoRepository.findByActivoTrue();
         
+        // Unificamos el café (por si en alguna parte se guardó como 'cafe' o 'cafeteria')
         var cafeteria = todosLosProductos.stream()
-                .filter(p -> "cafeteria".equalsIgnoreCase(p.getTipoProducto()))
+                .filter(p -> "cafe".equalsIgnoreCase(p.getTipoProducto()) || "cafeteria".equalsIgnoreCase(p.getTipoProducto()))
                 .collect(Collectors.toList());
 
         var cactus = todosLosProductos.stream()
@@ -54,9 +53,12 @@ public class HomeController {
                 .filter(p -> "recuerdo".equalsIgnoreCase(p.getTipoProducto()))
                 .collect(Collectors.toList());
 
+        // Devolvemos ambas claves para que Angular las lea sin importar cómo las pida
         respuesta.put("cafeteria", cafeteria);
+        respuesta.put("cafe", cafeteria); 
         respuesta.put("cactus", cactus);
         respuesta.put("souvenirs", souvenirs);
+        respuesta.put("recuerdos", souvenirs);
 
         return ResponseEntity.ok(respuesta);
     }

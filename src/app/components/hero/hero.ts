@@ -16,48 +16,51 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 export class Hero implements AfterViewInit {
   mapaActivo: boolean = false;
 
-  get isLoggedIn(): boolean {
-    return typeof localStorage !== 'undefined' && localStorage.getItem('usuario_cactus') !== null;
-  }
+  isLoggedIn: boolean =
+  localStorage.getItem('usuario_cactus') !== null;
+  
 
   ngAfterViewInit() {
-    gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger);
 
-    if (this.isLoggedIn) {
-      gsap.set("#mask-container, #logo-blanco-overlay", { "--mask-size": "4000vmax" });
-      gsap.set("#logo-blanco-overlay", { opacity: 0 });
-      gsap.set("#hero-ui", { opacity: 1, pointerEvents: "auto" });
-    } else {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".scroll-trigger-zone",
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 1,
-        },
-      });
+  this.isLoggedIn =
+    localStorage.getItem('usuario_cactus') !== null;
 
-      tl.to("#mask-container, #logo-blanco-overlay", {
-        "--mask-size": "4000vmax",
-        duration: 1,
-        ease: "power2.in"
-      }, 0)
+  if (this.isLoggedIn) {
+    gsap.set("#mask-container", { "--mask-size": "4000vmax" });
+    gsap.set("#logo-blanco-overlay", { opacity: 0 });
+    gsap.set("#hero-ui", {
+      opacity: 1,
+      pointerEvents: "auto"
+    });
+  } else {
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".scroll-trigger-zone",
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 1,
+      },
+    });
 
-      .to("#logo-blanco-overlay", {
-        opacity: 0,
-        duration: 0.1,
-        ease: "power1.out"
-      }, 0)
-      
-      .to("#hero-ui", {
-        opacity: 1,
-        pointerEvents: "auto",
-        duration: 0.5
-      }, "0.2")
-
-      .to({}, { duration: 2 });
-    }
+    tl.to("#mask-container, #logo-blanco-overlay", {
+      "--mask-size": "4000vmax",
+      duration: 1,
+      ease: "power2.in"
+    }, 0)
+    .to("#logo-blanco-overlay", {
+      opacity: 0,
+      duration: 0.1,
+      ease: "power1.out"
+    }, 0)
+    .to("#hero-ui", {
+      opacity: 1,
+      pointerEvents: "auto",
+      duration: 0.5
+    }, "0.2")
+    .to({}, { duration: 2 });
   }
+}
 
   toggleMapa() {
     this.mapaActivo = !this.mapaActivo;

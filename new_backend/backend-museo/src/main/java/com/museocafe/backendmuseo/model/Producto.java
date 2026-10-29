@@ -20,27 +20,31 @@ public class Producto {
     @JsonProperty("id_producto")
     private Long idProducto;
 
-    // Quitamos el nullable = false temporalmente para evitar el error SQL
+    // AQUI ESTÁ LA MAGIA: Le decimos que en PostgreSQL se llama nombre_comun
+    @Column(name = "nombre_comun")
+    @JsonProperty("nombre_comun")
     private String nombre; 
 
+    @Column(name = "nombre_cientifico")
+    @JsonProperty("nombre_cientifico")
     private String subtitulo; 
 
+    @Column(name = "tipo_producto")
     @JsonProperty("tipo_producto")
     private String tipoProducto; 
 
     @Column(columnDefinition = "TEXT")
-    private String descripcion; 
+    private String cuidados; // Usamos el nombre original de la BD (en vez de 'descripcion')
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", name = "detalles_tecnicos")
     @JsonProperty("detalles_tecnicos")
     private String detallesTecnicos; 
 
-    // Quitamos el nullable = false
+    @Column(name = "precio_base") // Asegúrate de que coincida con tu BD (a veces es 'precio' o 'precio_base')
     private BigDecimal precio;
 
     private Integer stock;
 
-    // ¡AQUÍ ESTÁ LA SOLUCIÓN AL CRASHEO PRINCIPAL!
     private Boolean activo = true;
 
     @ManyToOne

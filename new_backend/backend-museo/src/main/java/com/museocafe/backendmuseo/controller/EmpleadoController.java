@@ -2,7 +2,10 @@ package com.museocafe.backendmuseo.controller;
 
 import com.museocafe.backendmuseo.model.Pedido;
 import com.museocafe.backendmuseo.model.Usuario;
+import com.museocafe.backendmuseo.repository.CuponRepository;
+import com.museocafe.backendmuseo.repository.NoticiaRepository;
 import com.museocafe.backendmuseo.repository.PedidoRepository;
+import com.museocafe.backendmuseo.repository.PremioRuletaRepository;
 import com.museocafe.backendmuseo.repository.UsuarioRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +27,18 @@ import java.util.Optional;
 @CrossOrigin(origins = {"http://localhost:4200", "http://localhost:80"})
 public class EmpleadoController {
 
+    private final PremioRuletaRepository premioRuletaRepository;
+    private final NoticiaRepository noticiaRepository;
+    private final CuponRepository cuponRepository;
     private final PedidoRepository pedidoRepository;
     private final UsuarioRepository usuarioRepository;
 
-    public EmpleadoController(PedidoRepository pedidoRepository, UsuarioRepository usuarioRepository) {
+    public EmpleadoController(PedidoRepository pedidoRepository, UsuarioRepository usuarioRepository, CuponRepository cuponRepository, NoticiaRepository noticiaRepository, PremioRuletaRepository premioRuletaRepository) {
         this.pedidoRepository = pedidoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.cuponRepository = cuponRepository;
+        this.noticiaRepository = noticiaRepository;
+        this.premioRuletaRepository = premioRuletaRepository;
     }
 
     @GetMapping("/dashboard/{idEmpleado}")
@@ -47,7 +56,17 @@ public class EmpleadoController {
         respuesta.put("historial", historial);
         respuesta.put("totalAtendidas", historial.size());
 
+        respuesta.put("cupones", cuponRepository.findAll()); 
+        
+        respuesta.put("noticias", noticiaRepository.findAll());
+        respuesta.put("ruleta", premioRuletaRepository.findAll());
+
         return ResponseEntity.ok(respuesta);
+    }
+
+    @GetMapping("/cupones/listar")
+    public ResponseEntity<?> listarCupones() {
+        return ResponseEntity.ok(cuponRepository.findAll());
     }
 
     @PostMapping("/ordenes/estado")

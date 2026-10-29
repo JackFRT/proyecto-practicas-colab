@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,35 +50,73 @@ public class MarketingController {
     // GESTIÓN DE CUPONES (Solo Admin)
     // ==========================================
     
-    @PostMapping("/cupones/guardar/{idUsuario}")
-    public ResponseEntity<?> guardarCupon(@PathVariable Long idUsuario, @RequestBody Map<String, Object> payload) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
-        
-        if (usuarioOpt.isEmpty() || !"admin".equals(usuarioOpt.get().getRol())) {
-            return ResponseEntity.status(403).body(Map.of("success", false, "mensaje", "Acceso denegado: Solo los administradores pueden crear cupones."));
-        }
+    // ==========================================
+    // GESTIÓN DE CUPONES (Solo Admin)
+    // ==========================================
+    
+    @PostMapping("/cupones/guardar")
+    public ResponseEntity<?> guardarCupon(@RequestBody Map<String, Object> payload, 
+                                          org.springframework.security.core.Authentication authentication) {
+        try {
+            // Validación por seguridad usando el Token JWT del Admin
+            if (authentication != null) {
+                String emailAdmin = authentication.getName();
+                Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(emailAdmin);
+                if (usuarioOpt.isPresent() && !"admin".equals(usuarioOpt.get().getRol())) {
+                    return ResponseEntity.status(403).body(Map.of("success", false, "mensaje", "Acceso denegado."));
+                }
+            }
 
-        Cupon cupon = new Cupon();
-        cupon.setCodigo(payload.get("codigo_cupon").toString().toUpperCase()); 
-        cupon.setDescuentoPorcentaje(Integer.valueOf(payload.get("descuento").toString()));
-        cupon.setLimiteUsos(Integer.valueOf(payload.get("limite_usos").toString()));
-        
-        int diasValidez = Integer.parseInt(payload.getOrDefault("dias_validez", "30").toString());
-        cupon.setFechaVencimiento(LocalDateTime.now().plusDays(diasValidez));
-        
-        cuponRepository.save(cupon);
-        return ResponseEntity.ok(Map.of("success", true, "mensaje", "Cupón creado exitosamente."));
+            Cupon cupon = new Cupon();
+            String codigo = payload.get("codigo") != null ? payload.get("codigo").toString() : payload.get("codigo_cupon").toString();
+            cupon.setCodigo(codigo.toUpperCase()); 
+
+            Object desc = payload.get("descuento") != null ? payload.get("descuento") : payload.get("descuento_porcentaje");
+            cupon.setDescuentoPorcentaje(Integer.valueOf(desc.toString()));
+
+            Object limite = payload.get("limite_usos") != null ? payload.get("limite_usos") : payload.get("limite");
+            cupon.setLimiteUsos(Integer.valueOf(limite.toString()));
+            
+            int diasValidez = Integer.parseInt(payload.getOrDefault("dias_validez", "30").toString());
+            cupon.setFechaVencimiento(LocalDateTime.now().plusDays(diasValidez));
+            
+            cuponRepository.save(cupon);
+            return ResponseEntity.ok(Map.of("success", true, "mensaje", "Cupón creado exitosamente."));
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Error al crear cupón: " + e.getMessage()));
+        }
     }
 
-    @DeleteMapping("/cupones/eliminar/{idCupon}/usuario/{idUsuario}")
-    public ResponseEntity<?> eliminarCupon(@PathVariable Long idCupon, @PathVariable Long idUsuario) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
-        if (usuarioOpt.isEmpty() || !"admin".equals(usuarioOpt.get().getRol())) {
-            return ResponseEntity.status(403).body(Map.of("success", false, "mensaje", "Acceso denegado."));
+    @DeleteMapping("/cupones/eliminar/{idCupon}")
+    public ResponseEntity<?> eliminarCupon(@PathVariable Long idCupon) {
+        try {
+            cuponRepository.deleteById(idCupon);
+            return ResponseEntity.ok(Map.of("success", true, "mensaje", "Cupón eliminado."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Error al eliminar cupón."));
         }
+    }
 
-        cuponRepository.deleteById(idCupon);
-        return ResponseEntity.ok(Map.of("success", true, "mensaje", "Cupón eliminado."));
+    // ==========================================
+    // LISTAR CUPONES (Para la tabla de Marketing)
+    // ==========================================
+    @GetMapping("/cupones/listar")
+    public ResponseEntity<?> listarCupones() {
+        try {
+            List<Cupon> cupones = cuponRepository.findAll();
+            return ResponseEntity.ok(cupones);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Error al listar cupones"));
+        }
+    }
+
+    // ==========================================
+    // LISTAR NOTICIAS (Para el boletín/carrusel)
+    // ==========================================
+    @GetMapping("/noticias/listar")
+    public ResponseEntity<?> listarNoticias() {
+        return ResponseEntity.ok(noticiaRepository.findAll());
     }
 
     // ==========================================

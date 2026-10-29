@@ -3,7 +3,6 @@ package com.museocafe.backendmuseo.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,14 +15,15 @@ public class Cupon {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idCupon;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, length = 20)
     private String codigo;
 
     @Column(name = "descuento_porcentaje", nullable = false)
     private Integer descuentoPorcentaje;
 
+    // Relación opcional: Si es null es un cupón público. Si tiene usuario, es personal de la ruleta.
     @ManyToOne
-    @JoinColumn(name = "id_usuario")
+    @JoinColumn(name = "id_usuario", nullable = true)
     private Usuario usuario;
 
     @Column(name = "limite_usos")
@@ -34,14 +34,4 @@ public class Cupon {
 
     @Column(name = "fecha_vencimiento")
     private LocalDateTime fechaVencimiento;
-
-    public int getUsosActuales() {
-        
-        throw new UnsupportedOperationException("Unimplemented method 'getUsosActuales'");
-    }
-
-    public void setUsosActuales(int i) {
-        
-        throw new UnsupportedOperationException("Unimplemented method 'setUsosActuales'");
-    }
 }

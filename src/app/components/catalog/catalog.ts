@@ -62,11 +62,25 @@ export class Catalog implements OnInit {
     if (userGuardado) {
         this.usuarioActual = JSON.parse(userGuardado);
         const idValidado = this.usuarioActual.idUsuario || this.usuarioActual.id_usuario;
+
+        this.http.get<any>('http://localhost:8080/api/publico/inicio').subscribe({
+      next: (data) => {
+        // Combinamos café y cactus en la vista de bebidas si es necesario, o mapeamos tus listas
+        this.todosCactus = [...(data.cactus || []), ...(data.cafeteria || []), ...(data.cafe || [])];
+        this.todosSouvenirs = data.souvenirs || data.recuerdos || [];
+        this.categorias = data.categorias || [];
+
+        this.aplicarFiltros();
+        this.cdr.detectChanges();
+      }
+    });
         
         this.http.get<any>(`http://localhost:8080/api/perfil/cargar/${idValidado}`).subscribe(res => {
             if (res.success) {
                 this.usuarioActual = res.usuario;
                 this.cuponesDisponibles = res.cupones || [];
+
+                
                 localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
                 
                 const visitas = parseInt(this.usuarioActual.visitasPresenciales || this.usuarioActual.visitas_presenciales) || 0;
@@ -146,14 +160,16 @@ export class Catalog implements OnInit {
 
       let matchCategoria = true;
       if (this.categoriaSeleccionada !== 'todos') {
-        const idCat = p.categoria ? p.categoria.idCategoria : p.id_categoria;
-        matchCategoria = idCat == this.categoriaSeleccionada;
+        // Verificamos tanto si la categoría viene como objeto anidado o como ID plano
+        const idCat = p.categoria ? (p.categoria.idCategoria || p.categoria.id_categoria) : (p.id_categoria || p.idCategoria);
+        matchCategoria = String(idCat) === String(this.categoriaSeleccionada);
       }
 
       return matchBusqueda && matchCategoria;
     });
 
     this.totalPaginas = Math.ceil(this.productosFiltrados.length / this.itemsPorPagina) || 1;
+    if (this.paginaActual > this.totalPaginas) this.paginaActual = 1;
     this.actualizarPaginacion();
   }
 

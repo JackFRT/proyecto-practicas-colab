@@ -80,7 +80,7 @@ public class PerfilController {
         respuesta.put("datos_nivel", nivel);
         
         respuesta.put("historial", pedidoRepository.findByUsuarioIdUsuarioOrderByFechaPedidoDesc(idUsuario));
-        respuesta.put("cupones", cuponRepository.findByUsuarioIdUsuario(idUsuario));
+        respuesta.put("cupones", cuponRepository.findAll());
 
         return ResponseEntity.ok(respuesta);
     }

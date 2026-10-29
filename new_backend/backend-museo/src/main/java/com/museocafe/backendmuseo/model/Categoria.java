@@ -8,13 +8,17 @@ import lombok.Data;
 @Table(name = "categorias")
 @Data
 public class Categoria {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonProperty("id_categoria")
     private Long idCategoria;
 
+    @Column(nullable = false)
+    @JsonProperty("nombre")
     private String nombre;
 
+    @Column(nullable = false)
     @JsonProperty("tipo")
-    private String tipo; // Debe llamarse así para que guarde 'cactus', 'cafe', o 'recuerdo'
+    private String tipo;
 }

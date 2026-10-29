@@ -84,11 +84,13 @@ export class Empleado implements OnInit {
     
     this.prepararRuleta(); 
     this.cargarDashboard();
+    this.cargarCupones();
   }
 
   cambiarTab(tab: string) {
     this.tabActivo = tab;
     if (tab === 'inventario') this.cambiarVistaInventario(this.vistaInventario);
+    if (tab === 'marketing') this.cargarCupones();
   }
   
   cerrarSesion() {
@@ -109,17 +111,69 @@ export class Empleado implements OnInit {
     this.ordenesExpandidas.has(id) ? this.ordenesExpandidas.delete(id) : this.ordenesExpandidas.add(id);
   }
 
-  getRutaImagen(nombreArchivo: string, carpeta: string = 'cactus'): string {
-    if (!nombreArchivo) return ''; 
-    return `http://localhost:8080/images/${carpeta}/${nombreArchivo}`;
+  getRutaImagen(rutaBD: any, tipo: string = ''): string {
+    if (!rutaBD) return '/assets/images/mascota_cactus/mascota.jpg'; 
+    
+    let fileName = typeof rutaBD === 'string' ? rutaBD : String(rutaBD);
+    if (fileName.startsWith('http') || fileName.startsWith('assets/')) return fileName;
+
+    // Si la ruta ya trae la estructura de carpetas, la respetamos directo
+    if (fileName.includes('images/')) {
+        return `http://localhost:8080/api/archivos/${fileName}`;
+    }
+
+    fileName = fileName.split('\\').pop()?.split('/').pop() || fileName;
+
+    // Si no pasan el tipo, intentamos deducirlo o usamos 'cactus' por defecto
+    const carpetaTipo = tipo ? tipo : 'cactus'; 
+    return `http://localhost:8080/api/archivos/images/${carpetaTipo}/${fileName}`;
+  }
+
+  // 1. Obtener la ruta de la portada real
+  getFotoPortada(item: any): string {
+    if (!item) return '';
+    
+    // Si viene una propiedad directa
+    if (item.foto_principal) return item.foto_principal;
+
+    if (item.imagenes && item.imagenes.length > 0) {
+      // Buscar la que tenga esPrincipal o es_principal en true
+      const principal = item.imagenes.find((img: any) => img.esPrincipal === true || img.es_principal === true);
+      if (principal) {
+        return principal.ruta_imagen || principal.rutaImagen || '';
+      }
+      // Si ninguna está marcada, tomamos la primera
+      return item.imagenes[0].ruta_imagen || item.imagenes[0].rutaImagen || '';
+    }
+    return '';
+  }
+
+  // 2. Obtener únicamente las fotos adicionales (excluyendo la portada)
+  getFotosAdicionales(item: any): any[] {
+    if (!item || !item.imagenes || item.imagenes.length === 0) return [];
+    
+    // Filtramos las que NO son principales
+    return item.imagenes.filter((img: any) => {
+      const esP = img.esPrincipal === true || img.es_principal === true;
+      return !esP;
+    });
   }
 
   aplicarFiltros() {
     this.inventarioFiltrado = this.inventario.filter(item => {
-        const matchTipo = item.tipo === this.vistaInventario;
-        const nombreCompleto = `${item.nombre_comun} ${item.nombre_cientifico || ''}`.toLowerCase();
+        // 1. Validamos el tipo (Spring Boot envía 'tipo_producto')
+        const tipoItem = item.tipo_producto || item.tipo;
+        const matchTipo = tipoItem === this.vistaInventario;
+        
+        // 2. Validamos la búsqueda
+        const nombreComun = item.nombre_comun || item.nombre || '';
+        const nombreCientifico = item.nombre_cientifico || item.subtitulo || '';
+        const nombreCompleto = `${nombreComun} ${nombreCientifico}`.toLowerCase();
         const matchBusqueda = nombreCompleto.includes(this.terminoBusqueda.toLowerCase());
-        const matchCategoria = this.categoriaFiltro === 'todas' || item.nombre_categoria === this.categoriaFiltro;
+        
+        // 3. Validamos la categoría (Spring Boot la envía como objeto anidado: categoria.nombre)
+        const nombreCat = (item.categoria && item.categoria.nombre) ? item.categoria.nombre : (item.nombre_categoria || 'todas');
+        const matchCategoria = this.categoriaFiltro === 'todas' || nombreCat === this.categoriaFiltro;
         
         return matchTipo && matchBusqueda && matchCategoria;
     });
@@ -276,28 +330,84 @@ export class Empleado implements OnInit {
 
   cargarDashboard() {
     this.cargando = true;
+    
+    // 1. Cargamos el dashboard principal (Órdenes, Cupones, Noticias, Ruleta)
     this.http.get<any>(`http://localhost:8080/api/empleado/dashboard/${this.idEmpleado}`).subscribe({
       next: (res) => {
-        if (res.success) {
+        if (res && res.success) {
           this.reservas_activas = res.ordenesActivas || [];
           this.historial_atendidas = res.historial || [];
           this.stats_empleado = { total_atendidas: res.totalAtendidas || 0 };
           this.num_notificaciones = this.reservas_activas.length;
 
-          this.inventario = res.inventario || res.productos || [];
-          this.categorias = res.categorias || [];
+          // Asignamos cupones y noticias directamente del backend o respaldamos con listados
           this.cupones = res.cupones || [];
           this.noticias = res.noticias || [];
           this.premios_ruleta = res.ruleta || res.premios_ruleta || [];
           
+          if (this.cupones.length === 0) {
+              this.http.get<any[]>('http://localhost:8080/api/marketing/cupones/listar').subscribe(c => {
+                  this.cupones = c || [];
+                  this.cdr.detectChanges();
+              });
+          }
+          if (this.noticias.length === 0) {
+              this.http.get<any[]>('http://localhost:8080/api/marketing/noticias/listar').subscribe(n => {
+                  this.noticias = n || [];
+                  this.cdr.detectChanges();
+              });
+          }
+
           this.autoRepararRuleta();
           this.prepararRuleta();
-          this.aplicarFiltros();
         }
-        this.cargando = false;
-        this.cdr.detectChanges();
+        
+        // 2. Cargamos las categorías de forma independiente
+        this.http.get<any>('http://localhost:8080/api/inventario/categorias').subscribe({
+            next: (categoriasBD) => {
+                this.categorias = categoriasBD || [];
+                
+                // 3. Cargamos los productos del inventario de forma independiente
+                this.http.get<any>('http://localhost:8080/api/inventario/productos').subscribe({
+                    next: (productosBD) => {
+                        this.inventario = productosBD || [];
+                        this.aplicarFiltros();
+                        this.cargando = false;
+                        this.cdr.detectChanges();
+                    },
+                    error: (errProd) => {
+                        console.error("Error cargando productos:", errProd);
+                        this.inventario = [];
+                        this.aplicarFiltros();
+                        this.cargando = false;
+                        this.cdr.detectChanges();
+                    }
+                });
+            },
+            error: (errCat) => {
+                console.error("Error cargando categorías:", errCat);
+                this.categorias = [];
+                this.cargando = false;
+                this.cdr.detectChanges();
+            }
+        });
       },
-      error: (err) => { console.error("Error BD", err); this.cargando = false; }
+      error: (err) => { 
+        console.error("Error cargando dashboard principal:", err);
+        // Aun si falla el dashboard general, intentamos cargar el inventario para no bloquear la pantalla
+        this.http.get<any>('http://localhost:8080/api/inventario/productos').subscribe({
+            next: (productosBD) => {
+                this.inventario = productosBD || [];
+                this.aplicarFiltros();
+                this.cargando = false;
+                this.cdr.detectChanges();
+            },
+            error: () => {
+                this.cargando = false;
+                this.cdr.detectChanges();
+            }
+        });
+      }
     });
   }
 
@@ -310,8 +420,8 @@ export class Empleado implements OnInit {
     if (accion === 'guardar_categoria') urlTarget = 'http://localhost:8080/api/inventario/categorias/guardar';
     else if (accion === 'guardar_producto') urlTarget = 'http://localhost:8080/api/inventario/productos/guardar';
     else if (accion === 'guardar_noticia') urlTarget = `http://localhost:8080/api/marketing/noticias/guardar/${this.idEmpleado}`;
-    else if (accion === 'guardar_cupon') urlTarget = `http://localhost:8080/api/marketing/cupones/guardar/${this.idEmpleado}`;
-    else if (accion === 'guardar_premio_ruleta') urlTarget = `http://localhost:8080/api/ruleta/guardar/${this.idEmpleado}`;
+    else if (accion === 'guardar_cupon') urlTarget = 'http://localhost:8080/api/marketing/cupones/guardar';
+    else if (accion === 'guardar_premio_ruleta') urlTarget = 'http://localhost:8080/api/ruleta/guardar';
 
     if (urlTarget === '') {
         alert("Acción no reconocida: " + accion);
@@ -322,37 +432,123 @@ export class Empleado implements OnInit {
     // 🌟 RUTA A: PRODUCTOS Y NOTICIAS (Envían Archivos/Fotos intactos)
     if (accion === 'guardar_producto' || accion === 'guardar_noticia') {
         const formData = new FormData(form);
-        formData.append('id_empleado', this.idEmpleado.toString());
-        
+        const cleanFormData = new FormData(); // Creamos uno limpio desde cero
+
+        // Pasamos el ID del empleado
+        cleanFormData.append('id_empleado', this.idEmpleado.toString());
+
         if (accion === 'guardar_producto') {
-            if (this.itemEditando) formData.append('id_producto', this.itemEditando.id_producto || this.itemEditando.id_cactus || '');
-            if (this.tieneEstilos) formData.append('variantes_json', JSON.stringify(this.variantesDinamicas));
-            if (formData.get('id_categoria') === '') formData.delete('id_categoria');
+            // 1. Manejo del ID del Producto (solo si estamos editando)
+            if (this.itemEditando && (this.itemEditando.id_producto || this.itemEditando.id_cactus)) {
+                cleanFormData.append('id_producto', (this.itemEditando.id_producto || this.itemEditando.id_cactus).toString());
+            }
+
+            // 2. Textos Básicos
+            const nombreComun = formData.get('nombre_comun');
+            if (nombreComun) cleanFormData.append('nombre_comun', nombreComun);
+
+            const nombreCientifico = formData.get('nombre_cientifico');
+            if (nombreCientifico) cleanFormData.append('nombre_cientifico', nombreCientifico);
+
+            const precio = formData.get('precio');
+            if (precio) cleanFormData.append('precio', precio);
+
+            const cuidados = formData.get('cuidados');
+            if (cuidados) cleanFormData.append('cuidados', cuidados);
+
+            const detallesTecnicos = formData.get('detalles_tecnicos');
+            if (detallesTecnicos) cleanFormData.append('detalles_tecnicos', detallesTecnicos);
+
+            const stock = formData.get('stock');
+            if (stock) cleanFormData.append('stock', stock);
+
+            const tipoProducto = formData.get('tipo_producto');
+            if (tipoProducto) cleanFormData.append('tipo_producto', tipoProducto);
+
+            const activo = formData.get('activo');
+            if (activo !== null) cleanFormData.append('activo', activo);
+
+            // 3. Categoría (aseguramos que no vaya vacía para evitar error 500)
+            const idCat = formData.get('id_categoria');
+            if (idCat && idCat !== '') {
+                cleanFormData.append('id_categoria', idCat);
+            }
+
+            // 4. Variantes JSON (Recuerdos)
+            if (this.tieneEstilos) {
+                cleanFormData.append('variantes_json', JSON.stringify(this.variantesDinamicas));
+            }
+
+            // 5. Foto Principal
+            const fotoPrincipal = formData.get('foto_principal');
+            if (fotoPrincipal && (fotoPrincipal as File).size > 0) {
+                cleanFormData.append('foto_principal', fotoPrincipal);
+            }
+
+            // 6. Fotos Adicionales (Múltiples)
+            // En el HTML el input tiene name="fotos_adicionales[]"
+            const fotosAdicionales = formData.getAll('fotos_adicionales[]');
+            fotosAdicionales.forEach(foto => {
+                if ((foto as File).size > 0) {
+                    // Importante: Spring Boot espera "fotos_adicionales[]" tal cual
+                    cleanFormData.append('fotos_adicionales[]', foto); 
+                }
+            });
+            
+            console.log("🚀 Enviando Producto a Java (FormData)");
         }
 
-        this.http.post<any>(urlTarget, formData).subscribe({
+        // Si es noticia, usamos el original
+        const dataAEnviar = accion === 'guardar_producto' ? cleanFormData : formData;
+
+        this.http.post<any>(urlTarget, dataAEnviar).subscribe({
             next: (res) => this.manejarRespuesta(res, accion, form),
-            error: () => { alert("Error de conexión"); this.cargando = false; }
+            error: (err) => { 
+                console.error("Error del backend al guardar archivo:", err);
+                if (err.error && err.error.mensaje) {
+                    alert(err.error.mensaje);
+                } else {
+                    alert("Error de conexión. Revisa la consola F12."); 
+                }
+                this.cargando = false;
+                this.cdr.detectChanges();
+            }
         });
-    } 
+    }
     // 🌟 RUTA B: CATEGORÍAS, RULETA Y CUPONES (Envían JSON Ligero)
     else {
         const formData = new FormData(form);
-        const payload: any = {};
-        formData.forEach((value, key) => payload[key] = value);
-        payload.id_empleado = this.idEmpleado;
+        let payload: any = {};
 
-        // Limpieza para evitar errores 500 en Spring Boot
-        if (payload.id_categoria === '') delete payload.id_categoria;
-        if (payload.id_premio === '') delete payload.id_premio;
+        // CONSTRUCCIÓN MANUAL ESTRICTA PARA CATEGORÍAS
+        if (accion === 'guardar_categoria') {
+            payload = {
+                nombre: formData.get('nombre'),
+                tipo: formData.get('tipo')
+            };
+            
+            // Solo añadimos el ID si estamos editando (y lo convertimos a número)
+            const idCat = formData.get('id_categoria');
+            if (idCat && idCat !== '') {
+                payload.id_categoria = Number(idCat);
+            }
+        } 
+        // CONSTRUCCIÓN PARA EL RESTO (Ruleta, Cupones, etc.)
+        else {
+            formData.forEach((value, key) => payload[key] = value);
+            payload.id_empleado = this.idEmpleado;
+            if (payload.id_premio === '') delete payload.id_premio;
+        }
         
-        // Adaptar nombres para que calcen perfecto con los modelos de Java
-        if (payload.nombre_categoria) { payload.nombre = payload.nombre_categoria; delete payload.nombre_categoria; }
-        if (payload.tipo_categoria) { payload.tipo = payload.tipo_categoria; delete payload.tipo_categoria; }
+        console.log("🚀 Enviando Payload a Java:", payload);
 
         this.http.post<any>(urlTarget, payload).subscribe({
             next: (res) => this.manejarRespuesta(res, accion, form),
-            error: () => { alert("Error de conexión"); this.cargando = false; }
+            error: (err) => { 
+                console.error("Error del backend:", err);
+                alert("Error de conexión. Revisa la consola F12."); 
+                this.cargando = false; 
+            }
         });
     }
   }
@@ -366,6 +562,18 @@ export class Empleado implements OnInit {
           } else {
               this.cerrarModales(); 
           }
+          
+          // Refrescamos los datos específicos al instante
+          if (accion === 'guardar_cupon') {
+              this.http.get<any[]>('http://localhost:8080/api/marketing/cupones/listar').subscribe({
+                  next: (lista) => { this.cupones = lista || []; this.cdr.detectChanges(); }
+              });
+          } else if (accion === 'guardar_noticia') {
+              this.http.get<any[]>('http://localhost:8080/api/marketing/noticias/listar').subscribe({
+                  next: (lista) => { this.noticias = lista || []; this.cdr.detectChanges(); }
+              });
+          }
+          
           this.cargarDashboard(); 
       } else { 
           alert(res.mensaje); 
@@ -374,7 +582,19 @@ export class Empleado implements OnInit {
       this.cdr.detectChanges();
   }
 
-  ejecutarAccion(accion: string, extraData: any = {}) {
+  cargarCupones() {
+    this.http.get<any[]>('http://localhost:8080/api/marketing/cupones/listar').subscribe({
+      next: (res) => {
+        this.cupones = res || [];
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Error al cargar cupones:", err);
+      }
+    });
+  }
+
+ ejecutarAccion(accion: string, extraData: any = {}) {
       if ((accion.includes('eliminar') || accion === 'cancelar') && !confirm("¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.")) return;
       if (accion === 'reportar' && !confirm("ALERTA: ¿Bloquear usuario por 7 días?")) return;
       
@@ -382,10 +602,12 @@ export class Empleado implements OnInit {
       let metodo = 'POST';
 
       if (accion.includes('eliminar_producto')) {
-          urlTarget = `http://localhost:8080/api/inventario/productos/eliminar/${extraData.id}`;
+          const idProd = extraData.id || extraData.id_producto;
+          urlTarget = `http://localhost:8080/api/inventario/productos/eliminar/${idProd}`;
           metodo = 'DELETE';
       } else if (accion.includes('eliminar_categoria')) {
-          urlTarget = `http://localhost:8080/api/inventario/categorias/eliminar/${extraData.id}`;
+          const idCat = extraData.id || extraData.id_categoria || extraData.idCategoria;
+          urlTarget = `http://localhost:8080/api/inventario/categorias/eliminar/${idCat}`;
           metodo = 'DELETE';
       } else if (accion === 'aprobar' || accion === 'listo' || accion === 'completar') {
           urlTarget = `http://localhost:8080/api/empleado/ordenes/${extraData.id_reserva}/estado`;
@@ -394,11 +616,23 @@ export class Empleado implements OnInit {
           urlTarget = `http://localhost:8080/api/usuarios/${extraData.id_cliente}/visita`;
       } else if (accion === 'toggle_noticia') {
           urlTarget = `http://localhost:8080/api/marketing/noticias/toggle/${extraData.id}/usuario/${this.idEmpleado}`;
-      } else if (accion === 'eliminar_premio_ruleta') { // <--- ¡AÑADE ESTO!
-          urlTarget = `http://localhost:8080/api/ruleta/eliminar/${extraData.id}`;
+      } else if (accion === 'eliminar_premio_ruleta') {
+          const idPremio = extraData.id || extraData.id_premio;
+          urlTarget = `http://localhost:8080/api/ruleta/eliminar/${idPremio}`;
           metodo = 'DELETE';
-      } else if (accion === 'guardar_probabilidades_ruleta') { // <--- ¡Y ESTO!
+      } else if (accion === 'guardar_probabilidades_ruleta') {
           urlTarget = `http://localhost:8080/api/ruleta/probabilidades`;
+      } else if (accion === 'eliminar_imagen') {
+          urlTarget = `http://localhost:8080/api/inventario/productos/${extraData.id_producto}/imagen/${extraData.id_imagen}`;
+          metodo = 'DELETE';
+      } else if (accion === 'eliminar_cupon') {
+        const idCup = extraData.id || extraData.id_cupon;
+        urlTarget = `http://localhost:8080/api/marketing/cupones/eliminar/${idCup}`;
+        metodo = 'DELETE';
+    } else if (accion === 'eliminar_noticia') {
+        const idNot = extraData.id || extraData.id_noticia;
+        urlTarget = `http://localhost:8080/api/marketing/noticias/eliminar/${idNot}/usuario/${this.idEmpleado}`;
+        metodo = 'DELETE';
     }
 
       const request = metodo === 'DELETE' ? this.http.delete<any>(urlTarget) : this.http.post<any>(urlTarget, extraData);
@@ -407,12 +641,34 @@ export class Empleado implements OnInit {
           next: (res) => { 
               if(res.success) { 
                   this.mostrarToast(res.mensaje); 
-                  this.cerrarModales();
+
+                  // ---> LA MAGIA ESTÁ AQUÍ <---
+                  if (accion === 'eliminar_imagen') {
+                      // Borramos la imagen visualmente del modal SIN cerrarlo
+                      if (this.itemEditando && this.itemEditando.imagenes) {
+                          this.itemEditando.imagenes = this.itemEditando.imagenes.filter((i:any) => 
+                              (i.id_imagen || i.idImagen || i.id) !== extraData.id_imagen
+                          );
+                      }
+                  } else {
+                      // Solo cerramos el modal si NO estamos borrando una imagen
+                      this.cerrarModales();
+                  }
+
                   this.cargarDashboard(); 
-              } else { alert(res.mensaje); }
+              } else { 
+                  alert(res.mensaje); 
+              }
               this.cdr.detectChanges();
           },
-          error: () => alert("Error de servidor.")
+          error: (err) => {
+              if (err.error && err.error.mensaje) {
+                  alert(err.error.mensaje);
+              } else {
+                  console.error("Error del servidor:", err);
+                  alert("Error de conexión con el servidor.");
+              }
+          }
       });
   }
 
