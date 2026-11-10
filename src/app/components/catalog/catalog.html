@@ -1,162 +1,227 @@
-<div class="font-['Montserrat'] bg-[#050505] text-white min-h-screen">
-    
-    <section id="catalogo-section" class="py-[100px] md:py-[120px] px-[5%] max-w-[1400px] mx-auto">
-        <div class="text-center mb-12">
-            <span class="text-[#d1b88e] font-bold tracking-[6px] uppercase text-sm drop-shadow-md">Nuestra Selección</span>
-            <h2 class="text-4xl md:text-[3.5rem] font-black tracking-[2px] mt-2 mb-0 text-white uppercase drop-shadow-xl">EL MENÚ</h2>
+<div class="font-['Montserrat'] min-h-screen transition-colors duration-500"
+     [ngClass]="themeService.isDarkMode() ? 'bg-[#050505] text-white' : 'bg-[#f8f5ee] text-[#1a281f]'">
+
+    <section class="py-16 md:py-24 px-4 sm:px-[5%] max-w-[1400px] mx-auto">
+        <div class="text-center mb-10 md:mb-12">
+            <span class="font-bold tracking-[4px] md:tracking-[6px] uppercase text-xs sm:text-sm"
+                  [ngClass]="themeService.isDarkMode() ? 'text-[#d1b88e]' : 'text-[#8c583a]'">Nuestra Selección</span>
+            <h2 class="text-3xl sm:text-4xl md:text-[3.4rem] font-black tracking-[2px] mt-2 mb-0 uppercase">CARTA &amp; CATÁLOGO</h2>
         </div>
-        
-        <div class="flex flex-col items-center gap-8 mb-12">
-            
-            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <button class="px-8 py-3 font-extrabold text-[1rem] cursor-pointer transition-all duration-300 tracking-[1px] border-2 rounded uppercase"
-                        [ngClass]="tipoActual === 'cactus' ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'bg-transparent border-white/20 text-white/50 hover:border-white hover:text-white'"
-                        (click)="cambiarTipo('cactus')">CAFÉ Y BEBIDAS</button>
-                <button class="px-8 py-3 font-extrabold text-[1rem] cursor-pointer transition-all duration-300 tracking-[1px] border-2 rounded uppercase"
-                        [ngClass]="tipoActual === 'recuerdo' ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'bg-transparent border-white/20 text-white/50 hover:border-white hover:text-white'"
-                        (click)="cambiarTipo('recuerdo')">POSTRES Y MERCH</button>
+
+        <div class="flex flex-col items-center gap-6 md:gap-8 mb-10 md:mb-12">
+            <!-- Pestañas de Tipo de Producto (Siempre visibles: Café, Cactus y Recuerdos) -->
+            <div class="flex flex-wrap justify-center gap-3 w-full">
+                <button type="button"
+                        class="px-5 sm:px-7 py-3 font-extrabold text-xs sm:text-sm cursor-pointer transition-all duration-300 tracking-[1px] border-2 rounded-full uppercase"
+                        [ngClass]="tipoActual === 'cafe'
+                          ? 'bg-[#d1b88e] text-black border-[#d1b88e] shadow-[0_0_20px_rgba(209,184,142,0.4)]'
+                          : (themeService.isDarkMode() ? 'bg-transparent border-white/20 text-white/60 hover:border-white hover:text-white' : 'bg-white/70 border-[#8c583a]/30 text-[#4a2c18]/70 hover:border-[#8c583a] hover:text-[#1a281f]')"
+                        (click)="cambiarTipo('cafe')">
+                    <i class="fas fa-mug-hot mr-2"></i>CAFÉ Y BEBIDAS ({{ todosCafe.length }})
+                </button>
+
+                <button type="button"
+                        class="px-5 sm:px-7 py-3 font-extrabold text-xs sm:text-sm cursor-pointer transition-all duration-300 tracking-[1px] border-2 rounded-full uppercase"
+                        [ngClass]="tipoActual === 'cactus'
+                          ? 'bg-[#d1b88e] text-black border-[#d1b88e] shadow-[0_0_20px_rgba(209,184,142,0.4)]'
+                          : (themeService.isDarkMode() ? 'bg-transparent border-white/20 text-white/60 hover:border-white hover:text-white' : 'bg-white/70 border-[#8c583a]/30 text-[#4a2c18]/70 hover:border-[#8c583a] hover:text-[#1a281f]')"
+                        (click)="cambiarTipo('cactus')">
+                    <i class="fas fa-seedling mr-2"></i>CACTUS Y PLANTAS ({{ todosCactus.length }})
+                </button>
+
+                <button type="button"
+                        class="px-5 sm:px-7 py-3 font-extrabold text-xs sm:text-sm cursor-pointer transition-all duration-300 tracking-[1px] border-2 rounded-full uppercase"
+                        [ngClass]="tipoActual === 'recuerdo'
+                          ? 'bg-[#d1b88e] text-black border-[#d1b88e] shadow-[0_0_20px_rgba(209,184,142,0.4)]'
+                          : (themeService.isDarkMode() ? 'bg-transparent border-white/20 text-white/60 hover:border-white hover:text-white' : 'bg-white/70 border-[#8c583a]/30 text-[#4a2c18]/70 hover:border-[#8c583a] hover:text-[#1a281f]')"
+                        (click)="cambiarTipo('recuerdo')">
+                    <i class="fas fa-gift mr-2"></i>RECUERDOS Y MERCH ({{ todosSouvenirs.length }})
+                </button>
             </div>
 
-            
-            <div class="flex flex-col md:flex-row gap-5 w-full max-w-[800px] justify-center">
-                <div class="flex-1 min-w-[250px] relative">
-                    <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-black/60 text-lg z-10"></i>
-                    <input type="text" placeholder="BUSCAR ORIGEN O PRODUCTO..." 
-                           class="w-full py-4 pr-5 pl-12 bg-white/95 rounded border-none text-black font-extrabold outline-none shadow-inner" 
+            <!-- Buscador y Filtro de Categoría -->
+            <div class="flex flex-col md:flex-row gap-4 w-full max-w-[820px] justify-center">
+                <div class="flex-1 relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-black/60 text-base z-10"></i>
+                    <input type="text" placeholder="BUSCAR POR NOMBRE O ESPECIE..."
+                           class="w-full py-3.5 pr-5 pl-11 bg-white rounded-xl border border-gray-300 text-black font-extrabold text-sm outline-none shadow-sm focus:border-[#d1b88e]"
                            (input)="onBuscar($event)" [value]="terminoBusqueda">
                 </div>
 
-                <div class="relative">
-                    <select class="w-full h-full py-4 px-6 bg-[#0a0a0a]/80 backdrop-blur-md border-2 border-white/30 rounded text-white font-extrabold cursor-pointer outline-none appearance-none pr-10 focus:border-[#d1b88e] transition-colors"
+                <div class="relative min-w-[230px]">
+                    <select class="w-full h-full py-3.5 px-5 border-2 rounded-xl font-extrabold text-sm cursor-pointer outline-none appearance-none pr-10 focus:border-[#d1b88e] transition-colors"
+                            [ngClass]="themeService.isDarkMode() ? 'bg-[#0a0a0a] border-white/30 text-white' : 'bg-white border-[#8c583a]/30 text-[#1a281f]'"
                             (change)="cambiarCategoria($event)" [value]="categoriaSeleccionada">
-                        <option value="todos" class="bg-black text-white">TODAS LAS CATEGORÍAS</option>
+                        <option value="todos">TODAS LAS CATEGORÍAS</option>
                         @for (cat of categorias; track cat.id_categoria) {
                             @if (cat.tipo === tipoActual || !cat.tipo) {
-                                <option [value]="cat.id_categoria" class="bg-black text-white">{{ cat.nombre | uppercase }}</option>
+                                <option [value]="cat.id_categoria">{{ cat.nombre | uppercase }}</option>
                             }
                         }
                     </select>
-                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none"></i>
+                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none"></i>
                 </div>
             </div>
         </div>
 
-        
+        <!-- Cuadrícula de Productos con Paginación -->
         <div class="flex items-center gap-2 md:gap-5 relative">
-            <button class="absolute md:static -left-4 md:left-0 top-1/2 -translate-y-1/2 bg-black/80 md:bg-transparent border-none text-white text-3xl md:text-[3rem] cursor-pointer transition-colors duration-300 hover:text-[#d1b88e] disabled:opacity-20 disabled:cursor-not-allowed z-10 p-2 rounded-r-lg md:rounded-none" 
+            <button type="button"
+                    class="hidden md:flex items-center justify-center bg-transparent border-none text-3xl cursor-pointer transition-colors duration-300 hover:text-[#d1b88e] disabled:opacity-20 disabled:cursor-not-allowed z-10 p-2"
+                    [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'"
                     (click)="cambiarPagina(-1)" [disabled]="paginaActual === 1">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 flex-1">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-7 flex-1">
                 @if (productosPaginados.length > 0) {
                     @for (producto of productosPaginados; track producto.id_cactus) {
-                        
-                        <div class="bg-[#111111]/80 backdrop-blur-sm aspect-square relative cursor-pointer overflow-hidden border border-white/10 rounded-xl transition-all duration-300 hover:border-[#d1b88e] hover:-translate-y-2 hover:shadow-[0_15px_30px_rgba(209,184,142,0.15)] group" 
+                        <div class="aspect-square relative cursor-pointer overflow-hidden border rounded-2xl transition-all duration-300 hover:border-[#d1b88e] hover:-translate-y-2 hover:shadow-[0_15px_30px_rgba(209,184,142,0.2)] group"
+                             [ngClass]="themeService.isDarkMode() ? 'bg-[#111111]/80 border-white/10' : 'bg-white border-[#8c583a]/20 shadow-md'"
                              (click)="abrirDetalle(producto)">
-                            
-                            @if (tipoActual === 'recuerdo') {
-                                <div class="absolute top-4 left-4 bg-white text-black px-4 py-1.5 font-black text-xs tracking-[1px] rounded-full z-10 shadow-lg">MERCH</div>
-                            } @else if (producto.precio > 15) {
-                                <div class="absolute top-4 left-4 bg-[#d1b88e] text-black px-4 py-1.5 font-black text-xs tracking-[1px] rounded-full z-10 shadow-lg">PREMIUM</div>
-                            }
-                            
-                            <img [src]="getRutaImagen(producto.imagen_url)" [alt]="producto.nombre_comun" 
-                                 class="w-full h-full object-cover grayscale-[60%] transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110">
-                            
-                            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                            <div class="absolute bottom-0 left-0 w-full p-5 font-extrabold text-lg text-center border-t border-white/10 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                {{ producto.nombre_comun | uppercase }}
+                            <!-- Etiqueta superior izquierda -->
+                            @if (esProductoConAlcohol(producto)) {
+                                <div class="absolute top-3.5 left-3.5 bg-amber-600 text-white px-3 py-1 font-black text-[10px] tracking-[1px] rounded-full z-10 shadow-md flex items-center gap-1.5">
+                                    <i class="fas fa-wine-glass-alt"></i> +18 ALCOHOL
+                                </div>
+                            } @else if (tipoActual === 'recuerdo') {
+                                <div class="absolute top-3.5 left-3.5 bg-white text-black px-3.5 py-1 font-black text-[11px] tracking-[1px] rounded-full z-10 shadow-md">MERCH</div>
+                            } @else if (producto.precio > 25) {
+                                <div class="absolute top-3.5 left-3.5 bg-[#d1b88e] text-black px-3.5 py-1 font-black text-[11px] tracking-[1px] rounded-full z-10 shadow-md">ESPECIAL</div>
+                            }
+
+                            <!-- Etiqueta de Precio superior derecha -->
+                            <div class="absolute top-3.5 right-3.5 bg-black/80 backdrop-blur-md text-[#d1b88e] border border-[#d1b88e]/40 px-3.5 py-1 font-black text-xs rounded-full z-10 shadow-md">
+                                S/ {{ (producto.precio_base || producto.precio) | number:'1.2-2' }}
+                            </div>
+
+                            <img [src]="getRutaImagenProducto(producto)" [alt]="producto.nombre_comun"
+                                 class="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                                 onerror="this.src='/assets/images/museo/logo-cafe.png'">
+
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-85 group-hover:opacity-95 transition-opacity duration-300"></div>
+
+                            <div class="absolute bottom-0 left-0 w-full p-4 text-center text-white">
+                                <div class="font-extrabold text-base sm:text-lg leading-tight uppercase">
+                                    {{ producto.nombre_comun }}
+                                </div>
+                                @if (producto.nombre_cientifico) {
+                                    <div class="text-xs italic text-[#d1b88e] mt-0.5 truncate">{{ producto.nombre_cientifico }}</div>
+                                }
                             </div>
                         </div>
                     }
                 } @else {
-                    <div class="col-span-full text-center font-extrabold text-white/50 py-16 bg-[#111]/50 rounded-2xl border border-white/5">
+                    <div class="col-span-full text-center font-extrabold opacity-60 py-16 rounded-2xl border"
+                         [ngClass]="themeService.isDarkMode() ? 'bg-[#111]/50 border-white/5' : 'bg-white/60 border-[#8c583a]/15'">
                         <i class="fas fa-box-open text-4xl mb-4 block opacity-50"></i>
-                        MENÚ NO DISPONIBLE EN ESTA CATEGORÍA.
+                        NO SE ENCONTRARON PRODUCTOS EN ESTA SECCIÓN AÚN.
                     </div>
                 }
             </div>
 
-            <button class="absolute md:static -right-4 md:right-0 top-1/2 -translate-y-1/2 bg-black/80 md:bg-transparent border-none text-white text-3xl md:text-[3rem] cursor-pointer transition-colors duration-300 hover:text-[#d1b88e] disabled:opacity-20 disabled:cursor-not-allowed z-10 p-2 rounded-l-lg md:rounded-none" 
+            <button type="button"
+                    class="hidden md:flex items-center justify-center bg-transparent border-none text-3xl cursor-pointer transition-colors duration-300 hover:text-[#d1b88e] disabled:opacity-20 disabled:cursor-not-allowed z-10 p-2"
+                    [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'"
                     (click)="cambiarPagina(1)" [disabled]="paginaActual === totalPaginas">
                 <i class="fas fa-chevron-right"></i>
             </button>
         </div>
-        
-        <div class="text-center mt-10 font-extrabold text-white/50 tracking-[2px] text-sm">
-            PÁGINA {{ paginaActual }} DE {{ totalPaginas }}
+
+        <!-- Controles de paginación móvil + indicador -->
+        <div class="flex items-center justify-center gap-6 mt-8">
+            <button type="button"
+                    class="md:hidden px-4 py-2 rounded-full border font-bold text-xs disabled:opacity-30"
+                    [ngClass]="themeService.isDarkMode() ? 'border-white/20 text-white' : 'border-[#8c583a]/30 text-[#1a281f]'"
+                    (click)="cambiarPagina(-1)" [disabled]="paginaActual === 1">
+                <i class="fas fa-chevron-left mr-1"></i> ANTERIOR
+            </button>
+            <span class="font-extrabold opacity-60 tracking-[2px] text-xs sm:text-sm">
+                PÁGINA {{ paginaActual }} DE {{ totalPaginas }}
+            </span>
+            <button type="button"
+                    class="md:hidden px-4 py-2 rounded-full border font-bold text-xs disabled:opacity-30"
+                    [ngClass]="themeService.isDarkMode() ? 'border-white/20 text-white' : 'border-[#8c583a]/30 text-[#1a281f]'"
+                    (click)="cambiarPagina(1)" [disabled]="paginaActual === totalPaginas">
+                SIGUIENTE <i class="fas fa-chevron-right ml-1"></i>
+            </button>
         </div>
     </section>
 
-    
-    <section class="py-[80px] md:py-[100px] px-[5%] md:px-[10%] bg-[#0a0503] border-t border-white/10">
-        <h2 class="text-center text-3xl md:text-[3.5rem] font-black mb-[60px] uppercase drop-shadow-lg text-[#d1b88e]">LA CULTURA DEL CAFÉ</h2>
-        <div class="flex flex-col gap-12 max-w-[1000px] mx-auto">
-            
-            <div class="flex flex-col md:flex-row items-center gap-8 md:gap-[50px] bg-[#110a05]/60 backdrop-blur-md p-8 border border-white/10 rounded-[2rem] text-center md:text-left shadow-2xl">
-                <div class="shrink-0 h-[400px] w-full md:w-[250px] rounded-xl overflow-hidden border border-white/20">
+    <!-- Sección Cultura del Café -->
+    <section class="py-16 md:py-24 px-4 sm:px-[5%] md:px-[10%] border-t transition-colors duration-500"
+             [ngClass]="themeService.isDarkMode() ? 'bg-[#0a0503] border-white/10' : 'bg-[#efe7d8] border-[#8c583a]/20'">
+        <h2 class="text-center text-2xl sm:text-3xl md:text-[3.2rem] font-black mb-10 md:mb-14 uppercase drop-shadow-sm"
+            [ngClass]="themeService.isDarkMode() ? 'text-[#d1b88e]' : 'text-[#8c583a]'">LA CULTURA DEL CAFÉ &amp; EL CACTUS</h2>
+        <div class="flex flex-col gap-8 md:gap-12 max-w-[1000px] mx-auto">
+
+            <div class="flex flex-col md:flex-row items-center gap-6 md:gap-12 backdrop-blur-md p-6 sm:p-8 border rounded-[2rem] text-center md:text-left shadow-xl"
+                 [ngClass]="themeService.isDarkMode() ? 'bg-[#110a05]/60 border-white/10 text-white' : 'bg-white/90 border-[#8c583a]/20 text-[#1a281f]'">
+                <div class="shrink-0 h-[340px] w-full max-w-[260px] rounded-xl overflow-hidden border border-white/20">
                     <iframe src="https://www.instagram.com/p/DXVLIJtDfFg/embed/" width="100%" height="100%" style="border:none; overflow:hidden;" scrolling="no" allowtransparency="true"></iframe>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-2xl md:text-[2rem] font-black text-white mb-4 m-0 uppercase">EL ARTE DEL TUESTE</h3>
-                    <p class="text-white/70 text-[1.1rem] leading-[1.8] m-0 font-medium">Descubre el proceso detrás de nuestra selección de granos. Desde las montañas del VRAEM hasta la extracción perfecta en tu taza.</p>
+                    <h3 class="text-xl sm:text-2xl md:text-[1.9rem] font-black mb-3 m-0 uppercase">EL ARTE DEL TUESTE Y CULTIVO</h3>
+                    <p class="opacity-80 text-sm sm:text-base md:text-[1.05rem] leading-[1.8] m-0 font-medium">Descubre el proceso detrás de nuestra selección de granos de especialidad del VRAEM y nuestra colección viva de cactáceas en el corazón de Ayacucho.</p>
                 </div>
             </div>
-
-            <div class="flex flex-col md:flex-row-reverse items-center gap-8 md:gap-[50px] bg-[#110a05]/60 backdrop-blur-md p-8 border border-white/10 rounded-[2rem] text-center md:text-left shadow-2xl">
-                <div class="shrink-0 h-[400px] w-full md:w-[250px] rounded-xl overflow-hidden border border-white/20 bg-black flex items-center justify-center">
-                     
-                    <span class="text-white/50 font-bold">Video TikTok</span>
-                </div>
-                <div class="flex-1">
-                    <h3 class="text-2xl md:text-[2rem] font-black text-white mb-4 m-0 uppercase">UBICACIÓN DEL LOCAL</h3>
-                    <p class="text-white/70 text-[1.1rem] leading-[1.8] m-0 font-medium">Nuestra fachada minimalista esconde la mejor experiencia de Ayacucho. Te mostramos la ruta exacta para que encuentres nuestro santuario de cafeína.</p>
-                </div>
-            </div>
-
         </div>
     </section>
 
-    
+    <!-- MODALES DE TIENDA (Detalle, Carrito, Checkout, Éxito) -->
     @if (modalTienda) {
-        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100000] flex justify-center items-center p-4 animate-[fadeIn_0.3s]" (click)="cerrarModalTienda()">
-            
-            
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100000] flex justify-center items-center p-3 sm:p-4 animate-[fadeIn_0.3s]" (click)="cerrarModalTienda($event)">
+
+            <!-- Modal Detalle Producto -->
             @if (modalTienda === 'detalle' && productoSeleccionado) {
-                <div class="bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/20 w-full max-w-[1000px] relative flex flex-col md:flex-row p-6 md:p-10 gap-8 md:gap-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] rounded-3xl max-h-[90vh] md:max-h-[85vh] overflow-y-auto md:overflow-visible" (click)="$event.stopPropagation()">
-                    <button class="absolute top-4 right-4 md:top-6 md:right-6 bg-white/10 hover:bg-white text-white hover:text-black w-10 h-10 rounded-full flex items-center justify-center text-xl cursor-pointer transition-colors z-20" (click)="cerrarModalTienda()"><i class="fas fa-times"></i></button>
-                    
-                    <div class="flex-1 flex flex-col gap-4">
-                        <div class="w-full h-[250px] md:h-[400px] bg-[#111] border border-white/10 rounded-2xl overflow-hidden relative">
+                <div class="bg-[#0a0a0a]/95 text-white backdrop-blur-2xl border border-white/20 w-full max-w-[980px] relative flex flex-col md:flex-row p-5 sm:p-8 md:p-10 gap-6 md:gap-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] rounded-3xl max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()">
+                    <button type="button" class="absolute top-4 right-4 bg-white/10 hover:bg-white text-white hover:text-black w-10 h-10 rounded-full flex items-center justify-center text-xl cursor-pointer transition-colors z-20 border-none" (click)="cerrarModalTienda($event)"><i class="fas fa-times"></i></button>
+
+                    <div class="flex-1 flex flex-col gap-3">
+                        <div class="w-full h-[230px] sm:h-[300px] md:h-[380px] bg-[#111] border border-white/10 rounded-2xl overflow-hidden relative">
                             @if (imagenModalActual) {
-                                <img [src]="getRutaImagen(imagenModalActual)" [alt]="productoSeleccionado.nombre_comun" class="w-full h-full object-cover">
+                                <img [src]="getRutaImagen(imagenModalActual, varianteSeleccionada?.ruta_imagen === imagenModalActual ? 'var' : undefined)"
+                                     [alt]="productoSeleccionado.nombre_comun"
+                                     class="w-full h-full object-cover"
+                                     onerror="this.src='/assets/images/museo/logo-cafe.png'">
                             } @else {
-                                <div class="h-full flex justify-center items-center text-[5rem] text-white/10"><i class="fas fa-mug-hot"></i></div>
+                                <div class="h-full flex justify-center items-center text-[4rem] text-white/10"><i class="fas fa-seedling"></i></div>
                             }
                         </div>
-                        
+
                         @if (imagenesProducto.length > 1) {
-                            <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                            <div class="flex gap-2.5 overflow-x-auto pb-2">
                                 @for (img of imagenesProducto; track img) {
-                                    <img [src]="getRutaImagen(img)" 
-                                         class="w-16 h-16 md:w-20 md:h-20 object-cover cursor-pointer border-2 rounded-xl transition-all duration-300" 
-                                         [ngClass]="img === imagenModalActual ? 'opacity-100 border-[#d1b88e]' : 'opacity-50 border-transparent hover:opacity-100 hover:border-white/50'"
+                                    <img [src]="getRutaImagen(img)"
+                                         class="w-14 h-14 sm:w-16 sm:h-16 object-cover cursor-pointer border-2 rounded-xl transition-all duration-300 shrink-0"
+                                         [ngClass]="img === imagenModalActual ? 'opacity-100 border-[#d1b88e]' : 'opacity-50 border-transparent hover:opacity-100'"
                                          (click)="cambiarImagenModal(img)">
                                 }
                             </div>
                         }
                     </div>
 
-                    <div class="flex-[1.2] flex flex-col pr-2">
-                        <h2 class="text-3xl md:text-[2.5rem] font-black m-0 mb-4 leading-[1.1] uppercase drop-shadow-md">{{ productoSeleccionado.nombre_comun | uppercase }}</h2>
-                        <div class="flex items-center gap-4 mb-6 flex-wrap">
-                            @if (descuentoSocio > 0) {
-                                <span class="line-through text-white/40 text-xl font-extrabold">S/ {{ precioOriginal | number:'1.2-2' }}</span>
+                    <div class="flex-[1.2] flex flex-col">
+                        <div class="flex flex-wrap items-center gap-2 mb-1">
+                            @if (esProductoConAlcohol(productoSeleccionado)) {
+                                <span class="bg-amber-600 text-white px-3 py-1 rounded-full text-[11px] font-black tracking-[1px] uppercase inline-flex items-center gap-1.5">
+                                    <i class="fas fa-wine-glass-alt"></i> BEBIDA CON ALCOHOL (+18)
+                                </span>
                             }
-                            <div class="text-4xl font-black text-[#d1b88e]">S/ {{ precioCalculado | number:'1.2-2' }}</div>
-                            
+                        </div>
+
+                        <h2 class="text-2xl sm:text-3xl md:text-[2.2rem] font-black m-0 mb-1 leading-[1.15] uppercase">{{ productoSeleccionado.nombre_comun }}</h2>
+                        @if (productoSeleccionado.nombre_cientifico) {
+                            <p class="text-[#d1b88e] italic text-sm m-0 mb-4">{{ productoSeleccionado.nombre_cientifico }}</p>
+                        }
+
+                        <div class="flex items-center gap-3 mb-5 flex-wrap">
+                            @if (descuentoSocio > 0) {
+                                <span class="line-through text-white/40 text-lg font-extrabold">S/ {{ precioOriginal | number:'1.2-2' }}</span>
+                            }
+                            <div class="text-3xl sm:text-4xl font-black text-[#d1b88e]">S/ {{ precioCalculado | number:'1.2-2' }}</div>
+
                             @if (descuentoSocio > 0) {
                                 <div class="bg-[#d1b88e] text-black px-3 py-1 font-black text-xs rounded-full">
                                     <i class="fas fa-star text-black"></i> NIVEL {{ nivelSocio }} (-{{ descuentoSocio }}%)
@@ -164,23 +229,32 @@
                             }
                         </div>
 
-                        <div class="flex-1 overflow-y-auto max-h-[250px] md:max-h-[300px] flex flex-col gap-6 custom-scrollbar pr-4">
-                            @if (productoSeleccionado.cuidados || productoSeleccionado.tipo === 'recuerdo') {
+                        <div class="flex-1 overflow-y-auto max-h-[220px] md:max-h-[260px] flex flex-col gap-4 pr-2">
+                            @if (productoSeleccionado.cuidados) {
                                 <div>
-                                    <h3 class="text-white text-sm font-extrabold m-0 mb-2 tracking-[1px] uppercase">{{ productoSeleccionado.tipo === 'recuerdo' ? 'DESCRIPCIÓN' : 'PERFIL DE TAZA' }}</h3>
-                                    <div class="h-[1px] bg-white/20 mb-3 w-12"></div>
-                                    <p class="text-white/70 leading-[1.6] m-0 text-sm font-medium">{{ productoSeleccionado.cuidados || 'Elaborado con insumos locales de primera calidad.' }}</p>
+                                    <h3 class="text-[#d1b88e] text-xs font-extrabold m-0 mb-1.5 tracking-[1px] uppercase">
+                                        {{ productoSeleccionado.tipo === 'recuerdo' ? 'DESCRIPCIÓN' : (productoSeleccionado.tipo === 'cafe' ? 'NOTAS DE CATA / SABOR' : 'CUIDADOS RECOMENDADOS') }}
+                                    </h3>
+                                    <p class="text-white/80 leading-[1.6] m-0 text-sm font-medium">{{ productoSeleccionado.cuidados }}</p>
                                 </div>
                             }
-                            
+
+                            @if (productoSeleccionado.detalles_tecnicos) {
+                                <div>
+                                    <h3 class="text-[#d1b88e] text-xs font-extrabold m-0 mb-1.5 tracking-[1px] uppercase">
+                                        {{ productoSeleccionado.tipo === 'cafe' ? 'INGREDIENTES / ORIGEN' : 'DETALLES TÉCNICOS' }}
+                                    </h3>
+                                    <p class="text-white/70 leading-[1.6] m-0 text-sm">{{ productoSeleccionado.detalles_tecnicos }}</p>
+                                </div>
+                            }
+
                             @if (tieneVariantesReales) {
                                 <div class="bg-white/5 p-4 rounded-xl border border-white/10">
-                                    <h3 class="text-white text-sm font-extrabold m-0 mb-3 tracking-[1px]">SELECCIONAR VARIANTE <span class="text-[#ff4757]">*</span></h3>
-                                    <select class="w-full p-3 bg-black border border-white/30 text-white font-extrabold rounded outline-none focus:border-[#d1b88e] transition-colors" 
-                                            [ngModel]="varianteSeleccionada" 
-                                            (ngModelChange)="onVarianteChange($event)"
-                                            [ngClass]="{'border-[#ff4757]': !varianteSeleccionada}">
-                                        <option [ngValue]="null" disabled selected>-- SELECCIONA UNA OPCIÓN --</option>
+                                    <h3 class="text-white text-xs font-extrabold m-0 mb-2.5 tracking-[1px]">SELECCIONAR ESTILO / VARIANTE <span class="text-[#ff4757]">*</span></h3>
+                                    <select class="w-full p-3 bg-black border border-white/30 text-white font-extrabold rounded-lg outline-none focus:border-[#d1b88e] transition-colors text-sm"
+                                            [ngModel]="varianteSeleccionada"
+                                            (ngModelChange)="onVarianteChange($event)">
+                                        <option [ngValue]="null" disabled>-- SELECCIONA UNA OPCIÓN --</option>
                                         @for (v of variantesProducto; track v.id_variante) {
                                             <option [ngValue]="v" [disabled]="v.stock <= 0">
                                                 {{ v.nombre_variante | uppercase }} ({{ v.stock > 0 ? v.stock + ' DISP.' : 'AGOTADO' }})
@@ -191,29 +265,27 @@
                             }
                         </div>
 
-                        <div class="mt-6 pt-6 border-t border-white/10">
+                        <div class="mt-5 pt-5 border-t border-white/10">
                             @if (userRole === 'empleado') {
-                                <div class="bg-[#ff4757] text-white p-4 text-center font-black rounded uppercase">Vista de empleado (Compras Deshabilitadas)</div>
-                            } 
-                            @else {
-                                @if (productoSeleccionado.tipo === 'recuerdo' && variantesProducto && variantesProducto.length > 0 && !varianteSeleccionada) {
-                                    <button class="w-full p-4 bg-black border border-dashed border-white/30 text-white/40 font-black cursor-not-allowed rounded" disabled>SELECCIONA UNA VARIANTE</button>
-                                } 
-                                @else if (stockVariedadActual > 0) {
+                                <div class="bg-[#ff4757]/20 border border-[#ff4757] text-[#ff4757] p-3.5 text-center font-black rounded-xl uppercase text-xs">Vista de empleado (Compras Deshabilitadas)</div>
+                            } @else {
+                                @if (tieneVariantesReales && !varianteSeleccionada) {
+                                    <button type="button" class="w-full p-4 bg-black border border-dashed border-white/30 text-white/40 font-black cursor-not-allowed rounded-xl text-sm" disabled>SELECCIONA UNA VARIANTE</button>
+                                } @else if (stockVariedadActual > 0) {
                                     <div class="flex flex-col sm:flex-row gap-3 mb-2">
-                                        
-                                        <div class="flex border border-white/30 rounded-lg overflow-hidden bg-black/50">
-                                            <button type="button" class="bg-transparent text-white border-none w-12 h-12 cursor-pointer text-xl hover:bg-white/10 transition-colors" (click)="cambiarCantidad(-1)">-</button>
-                                            <input type="number" readonly [value]="cantidadSeleccionada" class="bg-transparent border-none text-white w-10 text-center font-black outline-none appearance-none">
-                                            <button type="button" class="bg-transparent text-white border-none w-12 h-12 cursor-pointer text-xl hover:bg-white/10 transition-colors" (click)="cambiarCantidad(1)">+</button>
+                                        <div class="flex items-center justify-center border border-white/30 rounded-xl overflow-hidden bg-black/50">
+                                            <button type="button" class="bg-transparent text-white border-none w-11 h-11 cursor-pointer text-xl hover:bg-white/10" (click)="cambiarCantidad(-1)">-</button>
+                                            <input type="number" readonly [value]="cantidadSeleccionada" class="bg-transparent border-none text-white w-10 text-center font-black outline-none">
+                                            <button type="button" class="bg-transparent text-white border-none w-11 h-11 cursor-pointer text-xl hover:bg-white/10" (click)="cambiarCantidad(1)">+</button>
                                         </div>
-                                        <button type="button" class="flex-1 bg-transparent border-2 border-white text-white font-black rounded-lg cursor-pointer transition-all duration-300 hover:bg-white hover:text-black py-3 sm:py-0 text-sm tracking-[1px]" (click)="agregarAlCarrito($event)">AÑADIR ORDEN</button>
-                                        <button type="button" class="flex-1 bg-[#d1b88e] border-none text-black font-black rounded-lg cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:bg-white shadow-[0_5px_15px_rgba(209,184,142,0.3)] py-3 sm:py-0 text-sm tracking-[1px]" (click)="comprarDirecto($event)">COMPRAR YA</button>
+                                        <button type="button" class="flex-1 bg-transparent border-2 border-white text-white font-black rounded-xl cursor-pointer transition-all duration-300 hover:bg-white hover:text-black py-3 text-xs sm:text-sm tracking-[1px]" (click)="agregarAlCarrito($event)">AÑADIR AL CARRITO</button>
+                                        <button type="button" class="flex-1 bg-[#d1b88e] border-none text-black font-black rounded-xl cursor-pointer transition-all duration-300 hover:bg-white py-3 text-xs sm:text-sm tracking-[1px]" (click)="comprarDirecto($event)">COMPRAR YA</button>
                                     </div>
-                                    <div class="text-xs text-white/50 font-bold text-center sm:text-left mt-2">STOCK: {{ stockVariedadActual }} UNIDADES</div>
-                                } 
-                                @else {
-                                    <button class="w-full p-4 bg-black border border-dashed border-[#ff4757]/50 text-[#ff4757] font-black cursor-not-allowed rounded uppercase" disabled>AGOTADO</button>
+                                    @if (productoSeleccionado.tipo !== 'cafe') {
+                                        <div class="text-xs text-white/50 font-bold text-center sm:text-left mt-2">STOCK DISPONIBLE: {{ stockVariedadActual }} UNIDADES</div>
+                                    }
+                                } @else {
+                                    <button type="button" class="w-full p-4 bg-black border border-dashed border-[#ff4757]/50 text-[#ff4757] font-black cursor-not-allowed rounded-xl uppercase" disabled>AGOTADO TEMPORALMENTE</button>
                                 }
                             }
                         </div>
@@ -221,178 +293,215 @@
                 </div>
             }
 
-            
+            <!-- Panel Lateral del Carrito -->
             @if (modalTienda === 'carrito') {
-                <div class="absolute right-0 top-0 w-full md:w-[450px] h-[100dvh] bg-[#050505]/95 backdrop-blur-xl border-l border-white/10 flex flex-col animate-[slideLeft_0.3s_forwards]" (click)="$event.stopPropagation()">
-                    <div class="p-8 border-b border-white/10 flex justify-between items-center bg-black/50">
-                        <h2 class="m-0 text-2xl font-black text-[#d1b88e] tracking-[1px] uppercase">Tu Orden</h2>
-                        <button class="bg-transparent border-none text-white hover:text-[#ff4757] text-3xl cursor-pointer transition-colors" (click)="cerrarModalTienda()">&times;</button>
+                <div class="absolute right-0 top-0 w-full sm:w-[440px] h-[100dvh] bg-[#080808] text-white border-l border-white/10 flex flex-col shadow-2xl" (click)="$event.stopPropagation()">
+                    <div class="p-6 sm:p-8 border-b border-white/10 flex justify-between items-center bg-black/50">
+                        <h2 class="m-0 text-xl sm:text-2xl font-black text-[#d1b88e] tracking-[1px] uppercase">Tu Carrito</h2>
+                        <button type="button" class="bg-transparent border-none text-white hover:text-[#ff4757] text-3xl cursor-pointer transition-colors" (click)="cerrarModalTienda($event)">&times;</button>
                     </div>
 
-                    <div class="flex-1 p-6 md:p-8 overflow-y-auto custom-scrollbar">
+                    <div class="flex-1 p-5 sm:p-7 overflow-y-auto">
                         @if (cartService.items.length === 0) {
                             <div class="text-center text-white/30 mt-20 flex flex-col items-center">
                                 <i class="fas fa-shopping-bag text-[4rem] mb-6 opacity-50"></i>
-                                <p class="font-extrabold tracking-[2px]">ORDEN VACÍA.</p>
+                                <p class="font-extrabold tracking-[2px]">TU CARRITO ESTÁ VACÍO.</p>
                             </div>
                         } @else {
-                            @for (item of cartService.items; track item.id_cactus; let i = $index) {
-                                <div class="flex gap-4 mb-6 pb-6 border-b border-white/10 bg-white/5 p-4 rounded-xl relative group">
-                                    <img [src]="getRutaImagen(item.imagen_url)" class="w-20 h-20 object-cover rounded-lg grayscale-[30%]">
+                            @for (item of cartService.items; track $index; let i = $index) {
+                                <div class="flex gap-4 mb-4 pb-4 border-b border-white/10 bg-white/5 p-3.5 rounded-xl relative group">
+                                    <img [src]="getRutaImagen(item.imagen_url, item.tipo)" class="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg" onerror="this.src='/assets/images/museo/logo-cafe.png'">
                                     <div class="flex-1 flex flex-col gap-1 justify-center">
-                                        <strong class="font-black text-sm uppercase leading-tight">{{ item.nombre_comun }}</strong>
-                                        @if(item.estilo !== 'Estándar') { <span class="text-xs text-[#d1b88e] font-extrabold">{{ item.estilo | uppercase }}</span> }
-                                        <small class="text-white/50 font-bold mt-1">{{ item.cantidad }} x S/ {{ item.precio | number:'1.2-2' }}</small>
+                                        <strong class="font-black text-xs sm:text-sm uppercase leading-tight">{{ item.nombre_comun }}</strong>
+                                        @if (esProductoConAlcohol(item)) {
+                                            <span class="text-[10px] text-amber-400 font-black"><i class="fas fa-wine-glass-alt mr-1"></i>+18 CON ALCOHOL</span>
+                                        }
+                                        @if (item.estilo && item.estilo !== 'Estándar') {
+                                            <span class="text-xs text-[#d1b88e] font-extrabold">{{ item.estilo | uppercase }}</span>
+                                        }
+                                        <small class="text-white/60 font-bold mt-1">{{ item.cantidad }} x S/ {{ item.precio | number:'1.2-2' }}</small>
                                     </div>
                                     <div class="text-right flex flex-col justify-between items-end">
-                                        <button class="bg-black/50 border border-white/10 w-8 h-8 rounded-full text-[#ff4757] cursor-pointer hover:bg-[#ff4757] hover:text-white transition-all flex items-center justify-center opacity-70 group-hover:opacity-100" (click)="eliminarDelCarrito(i)"><i class="fas fa-trash text-xs"></i></button>
-                                        <strong class="text-white font-black">S/ {{ item.cantidad * item.precio | number:'1.2-2' }}</strong>
+                                        <button type="button" class="bg-black/50 border border-white/10 w-8 h-8 rounded-full text-[#ff4757] cursor-pointer hover:bg-[#ff4757] hover:text-white transition-all flex items-center justify-center" (click)="eliminarDelCarrito(i, $event)">
+                                            <i class="fas fa-trash text-xs"></i>
+                                        </button>
+                                        <strong class="text-white font-black text-sm">S/ {{ item.cantidad * item.precio | number:'1.2-2' }}</strong>
                                     </div>
                                 </div>
                             }
                         }
                     </div>
 
-                    <div class="p-8 border-t border-white/10 bg-black/50">
-                        <div class="flex justify-between font-black text-2xl mb-6 text-white">
+                    <div class="p-6 sm:p-8 border-t border-white/10 bg-black/50">
+                        <div class="flex justify-between font-black text-xl sm:text-2xl mb-5 text-white">
                             <span>TOTAL</span>
                             <span class="text-[#d1b88e]">S/ {{ cartService.getSubtotal() | number:'1.2-2' }}</span>
                         </div>
-                        <button class="w-full py-4 bg-[#d1b88e] border-none text-black font-black rounded-lg cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_5px_20px_rgba(209,184,142,0.3)] tracking-[2px]" 
-                                (click)="irACheckout()" [disabled]="cartService.items.length === 0">
+                        <button type="button" class="w-full py-4 bg-[#d1b88e] border-none text-black font-black rounded-xl cursor-pointer transition-all duration-300 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed tracking-[2px]"
+                                (click)="irACheckout($event)" [disabled]="cartService.items.length === 0">
                             PROCEDER AL PAGO
                         </button>
                     </div>
                 </div>
             }
-            
-            
-            @if (modalTienda === 'checkout') {
-                <div class="bg-[#050505]/95 backdrop-blur-2xl w-full max-w-[1100px] h-[95vh] md:h-[85vh] flex flex-col md:flex-row border border-white/20 rounded-3xl overflow-hidden relative shadow-[0_30px_60px_rgba(0,0,0,0.9)]" (click)="$event.stopPropagation()">
-                    <button class="absolute top-4 right-4 md:top-6 md:right-6 bg-black/50 border border-white/20 text-white hover:bg-[#ff4757] hover:border-[#ff4757] w-10 h-10 rounded-full flex justify-center items-center text-xl cursor-pointer z-50 transition-colors" (click)="abrirCarrito()"><i class="fas fa-times"></i></button>
 
-                    <div class="flex-1 p-6 md:p-10 flex flex-col border-r border-white/10 bg-black/40 overflow-y-auto custom-scrollbar">
-                        <h2 class="text-2xl font-black mb-4 color-[#d1b88e] text-[#d1b88e] uppercase">RESUMEN</h2>
-                        <div class="h-[1px] bg-white/20 mb-6"></div>
-                        
-                        <div class="flex-1 overflow-y-auto mb-6 pr-2 custom-scrollbar">
-                            @for (item of cartService.items; track item.id_cactus) {
-                                <div class="flex justify-between py-4 border-b border-white/5 font-bold text-sm text-white/80 items-center">
-                                    <span class="pr-4 leading-tight">{{ item.cantidad }}x {{ item.nombre_comun | uppercase }} {{ item.estilo !== 'Estándar' ? '(' + item.estilo + ')' : '' }}</span>
+            <!-- Modal Checkout -->
+            @if (modalTienda === 'checkout') {
+                <div class="bg-[#080808] text-white w-full max-w-[1080px] max-h-[94vh] flex flex-col md:flex-row border border-white/20 rounded-3xl overflow-y-auto md:overflow-hidden relative shadow-2xl" (click)="$event.stopPropagation()">
+                    <button type="button" class="absolute top-4 right-4 bg-black/60 border border-white/20 text-white hover:bg-[#ff4757] w-10 h-10 rounded-full flex justify-center items-center text-xl cursor-pointer z-50" (click)="abrirCarrito($event)"><i class="fas fa-times"></i></button>
+
+                    <!-- Resumen izquierda -->
+                    <div class="flex-1 p-6 md:p-9 flex flex-col border-b md:border-b-0 md:border-r border-white/10 bg-black/40">
+                        <h2 class="text-xl sm:text-2xl font-black mb-4 text-[#d1b88e] uppercase">RESUMEN DE COMPRA</h2>
+                        <div class="h-[1px] bg-white/20 mb-5"></div>
+
+                        <div class="flex-1 overflow-y-auto max-h-[220px] md:max-h-[280px] mb-5 pr-2">
+                            @for (item of cartService.items; track $index) {
+                                <div class="flex justify-between py-3 border-b border-white/5 font-bold text-xs sm:text-sm text-white/80 items-center">
+                                    <span class="pr-3">{{ item.cantidad }}x {{ item.nombre_comun | uppercase }} {{ item.estilo !== 'Estándar' ? '(' + item.estilo + ')' : '' }}</span>
                                     <span class="font-black text-white shrink-0">S/ {{ item.cantidad * item.precio | number:'1.2-2' }}</span>
                                 </div>
                             }
                         </div>
 
-                        <div class="mb-8 bg-white/5 p-5 rounded-xl border border-white/10">
-                            <label class="text-xs font-black block mb-3 text-white/60 uppercase">CÓDIGO PROMOCIONAL</label>
+                        <div class="mb-6 bg-white/5 p-4 rounded-xl border border-white/10">
+                            <label class="text-xs font-black block mb-2.5 text-white/60 uppercase">CÓDIGO PROMOCIONAL / RULETA</label>
                             <div class="flex gap-2">
-                                <input type="text" [(ngModel)]="codigoCupon" placeholder="INGRESA CÓDIGO" [disabled]="descuentoAplicado > 0" class="flex-1 p-3 bg-black border border-white/20 text-white font-black rounded outline-none uppercase focus:border-[#d1b88e] transition-colors disabled:opacity-50">
-                                <button (click)="aplicarCupon()" [disabled]="descuentoAplicado > 0" class="px-6 bg-white text-black font-black rounded cursor-pointer hover:bg-[#d1b88e] disabled:opacity-50 transition-colors">APLICAR</button>
+                                <input type="text" [(ngModel)]="codigoCupon" placeholder="EJ: RUL-XXXXX" [disabled]="descuentoAplicado > 0" class="flex-1 p-3 bg-black border border-white/20 text-white font-black rounded-lg outline-none uppercase text-sm focus:border-[#d1b88e] disabled:opacity-50">
+                                <button type="button" (click)="aplicarCupon()" [disabled]="descuentoAplicado > 0" class="px-5 bg-[#d1b88e] text-black font-black rounded-lg cursor-pointer hover:bg-white disabled:opacity-50 text-xs sm:text-sm border-none">APLICAR</button>
                             </div>
                             @if (descuentoAplicado > 0) {
-                                <small class="text-[#d1b88e] font-black mt-2 block"><i class="fas fa-check-circle mr-1"></i> DESCUENTO DEL {{ descuentoAplicado }}% ACTIVADO</small>
+                                <small class="text-[#2ecc71] font-black mt-2 block"><i class="fas fa-check-circle mr-1"></i> DESCUENTO DEL {{ descuentoAplicado }}% ACTIVADO</small>
                             }
                         </div>
 
-                        <div class="flex justify-between text-2xl md:text-3xl font-black items-end">
-                            <span class="text-white/60 text-lg md:text-xl">TOTAL A PAGAR</span>
+                        <div class="flex justify-between text-2xl font-black items-end mt-auto">
+                            <span class="text-white/60 text-base sm:text-lg">TOTAL A PAGAR</span>
                             <span class="text-[#d1b88e]">S/ {{ calcularTotalFinal() | number:'1.2-2' }}</span>
                         </div>
                     </div>
 
-                    <div class="flex-1 p-6 md:p-10 flex flex-col overflow-y-auto custom-scrollbar">
-                        <h2 class="text-2xl font-black mb-4 color-[#d1b88e] text-[#d1b88e] uppercase">PAGO Y DATOS</h2>
-                        <div class="h-[1px] bg-white/20 mb-6"></div>
-                        
-                        <div class="flex items-center gap-6 mb-8 p-5 border border-dashed border-[#d1b88e]/50 rounded-xl bg-[#d1b88e]/5">
-                            <img src="/assets/images/decoracion/qr_yape.png" alt="QR Yape" class="w-24 h-24 rounded-lg bg-white p-1">
+                    <!-- Pago y Datos derecha -->
+                    <div class="flex-1 p-6 md:p-9 flex flex-col overflow-y-auto">
+                        <h2 class="text-xl sm:text-2xl font-black mb-4 text-[#d1b88e] uppercase">PAGO Y COMPROBANTE</h2>
+                        <div class="h-[1px] bg-white/20 mb-5"></div>
+
+                        <div class="flex items-center gap-4 sm:gap-6 mb-6 p-4 border border-dashed border-[#d1b88e]/50 rounded-xl bg-[#d1b88e]/5">
+                            <img src="/assets/images/decoracion/qr_yape.png" alt="QR Yape" class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-white p-1 shrink-0">
                             <div>
-                                <p class="m-0 mb-1 font-bold text-white/60 text-xs tracking-[1px]">YAPE O PLIN AL</p>
-                                <strong class="text-[1.75rem] font-black tracking-[1px] text-white">981 851 430</strong>
+                                <p class="m-0 mb-1 font-bold text-white/60 text-xs tracking-[1px]">YAPE O PLIN AL NÚMERO</p>
+                                <strong class="text-xl sm:text-2xl font-black tracking-[1px] text-white">981 851 430</strong>
+                                <p class="m-0 mt-1 text-[11px] text-[#d1b88e]">Titular: Henry Ayala - Cactus Museum</p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             <div>
-                                <label class="text-xs font-bold block mb-2 text-white/50">COMPROBANTE</label>
-                                <select class="w-full p-4 bg-black/50 border border-white/20 text-white font-extrabold rounded outline-none appearance-none focus:border-[#d1b88e]" [(ngModel)]="tipoComprobante">
-                                    <option class="bg-black">Ninguno</option>
-                                    <option class="bg-black">Boleta de Venta</option>
-                                    <option class="bg-black">Factura</option>
+                                <label class="text-xs font-bold block mb-2 text-white/60">TIPO DE COMPROBANTE</label>
+                                <select class="w-full p-3.5 bg-black/50 border border-white/20 text-white font-extrabold rounded-lg outline-none focus:border-[#d1b88e] text-sm" [(ngModel)]="tipoComprobante">
+                                    <option class="bg-black" value="Boleta de Venta">Boleta de Venta</option>
+                                    <option class="bg-black" value="Factura">Factura</option>
                                 </select>
                             </div>
 
-                            @if (tipoComprobante !== 'Ninguno') {
-                                <div>
-                                    <label class="text-xs font-bold block mb-2 text-white/50">{{ tipoComprobante === 'Factura' ? 'RUC' : 'DNI' }}</label>
-                                    @if (usuarioActual?.dni && tipoComprobante === 'Boleta de Venta') {
-                                        <div class="p-4 border border-[#d1b88e]/50 bg-[#d1b88e]/10 text-[#d1b88e] font-extrabold rounded">GUARDADO: {{ usuarioActual.dni }}</div>
-                                    } @else {
-                                        <input type="text" class="w-full p-4 bg-black/50 border border-white/20 text-white font-extrabold rounded outline-none focus:border-white" [(ngModel)]="documentoCliente">
-                                    }
-                                </div>
-                            }
-
-                            @if (cartService.getTotalPlantas() >= 4) {
-                                <div class="col-span-1 sm:col-span-2">
-                                    <label class="text-xs font-bold block mb-2 text-[#ff4757]">TELÉFONO (REQUERIDO PARA PEDIDOS GRANDES)</label>
-                                    @if (usuarioActual?.telefono) {
-                                        <div class="p-4 border border-[#d1b88e]/50 bg-[#d1b88e]/10 text-[#d1b88e] font-extrabold rounded">GUARDADO: {{ usuarioActual.telefono }}</div>
-                                    } @else {
-                                        <input type="text" class="w-full p-4 bg-black/50 border border-white/20 text-white font-extrabold rounded outline-none focus:border-white" [(ngModel)]="telefonoCliente">
-                                    }
-                                </div>
-                            }
+                            <div>
+                                <label class="text-xs font-bold block mb-2 text-white/60">{{ tipoComprobante === 'Factura' ? 'NÚMERO DE RUC' : 'NÚMERO DE DNI' }}</label>
+                                <input type="text"
+                                       [placeholder]="tipoComprobante === 'Factura' ? 'Ingresa tu RUC (11 dígitos)' : 'Ingresa tu DNI (8 dígitos)'"
+                                       class="w-full p-3.5 bg-black/50 border border-white/20 text-white font-extrabold rounded-lg outline-none focus:border-[#d1b88e] text-sm"
+                                       [(ngModel)]="documentoCliente">
+                            </div>
 
                             <div class="col-span-1 sm:col-span-2">
-                                <label class="text-xs font-bold block mb-2 text-white/50">ADJUNTAR CAPTURA DE PAGO *</label>
-                                <input type="file" class="w-full p-3 bg-black/30 border border-dashed border-white/30 text-white rounded cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-black file:bg-[#d1b88e] file:text-black hover:file:bg-white transition-colors" (change)="onFileSelected($event)" accept="image/*">
+                                <label class="text-xs font-bold block mb-2 text-white/60">TELÉFONO / WHATSAPP DE CONTACTO</label>
+                                <input type="text" placeholder="Ej: 999 888 777"
+                                       class="w-full p-3.5 bg-black/50 border border-white/20 text-white font-extrabold rounded-lg outline-none focus:border-[#d1b88e] text-sm"
+                                       [(ngModel)]="telefonoCliente">
+                            </div>
+
+                            <div class="col-span-1 sm:col-span-2">
+                                <label class="text-xs font-bold block mb-2 text-[#d1b88e]">ADJUNTAR CAPTURA DE PAGO (YAPE / PLIN) *</label>
+                                <input type="file" class="w-full p-3 bg-black/30 border border-dashed border-white/30 text-white rounded-lg cursor-pointer text-xs sm:text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-[#d1b88e] file:text-black hover:file:bg-white transition-colors" (change)="onFileSelected($event)" accept="image/*">
                             </div>
                         </div>
 
-                        <div class="mt-auto pt-4">
-                            <button class="w-full py-5 bg-white text-black font-black rounded-lg cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:bg-[#d1b88e] shadow-[0_10px_30px_rgba(255,255,255,0.2)] tracking-[2px] text-lg disabled:opacity-50" (click)="procesarPago()" [disabled]="cargandoPago">
-                                {{ cargandoPago ? 'PROCESANDO...' : 'CONFIRMAR ORDEN' }}
+                        <div class="mt-auto pt-2">
+                            <button type="button" class="w-full py-4 bg-[#d1b88e] text-black border-none font-black rounded-xl cursor-pointer transition-all duration-300 hover:bg-white tracking-[2px] text-base disabled:opacity-50" (click)="procesarPago($event)" [disabled]="cargandoPago">
+                                {{ cargandoPago ? 'PROCESANDO ORDEN...' : 'CONFIRMAR ORDEN' }}
                             </button>
                         </div>
                     </div>
                 </div>
             }
 
-            
+            <!-- Modal Orden Confirmada -->
             @if (modalTienda === 'success') {
-                <div class="bg-[#0a0a0a] border border-white/20 p-10 md:p-16 text-center max-w-[600px] w-[95%] shadow-[0_30px_60px_rgba(0,0,0,0.9)] rounded-3xl" (click)="$event.stopPropagation()">
-                    <div class="text-[5rem] text-[#d1b88e] mb-6 drop-shadow-[0_0_15px_rgba(209,184,142,0.5)] animate-bounce"><i class="fas fa-check-circle"></i></div>
-                    <h1 class="text-3xl md:text-[2.5rem] font-black m-0 mb-2 uppercase">ORDEN CONFIRMADA</h1>
-                    <p class="text-2xl font-black text-white/50 m-0 mb-8 tracking-[2px]">TICKET <span class="text-white">#{{ ordenGeneradaId }}</span></p>
-                    
-                    <div class="bg-white/5 border border-white/10 rounded-xl p-6 mb-8 text-white/80 leading-[1.6] text-sm md:text-base font-medium">
-                        El comprobante está siendo verificado. Pasa a recoger tus artículos por barra mostrando este número de ticket.
+                <div class="bg-[#0a0a0a] text-white border border-white/20 p-7 sm:p-12 text-center max-w-[580px] w-[95%] shadow-2xl rounded-3xl" (click)="$event.stopPropagation()">
+                    <div class="text-[4rem] text-[#2ecc71] mb-4 animate-bounce"><i class="fas fa-check-circle"></i></div>
+                    <h1 class="text-2xl sm:text-3xl font-black m-0 mb-2 uppercase">¡ORDEN CONFIRMADA!</h1>
+                    <p class="text-xl font-black text-[#d1b88e] m-0 mb-6 tracking-[2px]">ORDEN #{{ ordenGeneradaId }}</p>
+
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-5 mb-6 text-white/80 leading-[1.6] text-sm font-medium">
+                        Tu comprobante de pago está siendo verificado. Puedes descargar o imprimir tu boleta electrónica y pasar a recoger tu pedido en tienda.
                     </div>
 
                     @if (premioLealtad) {
-                        <div class="border-2 border-dashed border-[#d1b88e] rounded-xl p-8 mb-8 bg-[#d1b88e]/5">
-                            <h2 class="text-[#d1b88e] text-lg md:text-xl font-black m-0 mb-3 tracking-[1px]"><i class="fas fa-award mr-2"></i>NUEVO RANGO ALCANZADO</h2>
-                            <p class="text-white/80 m-0 mb-4 text-sm font-medium">Has completado 4 pedidos. Desbloqueaste un <strong>{{ premioLealtad.descuento }}% de descuento</strong> para tu próxima visita.</p>
-                            <div class="text-3xl md:text-[2.5rem] font-black tracking-[8px] bg-black text-white py-4 rounded-lg border border-white/20 select-all">{{ premioLealtad.codigo }}</div>
+                        <div class="border-2 border-dashed border-[#d1b88e] rounded-xl p-6 mb-6 bg-[#d1b88e]/10">
+                            <h2 class="text-[#d1b88e] text-base sm:text-lg font-black m-0 mb-2"><i class="fas fa-award mr-2"></i>¡PREMIO DE FIDELIDAD DESBLOQUEADO!</h2>
+                            <p class="text-white/80 m-0 mb-3 text-xs sm:text-sm">Has completado 4 pedidos y ganaste un cupón de <strong>{{ premioLealtad.descuento }}% de descuento</strong>:</p>
+                            <div class="text-2xl font-black tracking-[6px] bg-black text-white py-3 rounded-lg border border-white/20 select-all">{{ premioLealtad.codigo }}</div>
                         </div>
-                    } @else {
-                        <div class="p-5 border border-dashed border-white/20 rounded-xl font-black text-white/40 mb-8 bg-black/50 tracking-[1px] text-xs md:text-sm">
+                    } @else if (mensajeFidelidad) {
+                        <div class="p-4 border border-dashed border-white/20 rounded-xl font-black text-white/70 mb-6 bg-black/50 tracking-[1px] text-xs">
                             {{ mensajeFidelidad | uppercase }}
                         </div>
                     }
 
-                    <button class="bg-transparent border-2 border-white text-white py-4 px-10 font-black rounded-full cursor-pointer transition-colors duration-300 hover:bg-white hover:text-black tracking-[2px]" (click)="cerrarExito()">VOLVER AL MENÚ</button>
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button type="button" class="bg-[#d1b88e] text-black border-none py-3.5 px-7 font-black rounded-full cursor-pointer hover:bg-white transition-colors tracking-[1px] text-xs sm:text-sm" (click)="abrirComprobanteEmitido($event)">
+                            <i class="fas fa-print mr-2"></i>VER / IMPRIMIR BOLETA
+                        </button>
+                        <button type="button" class="bg-transparent border-2 border-white text-white py-3.5 px-7 font-black rounded-full cursor-pointer transition-colors hover:bg-white hover:text-black tracking-[1px] text-xs sm:text-sm" (click)="cerrarExito($event)">
+                            VOLVER AL MENÚ
+                        </button>
+                    </div>
                 </div>
             }
         </div>
     }
 
-    
+    <!-- MODAL DE VERIFICACIÓN DE MAYORÍA DE EDAD (+18) PARA BEBIDAS CON ALCOHOL -->
+    @if (modalEdadAbierto) {
+        <div class="fixed inset-0 bg-black/85 backdrop-blur-md z-[110000] flex items-center justify-center p-4 animate-[fadeIn_0.25s]" (click)="rechazarMayoriaEdad($event)">
+            <div class="bg-[#111111] text-white border-2 border-amber-500/60 p-6 sm:p-8 rounded-3xl max-w-[440px] w-full text-center shadow-[0_20px_60px_rgba(0,0,0,0.9)]" (click)="$event.stopPropagation()">
+                <div class="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500 text-amber-400 flex items-center justify-center text-3xl mx-auto mb-4">
+                    <i class="fas fa-wine-glass-alt"></i>
+                </div>
+                <span class="bg-amber-600 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-[1.5px] uppercase">VERIFICACIÓN +18</span>
+                <h3 class="text-xl sm:text-2xl font-black mt-3 mb-2 uppercase text-[#d1b88e]">Bebida con Alcohol</h3>
+                <p class="text-white/80 text-xs sm:text-sm leading-relaxed mb-6">
+                    Esta bebida contiene alcohol. Para agregarla a tu pedido, por favor confirma si eres <strong>mayor de 18 años</strong>.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="button"
+                            (click)="rechazarMayoriaEdad($event)"
+                            class="flex-1 py-3.5 px-4 rounded-xl bg-white/10 hover:bg-[#ff4757] text-white font-black text-xs tracking-[1px] uppercase border border-white/15 cursor-pointer transition-colors">
+                        No, soy menor
+                    </button>
+                    <button type="button"
+                            (click)="confirmarMayoriaEdad($event)"
+                            class="flex-1 py-3.5 px-4 rounded-xl bg-[#d1b88e] hover:bg-white text-black font-black text-xs tracking-[1px] uppercase border-none cursor-pointer transition-colors">
+                        Sí, tengo +18 años
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
     @if (toastMsg) {
-        <div class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#d1b88e] text-black px-8 py-4 rounded-full font-black tracking-[1px] z-[999999] shadow-[0_10px_20px_rgba(0,0,0,0.5)] animate-[toastAnim_3.5s_forwards] text-center text-sm">
+        <div class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#d1b88e] text-black px-6 py-3.5 rounded-full font-black tracking-[1px] z-[999999] shadow-2xl text-center text-xs sm:text-sm max-w-[90vw]">
             {{ toastMsg | uppercase }}
         </div>
     }
-</div> 
+</div>

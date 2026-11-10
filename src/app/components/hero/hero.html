@@ -1,101 +1,173 @@
-<main class="relative bg-[#050505]">
-  
-  <div class="fixed inset-0 w-full h-screen z-0 bg-[#232b1e]">
-    <div id="mask-container" class="w-full h-full bg-[#050505]" [style.--mask-size]="isLoggedIn ? '4000vmax' : '35vh'">
-      <img src="/assets/images/museo/museo.jpg" class="w-full h-full object-cover opacity-80" alt="Fondo" />
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.2)_0%,rgba(0,0,0,0.85)_100%)]"></div>
-      
-      <div id="logo-blanco-overlay" class="absolute inset-0 bg-white pointer-events-none" [class.opacity-0]="isLoggedIn"></div>
+<main class="relative transition-colors duration-500"
+      [ngClass]="themeService.isDarkMode() ? 'bg-[#050505] text-white' : 'bg-[#f8f5ee] text-[#1a281f]'">
+
+  <!-- Fondo fijo del Hero -->
+  <div class="fixed inset-0 w-full h-screen z-0"
+       [ngClass]="themeService.isDarkMode() ? 'bg-[#232b1e]' : 'bg-[#dfd5c4]'">
+    <div id="mask-container" class="w-full h-full"
+         [class.mask-disabled]="isLoggedIn || maskCompletado"
+         [ngClass]="themeService.isDarkMode() ? 'bg-[#050505]' : 'bg-[#f8f5ee]'">
+      <img src="/assets/images/museo/museo.jpg"
+           class="w-full h-full object-cover transition-opacity duration-500"
+           [ngClass]="themeService.isDarkMode() ? 'opacity-80' : 'opacity-90 brightness-105'"
+           alt="Fondo Museo Café Ayacuchano" />
+      <div class="absolute inset-0 transition-all duration-500"
+           [ngClass]="themeService.isDarkMode()
+             ? 'bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.2)_0%,rgba(0,0,0,0.85)_100%)]'
+             : 'bg-[radial-gradient(circle_at_center,rgba(40,25,15,0.15)_0%,rgba(30,20,12,0.65)_100%)]'"></div>
+
+      <div id="logo-blanco-overlay"
+           class="absolute inset-0 bg-white pointer-events-none"
+           [class.mask-disabled]="isLoggedIn || maskCompletado"
+           [class.opacity-0]="isLoggedIn || maskCompletado"></div>
     </div>
   </div>
 
-  <!-- Top Navigation (Logo + Links) -->
-  <nav id="main-nav" class="fixed top-0 left-0 w-full px-4 py-6 flex justify-center items-center gap-6 md:gap-14 z-[1000] bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-500"
-       [ngClass]="isLoggedIn ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
-    
-    <!-- Links Izquierda -->
-    <div class="hidden md:flex items-center gap-10 text-white/80 font-black text-[0.65rem] tracking-[4px] uppercase drop-shadow-md">
-      <a href="#nosotros" class="hover:text-[#d1b88e] hover:-translate-y-1 transition-all duration-300">Nosotros</a>
-      <a href="#catalogo-section" class="hover:text-[#d1b88e] hover:-translate-y-1 transition-all duration-300">Carta</a>
-      <a href="#eventos" class="hover:text-[#d1b88e] hover:-translate-y-1 transition-all duration-300">Tienda</a>
-    </div>
-    
-    <!-- Logo Central -->
-    <div class="relative group cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-      <div class="absolute inset-0 bg-[#d1b88e] blur-md opacity-20 group-hover:opacity-60 transition-opacity duration-500 rounded-full"></div>
-      <img src="/assets/images/museo/logo-cafe.png" class="relative w-14 h-14 md:w-16 md:h-16 object-cover rounded-full opacity-90 border-2 border-transparent group-hover:border-[#d1b88e] group-hover:scale-105 transition-all duration-500 shadow-lg" alt="Museo"/>
-    </div>
-    
-    <!-- Links Derecha -->
-    <div class="hidden md:flex items-center gap-10 text-white/80 font-black text-[0.65rem] tracking-[4px] uppercase drop-shadow-md">
-      <button (click)="toggleMapa()" class="hover:text-[#d1b88e] hover:-translate-y-1 transition-all duration-300">Ubicación</button>
-      <a href="/login" class="hover:text-[#d1b88e] hover:-translate-y-1 transition-all duration-300">Mi Club</a>
-      <a href="/carrito" class="border border-white/20 hover:border-[#d1b88e] hover:bg-[#d1b88e]/10 hover:text-[#d1b88e] rounded-full px-5 py-2 transition-all duration-300 flex items-center gap-2">
-        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-        Carrito
-      </a>
-    </div>
-  </nav>
+  <!-- Barra de Navegación Superior con botón para desplegar/ocultar menú -->
+  @if (!cartService.modalAbierto && !mapaActivo) {
+    <nav id="main-nav"
+         class="fixed top-0 left-0 w-full px-3 sm:px-6 py-3 flex items-center justify-between lg:justify-center gap-3 md:gap-8 z-[900] transition-all duration-500 lg:pr-44"
+         [ngClass]="[
+           (isLoggedIn || maskCompletado) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
+           barraNavAbierta ? 'bg-black/65 backdrop-blur-md border-b border-white/10 shadow-lg' : 'bg-transparent pointer-events-none'
+         ]">
 
-  <div id="hero-ui" class="fixed inset-0 z-10 flex flex-col items-center justify-center px-6 transition-opacity duration-500"
-       [ngClass]="isLoggedIn ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
-    
-    <h1 class="text-white text-6xl md:text-8xl font-black tracking-tighter text-center uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.9)] leading-none mb-4">
+      <!-- Botón Izquierdo para Desplegar / Ocultar el Menú de Botones -->
+      <div class="pointer-events-auto flex items-center gap-2 lg:absolute lg:left-6">
+        <button type="button"
+                (click)="toggleBarraNav()"
+                class="h-10 px-3.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black transition-all duration-300 flex items-center gap-2 text-[11px] font-extrabold tracking-[1px] cursor-pointer shadow-md"
+                [title]="barraNavAbierta ? 'Ocultar barra de menú' : 'Desplegar barra de menú'">
+          <i class="fas" [ngClass]="barraNavAbierta ? 'fa-eye-slash' : 'fa-bars'"></i>
+          <span class="hidden sm:inline">{{ barraNavAbierta ? 'OCULTAR MENÚ' : 'MENÚ' }}</span>
+        </button>
+
+        @if (barraNavAbierta) {
+          <button type="button"
+                  (click)="abrirCarrito($event)"
+                  class="lg:hidden h-10 px-3.5 rounded-full bg-[#d1b88e] text-black border-none font-black text-[11px] tracking-[1px] flex items-center gap-1.5 shadow-md cursor-pointer">
+            <i class="fas fa-shopping-bag"></i>
+            <span>({{ cartService.getTotalPlantas() }})</span>
+          </button>
+        }
+      </div>
+
+      @if (barraNavAbierta) {
+        <!-- Links Izquierda (Desktop) -->
+        <div class="hidden lg:flex items-center gap-6 xl:gap-8 text-white/90 font-black text-[0.68rem] tracking-[2.5px] uppercase drop-shadow-md">
+          <a href="#nosotros" (click)="scrollToSection($event, 'nosotros')" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/90">Nosotros</a>
+          <a href="#catalogo-section" (click)="scrollToSection($event, 'catalogo-section')" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/90">Carta &amp; Tienda</a>
+          <a href="#boletin" (click)="scrollToSection($event, 'boletin')" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/90">Boletín</a>
+        </div>
+
+        <!-- Logo Central -->
+        <div class="relative group cursor-pointer shrink-0 hidden sm:block" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+          <div class="absolute inset-0 bg-[#d1b88e] blur-md opacity-20 group-hover:opacity-60 transition-opacity duration-500 rounded-full"></div>
+          <img src="/assets/images/museo/logo-cafe.png" class="relative w-11 h-11 md:w-13 md:h-13 object-cover rounded-full opacity-95 border-2 border-transparent group-hover:border-[#d1b88e] group-hover:scale-105 transition-all duration-500 shadow-lg" alt="Museo"/>
+        </div>
+
+        <!-- Links Derecha (Desktop) -->
+        <div class="hidden lg:flex items-center gap-6 xl:gap-8 text-white/90 font-black text-[0.68rem] tracking-[2.5px] uppercase drop-shadow-md">
+          <button type="button" (click)="toggleMapa()" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 uppercase cursor-pointer bg-transparent border-none text-white/90 font-black text-[0.68rem] tracking-[2.5px]">Ubicación</button>
+          <a href="/login" (click)="irAMiClub($event)" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/90">Mi Club</a>
+          <button type="button" (click)="abrirCarrito($event)" class="border border-[#d1b88e]/60 hover:border-[#d1b88e] hover:bg-[#d1b88e] hover:text-black rounded-full px-4 py-2 transition-all duration-300 flex items-center gap-2 cursor-pointer bg-black/50 text-[#d1b88e] font-black text-[0.68rem] tracking-[2px]">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Carrito ({{ cartService.getTotalPlantas() }})</span>
+          </button>
+        </div>
+      }
+    </nav>
+
+    <!-- Submenú rápido móvil cuando barraNavAbierta está activa -->
+    @if (barraNavAbierta && (isLoggedIn || maskCompletado)) {
+      <div class="lg:hidden fixed top-[58px] left-0 w-full z-[890] bg-black/75 backdrop-blur-md border-b border-white/10 px-3 py-2 flex items-center justify-center gap-4 overflow-x-auto text-[10px] font-black tracking-[1.5px] uppercase text-white/90">
+        <a href="#nosotros" (click)="scrollToSection($event, 'nosotros')" class="no-underline text-white/90 hover:text-[#d1b88e] whitespace-nowrap">Nosotros</a>
+        <a href="#catalogo-section" (click)="scrollToSection($event, 'catalogo-section')" class="no-underline text-white/90 hover:text-[#d1b88e] whitespace-nowrap">Carta &amp; Tienda</a>
+        <a href="#boletin" (click)="scrollToSection($event, 'boletin')" class="no-underline text-white/90 hover:text-[#d1b88e] whitespace-nowrap">Boletín</a>
+        <button type="button" (click)="toggleMapa()" class="bg-transparent border-none text-white/90 hover:text-[#d1b88e] font-black text-[10px] tracking-[1.5px] uppercase whitespace-nowrap cursor-pointer p-0">Ubicación</button>
+        <a href="/login" (click)="irAMiClub($event)" class="no-underline text-[#d1b88e] whitespace-nowrap">Mi Club</a>
+      </div>
+    }
+  }
+
+  <!-- Contenido Central del Hero -->
+  <div id="hero-ui" class="fixed inset-0 z-10 flex flex-col items-center justify-center px-4 sm:px-6 transition-opacity duration-500"
+       [ngClass]="(isLoggedIn || maskCompletado) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+
+    <h1 class="text-white text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-center uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.9)] leading-none mb-4">
       CAFÉ<br>AYACUCHANO
     </h1>
-    <p class="text-white/80 text-lg font-medium tracking-widest text-center drop-shadow-md mb-10">
-      "MÁS QUE UN CAFÉ..."
+    <p class="text-white/90 text-sm sm:text-lg font-medium tracking-[4px] sm:tracking-widest text-center drop-shadow-md mb-8">
+      "MÁS QUE UN CAFÉ... UN MUSEO VIVO"
     </p>
-    
-    <button (click)="toggleMapa()" class="pointer-events-auto bg-[#d1b88e]/20 backdrop-blur-xl border border-white/20 text-white hover:bg-[#d1b88e] hover:text-black hover:scale-105 transition-all duration-500 rounded-full px-10 py-5 flex items-center justify-center text-sm font-black tracking-[3px] shadow-[0_15px_35px_rgba(0,0,0,0.5)]">
-      <i class="fas fa-map-marker-alt mr-3 text-lg"></i> ENCUÉNTRANOS
-    </button>
 
-    <footer class="absolute bottom-10 flex flex-col items-center">
-      <span class="text-[#d1b88e] font-bold tracking-[6px] uppercase text-xs md:text-sm drop-shadow-lg mb-4">
-        TUESTE DE AUTOR • VRAEM
+    <div class="flex flex-wrap items-center justify-center gap-4 pointer-events-auto">
+      <button type="button" (click)="irAlCatalogo($event)" class="bg-[#d1b88e] text-black hover:bg-white hover:scale-105 transition-all duration-300 rounded-full px-7 sm:px-9 py-4 flex items-center justify-center text-xs sm:text-sm font-black tracking-[2px] shadow-[0_15px_35px_rgba(0,0,0,0.5)] cursor-pointer border-none">
+        <i class="fas fa-mug-hot mr-2.5 text-base"></i> EXPLORAR CARTA
+      </button>
+
+      <button type="button" (click)="toggleMapa()" class="bg-black/40 backdrop-blur-xl border border-white/30 text-white hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 transition-all duration-300 rounded-full px-7 sm:px-9 py-4 flex items-center justify-center text-xs sm:text-sm font-black tracking-[2px] shadow-[0_15px_35px_rgba(0,0,0,0.5)] cursor-pointer">
+        <i class="fas fa-map-marker-alt mr-2.5 text-base"></i> ENCUÉNTRANOS
+      </button>
+    </div>
+
+    <footer class="absolute bottom-6 sm:bottom-10 flex flex-col items-center px-4 text-center">
+      <span class="text-[#d1b88e] font-bold tracking-[4px] sm:tracking-[6px] uppercase text-[10px] sm:text-xs md:text-sm drop-shadow-lg mb-2 sm:mb-3">
+        TUESTE DE AUTOR • CACTUS MUSEUM • AYACUCHO
       </span>
-      <div class="flex items-center gap-4 text-white/40 text-xs font-bold tracking-[3px]">
+      <div class="flex flex-wrap justify-center items-center gap-2 sm:gap-4 text-white/70 text-[10px] sm:text-xs font-bold tracking-[2px]">
         <span>MAR - SÁB: 9AM - 7:30PM</span>
-        <span>•</span>
+        <span class="hidden sm:inline">•</span>
         <span>DOM: 3:30PM - 7PM</span>
       </div>
     </footer>
   </div>
 
-  <div class="fixed inset-0 z-[9999] flex items-center justify-center transition-all duration-300 opacity-0 invisible pointer-events-none"
+  <!-- Modal de Ubicación -->
+  <div class="fixed inset-0 z-[99999] flex items-center justify-center p-4 transition-all duration-300 opacity-0 invisible pointer-events-none"
        [ngClass]="{ '!opacity-100 !visible !pointer-events-auto': mapaActivo }">
-    
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" (click)="toggleMapa()"></div>
-    
-    <div class="relative bg-[#0a0a0a] border border-white/10 p-5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] w-[85%] max-w-[340px] transform transition-transform duration-300 ease-out scale-95 translate-y-8"
-         [ngClass]="{ '!scale-100 !translate-y-0': mapaActivo }">
-      
-      <button class="absolute -top-3 -right-3 w-10 h-10 bg-[#d1b88e] text-black border-none rounded-full font-black text-xl flex items-center justify-center shadow-lg hover:scale-110 hover:bg-white transition-all cursor-pointer z-10" (click)="toggleMapa()">
+
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-pointer" (click)="toggleMapa()"></div>
+
+    <div class="relative border p-5 sm:p-6 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] w-full max-w-[380px] transform transition-transform duration-300 ease-out scale-95 translate-y-8"
+         [ngClass]="[
+           mapaActivo ? '!scale-100 !translate-y-0' : '',
+           themeService.isDarkMode() ? 'bg-[#0a0a0a] border-white/15 text-white' : 'bg-[#f8f5ee] border-[#8c583a]/30 text-[#1a281f]'
+         ]">
+
+      <button type="button" class="absolute -top-3 -right-3 w-10 h-10 bg-[#d1b88e] text-black border-none rounded-full font-black text-xl flex items-center justify-center shadow-lg hover:scale-110 hover:bg-white transition-all cursor-pointer z-10" (click)="toggleMapa()">
         &times;
       </button>
 
-      <h3 class="text-[#d1b88e] font-black text-lg mb-4 m-0 uppercase tracking-[1px] text-center">UBICACIÓN</h3>
-      
-      <a href="https://www.google.com/maps/place/Cactus+Museo+Ayacucho/@-13.1564479,-74.2018571,20.75z/data=!4m15!1m8!3m7!1s0x91127d88f5b2bee9:0xe9b3cb843a70a16e!2sAyacucho!3b1!8m2!3d-13.1638737!4d-74.2235641!16zL20vMDJwZ252!3m5!1s0x9112870070ca3657:0x33920fa99e15b74f!8m2!3d-13.1565313!4d-74.2017623!16s%2Fg%2F11x2kz1ckw!5m1!1e4?hl=es&entry=ttu&g_ep=EgoyMDI2MDkyOC4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="block relative w-full h-[200px] overflow-hidden rounded-xl filter grayscale-[30%] hover:grayscale-0 transition-all duration-500 border border-white/10">
+      <h3 class="text-[#d1b88e] font-black text-lg mb-4 m-0 uppercase tracking-[1px] text-center">NUESTRA UBICACIÓN</h3>
+
+      <a href="https://www.google.com/maps/place/Cactus+Museo+Ayacucho/@-13.1564479,-74.2018571,20.75z" target="_blank" class="block relative w-full h-[220px] overflow-hidden rounded-xl border border-white/10">
         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31061.04285149372!2d-74.23862214482729!3d-13.15414002766023!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91127d75df0709b1%3A0xcb065ec016b8d41a!2sAyacucho!5e0!3m2!1ses!2spe!4v1713835000000!5m2!1ses!2spe" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
       </a>
-      
-      <div class="text-white/80 text-center mt-4 text-[0.7rem] font-bold tracking-[2px] uppercase">
-        Jr. San Cristóbal, Ayacucho
+
+      <div class="text-center mt-4 text-xs font-bold tracking-[2px] uppercase opacity-80">
+        Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho
       </div>
     </div>
   </div>
 
   @if (!isLoggedIn) {
     <div class="scroll-trigger-zone h-[150vh] w-full relative z-0"></div>
+  } @else {
+    <div class="h-[100vh] w-full relative z-0 pointer-events-none"></div>
   }
 
-  <div class="relative z-30 bg-[#050505] shadow-[0_-20px_50px_rgba(0,0,0,0.9)]">
-    <app-about></app-about>
-    <div id="catalogo-section">
+  <!-- Sin z-index en el contenedor padre para que los modales de app-catalog tengan z-index global -->
+  <div class="relative shadow-[0_-20px_50px_rgba(0,0,0,0.6)] transition-colors duration-500"
+       [ngClass]="themeService.isDarkMode() ? 'bg-[#050505]' : 'bg-[#f8f5ee]'">
+    <div id="nosotros" class="relative z-30">
+      <app-about></app-about>
+    </div>
+    <div id="catalogo-section" class="relative z-30">
       <app-catalog></app-catalog>
     </div>
-    <app-footer></app-footer>
+    <div class="relative z-30">
+      <app-footer></app-footer>
+    </div>
   </div>
 </main>

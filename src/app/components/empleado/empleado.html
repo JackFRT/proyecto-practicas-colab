@@ -1,72 +1,103 @@
-<div class="h-screen flex flex-col bg-[var(--bg-main)] text-[var(--cafe-oscuro)] font-['Outfit'] overflow-hidden">
+<div class="min-h-screen lg:h-screen flex flex-col bg-[var(--bg-main)] text-[var(--cafe-oscuro)] font-['Outfit'] lg:overflow-hidden">
     <!-- Header -->
-    <header class="bg-[var(--verde-pino)] px-8 py-4 flex justify-between items-center shadow-md shrink-0">
-        <h1 class="text-white text-2xl m-0 font-normal">Barra de atención | <strong class="font-bold text-white">HOLA, {{ nombreEmpleado }}</strong></h1>
-        <img src="/assets/images/mascota_cactus/mascota.jpg" alt="Mascota" class="w-12 h-12 rounded-full border-2 border-[var(--verde-oliva)] object-cover">
+    <header class="bg-[var(--verde-pino)] px-4 sm:px-8 py-3.5 sm:py-4 flex justify-between items-center shadow-md shrink-0 gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+            <button type="button"
+                    (click)="menuLateralAbierto = !menuLateralAbierto"
+                    class="bg-white/15 hover:bg-white text-white hover:text-[var(--verde-pino)] px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm transition-colors flex items-center gap-2 shrink-0 cursor-pointer border border-white/25"
+                    [title]="menuLateralAbierto ? 'Ocultar menú de botones' : 'Desplegar menú de botones'">
+                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-outdent' : 'fa-bars'"></i>
+                <span class="hidden sm:inline">{{ menuLateralAbierto ? 'Ocultar Menú' : 'Menú' }}</span>
+            </button>
+            <h1 class="text-white text-base sm:text-xl md:text-2xl m-0 font-normal truncate pr-2">
+                Barra de atención | <strong class="font-bold text-white">HOLA, {{ nombreEmpleado }}</strong>
+            </h1>
+        </div>
+        <img src="/assets/images/mascota_cactus/mascota.jpg" alt="Mascota" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-[var(--verde-oliva)] object-cover shrink-0">
     </header>
 
     <!-- Layout Principal -->
-    <div class="flex p-6 gap-6 w-full max-w-[1400px] mx-auto flex-1 overflow-hidden">
-        
-        <!-- Menú Lateral -->
-        <aside class="w-64 flex flex-col gap-2 overflow-y-auto pr-2">
-            <button [ngClass]="tabActivo === 'ordenes' ? 'bg-[var(--verde-pino)] text-white translate-x-1 shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:translate-x-1'" 
-                    class="w-full text-left font-extrabold px-5 py-4 rounded-xl transition-all duration-300 flex justify-between items-center shadow-sm"
+    <div class="flex flex-col lg:flex-row p-3 sm:p-6 gap-4 lg:gap-6 w-full max-w-[1400px] mx-auto flex-1 lg:overflow-hidden">
+
+        <!-- Menú Lateral Colapsable -->
+        @if (menuLateralAbierto) {
+        <aside class="w-full lg:w-64 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto pb-2 lg:pb-0 lg:pr-2 shrink-0 animate-[fadeIn_0.2s]">
+            <button type="button"
+                    [ngClass]="tabActivo === 'ordenes' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 flex justify-between items-center gap-2 shadow-sm text-xs sm:text-sm shrink-0"
                     (click)="cambiarTab('ordenes')">
-                NOTIFICACIONES @if(num_notificaciones > 0) { <span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs">{{ num_notificaciones }}</span> }
+                <span>NOTIFICACIONES</span>
+                @if (num_notificaciones > 0) {
+                    <span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs">{{ num_notificaciones }}</span>
+                }
             </button>
-            <button [ngClass]="tabActivo === 'inventario' ? 'bg-[var(--verde-pino)] text-white translate-x-1 shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:translate-x-1'" 
-                    class="w-full text-left font-extrabold px-5 py-4 rounded-xl transition-all duration-300 shadow-sm" (click)="cambiarTab('inventario')">INVENTARIO</button>
-            <button [ngClass]="tabActivo === 'fidelidad' ? 'bg-[var(--verde-pino)] text-white translate-x-1 shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:translate-x-1'" 
-                    class="w-full text-left font-extrabold px-5 py-4 rounded-xl transition-all duration-300 shadow-sm" (click)="cambiarTab('fidelidad')">FIDELIDAD</button>
-            <button [ngClass]="tabActivo === 'marketing' ? 'bg-[var(--verde-pino)] text-white translate-x-1 shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:translate-x-1'" 
-                    class="w-full text-left font-extrabold px-5 py-4 rounded-xl transition-all duration-300 shadow-sm" (click)="cambiarTab('marketing')">MARKETING</button>
-            <button [ngClass]="tabActivo === 'ruleta' ? 'bg-[var(--verde-pino)] text-white translate-x-1 shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:translate-x-1'" 
-                    class="w-full text-left font-extrabold px-5 py-4 rounded-xl transition-all duration-300 shadow-sm" (click)="cambiarTab('ruleta')">RULETA</button>
-            <button [ngClass]="tabActivo === 'perfil' ? 'bg-[var(--verde-pino)] text-white translate-x-1 shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:translate-x-1'" 
-                    class="w-full text-left font-extrabold px-5 py-4 rounded-xl transition-all duration-300 shadow-sm" (click)="cambiarTab('perfil')">MI PERFIL</button>
+            <button type="button"
+                    [ngClass]="tabActivo === 'inventario' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
+                    (click)="cambiarTab('inventario')">INVENTARIO</button>
+            <button type="button"
+                    [ngClass]="tabActivo === 'fidelidad' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
+                    (click)="cambiarTab('fidelidad')">FIDELIDAD</button>
+            <button type="button"
+                    [ngClass]="tabActivo === 'marketing' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
+                    (click)="cambiarTab('marketing')">MARKETING</button>
+            <button type="button"
+                    [ngClass]="tabActivo === 'ruleta' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
+                    (click)="cambiarTab('ruleta')">RULETA</button>
+            <button type="button"
+                    [ngClass]="tabActivo === 'perfil' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
+                    (click)="cambiarTab('perfil')">MI PERFIL</button>
         </aside>
+        }
 
         <!-- Área de Contenido Central -->
-        <main class="flex-1 bg-[var(--bg-card)] rounded-2xl p-8 shadow-sm overflow-y-auto relative">
-            
+        <main class="flex-1 bg-[var(--bg-card)] rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm lg:overflow-y-auto relative min-w-0">
+
             @if (tabActivo === 'ordenes') {
                 <div class="animate-fade-in">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2"><i class="fas fa-clipboard-list"></i> Gestión de Pedidos</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2"><i class="fas fa-clipboard-list"></i> Gestión de Pedidos</h2>
                     </div>
-                    
+
                     <div class="flex flex-col gap-5">
                         @if (cargando) {
                             <div class="text-center p-12 bg-white rounded-xl border-2 border-dashed border-gray-300 text-gray-500"><i class="fas fa-spinner fa-spin text-4xl mb-4"></i><p>Conectando con la base de datos...</p></div>
                         } @else if (reservas_activas.length === 0) {
-                            <div class="text-center p-12 bg-white rounded-xl border-2 border-dashed border-gray-300 text-gray-500"><i class="fas fa-leaf text-4xl mb-4"></i><p>Todo tranquilo por ahora.</p></div>
+                            <div class="text-center p-12 bg-white rounded-xl border-2 border-dashed border-gray-300 text-gray-500"><i class="fas fa-leaf text-4xl mb-4"></i><p>Todo tranquilo por ahora. No hay pedidos pendientes.</p></div>
                         } @else {
                             @for (reserva of reservas_activas; track reserva.id_reserva) {
-                                <div class="bg-white rounded-xl p-5 border-l-4 shadow-sm transition-all" [ngClass]="reserva.estado === 'esperando_recojo' ? 'border-[var(--verde-oliva)] bg-[#fdfbf7]' : 'border-[var(--terracota)]'">
-                                    <div class="flex justify-between items-center cursor-pointer" (click)="toggleOrden(reserva.id_reserva)">
-                                        <h3 class="text-xl font-bold text-[var(--cafe-oscuro)] m-0 flex items-center gap-2">
+                                <div class="bg-white rounded-xl p-4 sm:p-5 border-l-4 shadow-sm transition-all" [ngClass]="reserva.estado === 'esperando_recojo' ? 'border-[var(--verde-oliva)] bg-[#fdfbf7]' : 'border-[var(--terracota)]'">
+                                    <div class="flex flex-wrap justify-between items-center gap-2 cursor-pointer" (click)="toggleOrden(reserva.id_reserva)">
+                                        <h3 class="text-lg sm:text-xl font-bold text-[var(--cafe-oscuro)] m-0 flex items-center gap-2">
                                             <i class="fas fa-chevron-right transition-transform duration-300" [class.rotate-90]="ordenesExpandidas.has(reserva.id_reserva)"></i>
-                                            <i class="fas" [class.fa-file-invoice-dollar]="reserva.tipo_comprobante === 'factura'" [class.fa-receipt]="reserva.tipo_comprobante !== 'factura'"></i> 
+                                            <i class="fas" [class.fa-file-invoice-dollar]="reserva.tipo_comprobante === 'factura'" [class.fa-receipt]="reserva.tipo_comprobante !== 'factura'"></i>
                                             Orden #{{ reserva.id_reserva }}
                                         </h3>
                                         <span class="text-white px-3 py-1 rounded-full text-xs font-bold" [ngClass]="reserva.estado === 'esperando_recojo' ? 'bg-[var(--verde-oliva)]' : 'bg-[var(--terracota)]'">
                                             {{ reserva.estado === 'esperando_recojo' ? 'LISTO PARA RECOJO' : 'PAGO PENDIENTE' }}
                                         </span>
                                     </div>
-                                    
+
                                     @if (ordenesExpandidas.has(reserva.id_reserva)) {
-                                        <div class="grid grid-cols-2 gap-5 mt-4 pt-4 border-t border-dashed border-gray-300">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-4 pt-4 border-t border-dashed border-gray-300">
                                             <div>
-                                                <p class="my-1 text-gray-600"><strong class="text-[var(--cafe-oscuro)]"><i class="fas fa-user w-5"></i> Cliente:</strong> {{ reserva.cliente }}</p>
-                                                <p class="my-1 text-gray-600"><strong class="text-[var(--cafe-oscuro)]"><i class="fas fa-id-card w-5"></i> Doc:</strong> {{ reserva.dni_opcional?.split(' | ')[0] || 'Sin documento' }}</p>
-                                                <p class="my-1 text-gray-600"><strong class="text-[var(--cafe-oscuro)]"><i class="fab fa-whatsapp text-green-500 w-5"></i> Cel:</strong> {{ reserva.dni_opcional?.split('Cel/Wsp: ')[1] || 'No provisto' }}</p>
-                                                @if (reserva.comprobante_pago) { <button class="mt-3 bg-transparent border border-[var(--terracota)] text-[var(--terracota)] px-3 py-1 rounded hover:bg-[var(--terracota)] hover:text-white transition-colors text-sm" (click)="abrirModal('comprobante', reserva.comprobante_pago)"><i class="fas fa-image"></i> Ver Captura</button> }
+                                                <p class="my-1 text-gray-600 text-sm sm:text-base"><strong class="text-[var(--cafe-oscuro)]"><i class="fas fa-user w-5"></i> Cliente:</strong> {{ reserva.cliente }}</p>
+                                                <p class="my-1 text-gray-600 text-sm sm:text-base"><strong class="text-[var(--cafe-oscuro)]"><i class="fas fa-id-card w-5"></i> Doc:</strong> {{ reserva.dni_opcional?.split(' | ')[0] || 'Sin documento' }}</p>
+                                                <p class="my-1 text-gray-600 text-sm sm:text-base"><strong class="text-[var(--cafe-oscuro)]"><i class="fab fa-whatsapp text-green-500 w-5"></i> Cel/Notas:</strong> {{ reserva.notasCliente || (reserva.dni_opcional?.split('Cel/Wsp: ')[1]) || 'No provisto' }}</p>
+                                                @if (reserva.comprobante_pago) {
+                                                    <button type="button" class="mt-3 bg-transparent border border-[var(--terracota)] text-[var(--terracota)] px-3 py-1.5 rounded-lg hover:bg-[var(--terracota)] hover:text-white transition-colors text-xs sm:text-sm font-bold" (click)="abrirModal('comprobante', reserva.comprobante_pago)">
+                                                        <i class="fas fa-image"></i> Ver Captura de Pago
+                                                    </button>
+                                                }
                                             </div>
                                             <div>
-                                                <span class="block font-bold text-[var(--verde-pino)] border-b border-gray-200 pb-2 mb-3">Total Pagado: S/ {{ reserva.total_pagado }}</span>
+                                                <span class="block font-bold text-[var(--verde-pino)] border-b border-gray-200 pb-2 mb-3">Total Pagado: S/ {{ reserva.total_pagado | number:'1.2-2' }}</span>
                                                 <ul class="list-none p-0 m-0 text-sm">
-                                                    @for (item of reserva.detalles; track item.nombre_comun) {
+                                                    @for (item of reserva.detalles; track $index) {
                                                         <li class="mb-2 text-gray-700">
                                                             <strong class="text-[var(--cafe-oscuro)]">{{ item.cantidad }}x:</strong> {{ item.nombre_comun }}
                                                             @if (item.estilo_seleccionado && item.estilo_seleccionado !== 'Estándar' && item.estilo_seleccionado !== 'Principal') {
@@ -77,18 +108,18 @@
                                                 </ul>
                                             </div>
                                         </div>
-                                        
-                                        <div class="flex gap-3 border-t border-gray-100 pt-4 mt-4">
+
+                                        <div class="flex flex-col sm:flex-row gap-2.5 sm:gap-3 border-t border-gray-100 pt-4 mt-4">
                                             @if (reserva.estado === 'pendiente') {
-                                                <button class="flex-1 bg-[var(--verde-oliva)] text-white py-2 rounded-lg font-bold hover:brightness-110 transition-all flex justify-center items-center gap-2" (click)="ejecutarAccionOrden(reserva.id_reserva, 'aprobar')"><i class="fas fa-check"></i> Aprobar</button>
-                                                <button class="flex-1 bg-transparent border border-gray-300 text-red-500 py-2 rounded-lg font-bold hover:bg-gray-50 transition-all flex justify-center items-center gap-2" (click)="ejecutarAccionOrden(reserva.id_reserva, 'cancelar')"><i class="fas fa-times"></i> Rechazar</button>
-                                                <button class="flex-1 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600 transition-all flex justify-center items-center gap-2" (click)="ejecutarAccionOrden(reserva.id_reserva, 'reportar', reserva.id_usuario)"><i class="fas fa-ban"></i> Reportar</button>
+                                                <button type="button" class="flex-1 bg-[var(--verde-oliva)] text-white py-2.5 rounded-lg font-bold hover:brightness-110 transition-all flex justify-center items-center gap-2 text-sm" (click)="ejecutarAccionOrden(reserva.id_reserva, 'aprobar')"><i class="fas fa-check"></i> Aprobar</button>
+                                                <button type="button" class="flex-1 bg-transparent border border-gray-300 text-red-500 py-2.5 rounded-lg font-bold hover:bg-gray-50 transition-all flex justify-center items-center gap-2 text-sm" (click)="ejecutarAccionOrden(reserva.id_reserva, 'cancelar')"><i class="fas fa-times"></i> Rechazar</button>
+                                                <button type="button" class="flex-1 bg-red-500 text-white py-2.5 rounded-lg font-bold hover:bg-red-600 transition-all flex justify-center items-center gap-2 text-sm" (click)="ejecutarAccionOrden(reserva.id_reserva, 'reportar', reserva.id_usuario)"><i class="fas fa-ban"></i> Reportar</button>
                                             } @else {
-                                                <button class="flex-1 bg-transparent border border-gray-300 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-50 transition-all flex justify-center items-center gap-2" (click)="abrirPDF(reserva.id_reserva)"><i class="fas fa-print"></i> Ver / Imprimir</button>
-                                                @if (reserva.dni_opcional?.includes('Cel/Wsp: ')) {
-                                                    <button class="flex-1 bg-transparent border border-green-500 text-green-500 py-2 rounded-lg font-bold hover:bg-green-50 transition-all flex justify-center items-center gap-2" (click)="enviarWhatsApp(reserva.dni_opcional?.split('Cel/Wsp: ')[1], reserva.cliente, reserva.total_pagado)"><i class="fab fa-whatsapp"></i> Avisar</button>
+                                                <button type="button" class="flex-1 bg-transparent border border-gray-300 text-gray-700 py-2.5 rounded-lg font-bold hover:bg-gray-50 transition-all flex justify-center items-center gap-2 text-sm" (click)="abrirPDF(reserva.id_reserva)"><i class="fas fa-print"></i> Ver / Imprimir</button>
+                                                @if (reserva.dni_opcional?.includes('Cel/Wsp: ') || reserva.notasCliente?.includes('Cel/Wsp: ')) {
+                                                    <button type="button" class="flex-1 bg-transparent border border-green-500 text-green-600 py-2.5 rounded-lg font-bold hover:bg-green-50 transition-all flex justify-center items-center gap-2 text-sm" (click)="enviarWhatsApp((reserva.notasCliente || reserva.dni_opcional)?.split('Cel/Wsp: ')[1], reserva.cliente, reserva.total_pagado)"><i class="fab fa-whatsapp"></i> Avisar</button>
                                                 }
-                                                <button class="flex-1 bg-[var(--verde-oscuro)] text-white py-2 rounded-lg font-bold hover:brightness-110 transition-all flex justify-center items-center gap-2" (click)="ejecutarAccionOrden(reserva.id_reserva, 'completar')"><i class="fas fa-box-open"></i> Entregar</button>
+                                                <button type="button" class="flex-1 bg-[var(--verde-oscuro)] text-white py-2.5 rounded-lg font-bold hover:brightness-110 transition-all flex justify-center items-center gap-2 text-sm" (click)="ejecutarAccionOrden(reserva.id_reserva, 'completar')"><i class="fas fa-box-open"></i> Entregar</button>
                                             }
                                         </div>
                                     }
@@ -101,33 +132,32 @@
 
             @if (tabActivo === 'inventario') {
                 <div class="animate-fade-in">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="flex items-center gap-5">
-                            <h2 class="text-2xl font-bold text-[var(--verde-pino)] m-0 flex items-center gap-2"><i class="fas fa-boxes"></i> Inventario</h2>
-                            
-                            <!-- Toggle Filtros con Tailwind -->
-                            <div class="flex bg-[#dcd7cb] p-1 rounded-full gap-1">
-                                <button [class]="vistaInventario === 'cactus' ? 'bg-[var(--bg-card)] text-[var(--verde-pino)] shadow-sm' : 'text-gray-600 hover:bg-[#cfc8b7]'" 
-                                        class="px-5 py-2 rounded-full font-bold transition-all" (click)="cambiarVistaInventario('cactus')">🌵 Cactus</button>
-                                <button [class]="vistaInventario === 'cafe' ? 'bg-[var(--bg-card)] text-[var(--verde-pino)] shadow-sm' : 'text-gray-600 hover:bg-[#cfc8b7]'" 
-                                        class="px-5 py-2 rounded-full font-bold transition-all" (click)="cambiarVistaInventario('cafe')">☕ Café</button>
-                                <button [class]="vistaInventario === 'recuerdo' ? 'bg-[var(--bg-card)] text-[var(--verde-pino)] shadow-sm' : 'text-gray-600 hover:bg-[#cfc8b7]'" 
-                                        class="px-5 py-2 rounded-full font-bold transition-all" (click)="cambiarVistaInventario('recuerdo')">🛍️ Recuerdos</button>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div class="flex flex-wrap items-center gap-3 sm:gap-5">
+                            <h2 class="text-xl sm:text-2xl font-bold text-[var(--verde-pino)] m-0 flex items-center gap-2"><i class="fas fa-boxes"></i> Inventario</h2>
+
+                            <div class="flex flex-wrap bg-[#dcd7cb] p-1 rounded-full gap-1">
+                                <button type="button" [class]="vistaInventario === 'cactus' ? 'bg-[var(--bg-card)] text-[var(--verde-pino)] shadow-sm' : 'text-gray-600 hover:bg-[#cfc8b7]'"
+                                        class="px-4 py-1.5 rounded-full font-bold transition-all text-xs sm:text-sm" (click)="cambiarVistaInventario('cactus')">🌵 Cactus</button>
+                                <button type="button" [class]="vistaInventario === 'cafe' ? 'bg-[var(--bg-card)] text-[var(--verde-pino)] shadow-sm' : 'text-gray-600 hover:bg-[#cfc8b7]'"
+                                        class="px-4 py-1.5 rounded-full font-bold transition-all text-xs sm:text-sm" (click)="cambiarVistaInventario('cafe')">☕ Café</button>
+                                <button type="button" [class]="vistaInventario === 'recuerdo' ? 'bg-[var(--bg-card)] text-[var(--verde-pino)] shadow-sm' : 'text-gray-600 hover:bg-[#cfc8b7]'"
+                                        class="px-4 py-1.5 rounded-full font-bold transition-all text-xs sm:text-sm" (click)="cambiarVistaInventario('recuerdo')">🛍️ Recuerdos</button>
                             </div>
                         </div>
-                        <button class="bg-[var(--verde-oscuro)] text-white px-5 py-2.5 rounded-full font-bold hover:bg-[var(--verde-pino)] hover:-translate-y-0.5 transition-all shadow-md flex items-center gap-2" 
+                        <button type="button" class="w-full md:w-auto justify-center bg-[var(--verde-oscuro)] text-white px-5 py-2.5 rounded-full font-bold hover:bg-[var(--verde-pino)] transition-all shadow-md flex items-center gap-2 text-sm"
                                 (click)="abrirModal('producto')">
                             <i class="fas fa-plus"></i> Añadir {{ vistaInventario === 'cactus' ? 'Cactus' : (vistaInventario === 'cafe' ? 'Café' : 'Recuerdo') }}
                         </button>
                     </div>
 
-                    <div class="flex justify-between items-center gap-4 mb-6">
-                        <div class="flex items-center bg-white border border-[var(--border-light)] rounded-lg px-4 py-3 flex-1 max-w-md shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
+                        <div class="flex items-center bg-white border border-[var(--border-light)] rounded-lg px-4 py-2.5 flex-1 shadow-sm">
                             <i class="fas fa-search text-gray-400 mr-3"></i>
-                            <input type="text" class="bg-transparent outline-none w-full text-[var(--cafe-oscuro)]" placeholder="Buscar producto por nombre..." (input)="onBuscar($event)" [value]="terminoBusqueda">
+                            <input type="text" class="bg-transparent outline-none w-full text-[var(--cafe-oscuro)] text-sm" placeholder="Buscar producto por nombre..." (input)="onBuscar($event)" [value]="terminoBusqueda">
                         </div>
-                        
-                        <select class="bg-white border border-[var(--border-light)] rounded-lg px-4 py-3 w-64 shadow-sm text-[var(--cafe-oscuro)] outline-none focus:border-[var(--verde-oliva)]" (change)="onFiltrarCategoria($event)">
+
+                        <select class="bg-white border border-[var(--border-light)] rounded-lg px-4 py-2.5 sm:w-64 shadow-sm text-[var(--cafe-oscuro)] outline-none focus:border-[var(--verde-oliva)] text-sm" (change)="onFiltrarCategoria($event)">
                             <option value="todas" [selected]="categoriaFiltro === 'todas'">Todas las categorías</option>
                             @for (cat of categorias; track cat.id_categoria) {
                                 @if (cat.tipo === vistaInventario || !cat.tipo) {
@@ -136,48 +166,50 @@
                             }
                         </select>
                     </div>
-                    
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-[var(--border-light)]">
-                        <table class="w-full text-left border-collapse">
+
+                    <div class="bg-white rounded-xl shadow-sm overflow-x-auto border border-[var(--border-light)]">
+                        <table class="w-full text-left border-collapse min-w-[580px]">
                             <thead class="bg-[var(--verde-pino)] text-white">
                                 <tr>
-                                    <th class="p-4 font-semibold w-16">Foto</th>
-                                    <th class="p-4 font-semibold">Nombre</th>
-                                    <th class="p-4 font-semibold">Categoría</th>
-                                    <th class="p-4 font-semibold">Precio</th>
-                                    <th class="p-4 font-semibold">Stock</th>
-                                    <th class="p-4 font-semibold text-center w-28">Acciones</th>
+                                    <th class="p-3.5 font-semibold w-16">Foto</th>
+                                    <th class="p-3.5 font-semibold">Nombre</th>
+                                    <th class="p-3.5 font-semibold">Categoría</th>
+                                    <th class="p-3.5 font-semibold">Precio</th>
+                                    <th class="p-3.5 font-semibold">Stock</th>
+                                    <th class="p-3.5 font-semibold text-center w-28">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @for (item of inventarioFiltrado; track item.id_producto || item.id_cactus || item.id || $index) {
                                     <tr class="border-b border-gray-100 hover:bg-[#fdfbf7] transition-colors">
-                                        
                                         <td class="p-3">
                                             <div class="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
                                                 <img [src]="getRutaImagen(getFotoPortada(item), item.tipo_producto)" class="w-full h-full object-cover" onerror="this.src='/assets/images/mascota_cactus/mascota.jpg'">
                                             </div>
                                         </td>
-                                        
-                                        <!-- CELDA DE NOMBRE CORREGIDA -->
+
                                         <td class="p-3">
-                                            <strong class="text-[var(--cafe-oscuro)] block">{{ item.nombre_comun || item.nombre }}</strong>
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <strong class="text-[var(--cafe-oscuro)] text-sm sm:text-base">{{ item.nombre_comun || item.nombre }}</strong>
+                                                @if (item.contiene_alcohol || item.contieneAlcohol) {
+                                                    <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase">
+                                                        <i class="fas fa-wine-glass-alt mr-1"></i>+18 Alcohol
+                                                    </span>
+                                                }
+                                            </div>
                                             @if (item.nombre_cientifico || item.subtitulo) {
-                                                <small class="text-gray-500">{{ item.nombre_cientifico || item.subtitulo }}</small>
+                                                <small class="text-gray-500 block">{{ item.nombre_cientifico || item.subtitulo }}</small>
                                             }
                                         </td>
-                                        
-                                        <!-- CELDA DE CATEGORÍA CORREGIDA -->
+
                                         <td class="p-3">
                                             <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">
                                                 {{ item.categoria?.nombre || item.nombre_categoria || 'Sin Categoría' }}
                                             </span>
                                         </td>
-                                        
-                                        <!-- CELDA DE PRECIO -->
-                                        <td class="p-3 font-medium">S/ {{ item.precio_base || item.precio }}</td>
-                                        
-                                        <!-- CELDA DE STOCK / ESTADO -->
+
+                                        <td class="p-3 font-medium">S/ {{ (item.precio_base || item.precio) | number:'1.2-2' }}</td>
+
                                         <td class="p-3 font-bold" [ngClass]="item.stock == 0 ? 'text-red-500' : 'text-gray-700'">
                                             @if (vistaInventario === 'cafe') {
                                                 <span [ngClass]="item.activo !== false ? 'text-green-600' : 'text-red-500'">
@@ -187,14 +219,13 @@
                                                 {{ item.stock || 0 }}
                                             }
                                         </td>
-                                        
-                                        <!-- CELDA DE ACCIONES CORREGIDA -->
+
                                         <td class="p-3">
                                             <div class="flex gap-2 justify-center">
-                                                <button class="w-9 h-9 rounded-full bg-[#E0A96D] text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="abrirModal('producto', item)">
+                                                <button type="button" class="w-9 h-9 rounded-full bg-[#E0A96D] text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="abrirModal('producto', item)">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="ejecutarAccion('eliminar_producto', {id_producto: item.id_producto || item.id_cactus || item.id})">
+                                                <button type="button" class="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition-transform" (click)="ejecutarAccion('eliminar_producto', {id_producto: item.id_producto || item.id_cactus || item.id})">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -216,181 +247,186 @@
 
             @if (tabActivo === 'fidelidad') {
                 <div class="animate-fade-in">
-                    <h2 class="text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2 mb-2"><i class="fas fa-heart"></i> Control de Fidelidad</h2>
-                    <p class="text-gray-500 mb-6">Registra las visitas presenciales a la cafetería/museo para que tus clientes suban de nivel de socio.</p>
-                    
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-[var(--border-light)] max-w-lg">
-                        <label class="block mb-3 font-bold text-[var(--cafe-oscuro)]">Buscar Cliente (Nombre, Correo o DNI)</label>
-                        
+                    <h2 class="text-xl sm:text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2 mb-2"><i class="fas fa-heart"></i> Control de Fidelidad</h2>
+                    <p class="text-gray-500 mb-6 text-sm sm:text-base">Registra las visitas presenciales a la cafetería/museo para que tus clientes suban de nivel de socio y ganen giros de ruleta.</p>
+
+                    <div class="bg-white p-5 sm:p-6 rounded-xl shadow-sm border border-[var(--border-light)] max-w-lg">
+                        <label class="block mb-3 font-bold text-[var(--cafe-oscuro)] text-sm sm:text-base">Buscar Cliente (Nombre, Correo o DNI)</label>
+
                         <div class="relative mb-4">
                             <div class="flex items-center bg-white border border-[var(--border-light)] rounded-lg px-4 py-3 shadow-sm focus-within:border-[var(--verde-oliva)]">
                                 <i class="fas fa-search mr-3" [ngClass]="clienteSeleccionado ? 'text-[var(--verde-pino)]' : 'text-gray-400'"></i>
-                                <input type="text" placeholder="Ej: Juan Perez o 76543210" class="bg-transparent outline-none w-full text-[var(--cafe-oscuro)]" (input)="buscarClientes($event)" [value]="terminoFidelidad">
+                                <input type="text" placeholder="Ej: Juan Perez o 76543210" class="bg-transparent outline-none w-full text-[var(--cafe-oscuro)] text-sm" (input)="buscarClientes($event)" [value]="terminoFidelidad">
                             </div>
-                            
+
                             @if (sugerenciasClientes.length > 0) {
                                 <div class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto mt-2">
                                     @for (cliente of sugerenciasClientes; track cliente.id_usuario) {
                                         <div (click)="seleccionarCliente(cliente)" class="p-3 border-b border-gray-100 cursor-pointer hover:bg-[#fdfbf7] transition-colors">
                                             <strong class="text-[var(--verde-pino)] block">{{ cliente.nombre }}</strong>
-                                            <span class="text-sm text-gray-500"><i class="fas fa-envelope"></i> {{ ofuscarEmail(cliente.email) }} @if(cliente.dni) { | <i class="fas fa-id-card"></i> {{ ofuscarDni(cliente.dni) }} }</span>
+                                            <span class="text-xs sm:text-sm text-gray-500"><i class="fas fa-envelope"></i> {{ ofuscarEmail(cliente.email) }} @if(cliente.dni) { | <i class="fas fa-id-card"></i> {{ ofuscarDni(cliente.dni) }} }</span>
                                         </div>
                                     }
                                 </div>
                             }
                         </div>
 
-                        <button class="w-full py-3 rounded-lg font-bold text-white transition-all flex justify-center items-center gap-2" 
+                        <button type="button" class="w-full py-3 rounded-lg font-bold text-white transition-all flex justify-center items-center gap-2 text-sm"
                                 [ngClass]="clienteSeleccionado ? 'bg-[var(--verde-oscuro)] hover:brightness-110' : 'bg-gray-400 cursor-not-allowed'"
                                 (click)="registrarVisita()" [disabled]="!clienteSeleccionado">
-                            <i class="fas" [ngClass]="clienteSeleccionado ? 'fa-check-circle' : 'fa-lock'"></i> 
-                            {{ clienteSeleccionado ? 'Confirmar Visita Presencial' : 'Selecciona un cliente' }}
+                            <i class="fas" [ngClass]="clienteSeleccionado ? 'fa-check-circle' : 'fa-lock'"></i>
+                            {{ clienteSeleccionado ? 'Confirmar Visita Presencial (+1 Giro)' : 'Selecciona un cliente' }}
                         </button>
                     </div>
                 </div>
             }
 
-            <!-- ========================================== -->
-<!-- VISTA DE MARKETING (CUPONES Y NOTICIAS) -->
-<!-- ========================================== -->
-@if (tabActivo === 'marketing') {
-    <div class="bg-[var(--bg-card)] p-6 md:p-8 rounded-2xl shadow-sm border border-[var(--border-light)]">
-        
-        <!-- SECCIÓN 1: CUPONES PÚBLICOS -->
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-[var(--verde-pino)] m-0 flex items-center gap-2">
-                <i class="fas fa-ticket-alt"></i> Cupones Públicos
-            </h3>
-            <button type="button" class="bg-[var(--verde-oscuro)] text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:brightness-110 transition-all flex items-center gap-2 shadow-sm" (click)="abrirModal('cupon')">
-                <i class="fas fa-plus"></i> Nuevo Cupón
-            </button>
-        </div>
+            @if (tabActivo === 'marketing') {
+                <div class="bg-[var(--bg-card)] p-3 sm:p-6 md:p-8 rounded-2xl shadow-sm border border-[var(--border-light)]">
 
-        <div class="overflow-x-auto mb-10 border border-gray-200 rounded-xl bg-white shadow-inner">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-[var(--verde-pino)] text-white">
-                    <tr>
-                        <th class="p-3.5 font-semibold">Código</th>
-                        <th class="p-3.5 font-semibold">Dcto</th>
-                        <th class="p-3.5 font-semibold">Usos</th>
-                        <th class="p-3.5 font-semibold">Vencimiento</th>
-                        <th class="p-3.5 font-semibold text-center w-24">Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (cupon of cupones; track $index) {
-                        <tr class="border-b border-gray-100 hover:bg-[#fdfbf7]">
-                            <td class="p-3.5 font-bold text-[var(--verde-pino)]">{{ cupon.codigo }}</td>
-                            <td class="p-3.5"><span class="bg-orange-100 text-[var(--terracota)] px-2.5 py-1 rounded-full text-xs font-bold">{{ cupon.descuentoPorcentaje || cupon.descuento }}%</span></td>
-                            <td class="p-3.5 text-gray-700">{{ cupon.usosActuales || 0 }} / {{ cupon.limiteUsos }}</td>
-                            <td class="p-3.5 text-gray-500 text-sm">{{ cupon.fechaVencimiento ? (cupon.fechaVencimiento | date:'dd/MM/yyyy') : 'Sin límite' }}</td>
-                            <td class="p-3.5 text-center">
-                                <button type="button" class="w-8 h-8 rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-colors inline-flex items-center justify-center text-sm" (click)="ejecutarAccion('eliminar_cupon', {id: cupon.idCupon || cupon.id_cupon})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    } @empty {
-                        <tr>
-                            <td colspan="5" class="p-6 text-center text-gray-400">No hay cupones activos en este momento.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                    <!-- SECCIÓN 1: CUPONES PÚBLICOS -->
+                    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+                        <h3 class="text-lg sm:text-xl font-bold text-[var(--verde-pino)] m-0 flex items-center gap-2">
+                            <i class="fas fa-ticket-alt"></i> Cupones Promocionales
+                        </h3>
+                        <button type="button" class="bg-[var(--verde-oscuro)] text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm hover:brightness-110 transition-all flex items-center gap-2 shadow-sm" (click)="abrirModal('cupon')">
+                            <i class="fas fa-plus"></i> Nuevo Cupón
+                        </button>
+                    </div>
 
-        <hr class="border-dashed border-gray-300 my-8">
+                    <div class="overflow-x-auto mb-10 border border-gray-200 rounded-xl bg-white shadow-inner">
+                        <table class="w-full text-left border-collapse min-w-[480px]">
+                            <thead class="bg-[var(--verde-pino)] text-white">
+                                <tr>
+                                    <th class="p-3.5 font-semibold">Código</th>
+                                    <th class="p-3.5 font-semibold">Dcto</th>
+                                    <th class="p-3.5 font-semibold">Usos</th>
+                                    <th class="p-3.5 font-semibold">Vencimiento</th>
+                                    <th class="p-3.5 font-semibold text-center w-24">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (cupon of cupones; track $index) {
+                                    <tr class="border-b border-gray-100 hover:bg-[#fdfbf7]">
+                                        <td class="p-3.5 font-bold text-[var(--verde-pino)]">{{ cupon.codigo }}</td>
+                                        <td class="p-3.5"><span class="bg-orange-100 text-[var(--terracota)] px-2.5 py-1 rounded-full text-xs font-bold">{{ cupon.descuentoPorcentaje || cupon.descuento_porcentaje || cupon.descuento }}%</span></td>
+                                        <td class="p-3.5 text-gray-700">{{ cupon.usosActuales || cupon.usos_actuales || 0 }} / {{ cupon.limiteUsos || cupon.limite_usos }}</td>
+                                        <td class="p-3.5 text-gray-500 text-sm">{{ (cupon.fechaVencimiento || cupon.fecha_vencimiento) ? ((cupon.fechaVencimiento || cupon.fecha_vencimiento) | date:'dd/MM/yyyy') : 'Sin límite' }}</td>
+                                        <td class="p-3.5 text-center">
+                                            <button type="button" class="w-8 h-8 rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-colors inline-flex items-center justify-center text-sm" (click)="ejecutarAccion('eliminar_cupon', {id: cupon.idCupon || cupon.id_cupon})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                } @empty {
+                                    <tr>
+                                        <td colspan="5" class="p-6 text-center text-gray-400">No hay cupones activos en este momento.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
 
-        <!-- SECCIÓN 2: BOLETÍN / CARRUSEL (NOTICIAS) -->
-        <div class="flex justify-between items-center mb-4">
-            <div>
-                <h3 class="text-xl font-bold text-[var(--verde-pino)] m-0 flex items-center gap-2">
-                    <i class="fas fa-newspaper"></i> Boletín / Carrusel
-                </h3>
-                <p class="text-gray-500 text-sm m-0 mt-1">Arrastra las noticias para cambiar su orden de prioridad o edítalas directamente.</p>
-            </div>
-            <button type="button" class="bg-[var(--verde-oscuro)] text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:brightness-110 transition-all flex items-center gap-2 shadow-sm" (click)="abrirModal('noticia')">
-                <i class="fas fa-plus"></i> Nueva Publicación
-            </button>
-        </div>
+                    <hr class="border-dashed border-gray-300 my-8">
 
-        <div class="space-y-3">
-            @for (noticia of noticias; track $index) {
-                <div class="flex items-center justify-between bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:border-[var(--verde-oliva)] transition-all cursor-move"
-                     draggable="true"
-                     (dragstart)="onDragStartNews($index)"
-                     (dragover)="onDragOverNews($event)"
-                     (drop)="onDropNews($index)">
-                    
-                    <div class="flex items-center gap-4">
-                        <span class="text-gray-300 font-bold"><i class="fas fa-grip-vertical"></i></span>
-                        @if (noticia.imagenUrl || noticia.imagen_url) {
-                            <img [src]="getRutaImagen(noticia.imagenUrl || noticia.imagen_url, 'noticias')" class="w-14 h-14 object-cover rounded-lg border border-gray-200">
-                        }
+                    <!-- SECCIÓN 2: BOLETÍN / CARRUSEL (NOTICIAS) -->
+                    <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                         <div>
-                            <h4 class="font-bold text-gray-900 m-0 text-base">{{ noticia.titulo }}</h4>
-                            <p class="text-gray-500 text-sm m-0 line-clamp-1">{{ noticia.descripcion }}</p>
+                            <h3 class="text-lg sm:text-xl font-bold text-[var(--verde-pino)] m-0 flex items-center gap-2">
+                                <i class="fas fa-newspaper"></i> Boletín / Carrusel
+                            </h3>
+                            <p class="text-gray-500 text-xs sm:text-sm m-0 mt-1">Arrastra las noticias para cambiar su orden de prioridad o edítalas directamente.</p>
                         </div>
-                    </div>
-
-                    <div class="flex items-center gap-3">
-                        <!-- Toggle de estado público/oculto -->
-                        <button type="button" class="px-3 py-1 rounded-full text-xs font-bold transition-colors"
-                                [ngClass]="noticia.estado ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
-                                (click)="ejecutarAccion('toggle_noticia', {id: noticia.idNoticia || noticia.id_noticia})">
-                            {{ noticia.estado ? 'Público' : 'Oculto' }}
-                        </button>
-
-                        <button type="button" class="w-9 h-9 rounded-lg bg-orange-100 text-[var(--terracota)] hover:bg-[var(--terracota)] hover:text-white transition-colors flex items-center justify-center" (click)="abrirModal('noticia', noticia)">
-                            <i class="fas fa-edit"></i>
-                        </button>
-
-                        <button type="button" class="w-9 h-9 rounded-lg bg-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center" (click)="ejecutarAccion('eliminar_noticia', {id: noticia.idNoticia || noticia.id_noticia})">
-                            <i class="fas fa-trash"></i>
+                        <button type="button" class="bg-[var(--verde-oscuro)] text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm hover:brightness-110 transition-all flex items-center gap-2 shadow-sm" (click)="abrirModal('noticia')">
+                            <i class="fas fa-plus"></i> Nueva Publicación
                         </button>
                     </div>
-                </div>
-            } @empty {
-                <div class="text-center p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    <span class="text-gray-400 text-sm">No hay publicaciones en el boletín.</span>
+
+                    <div class="space-y-3">
+                        @for (noticia of noticias; track $index) {
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:border-[var(--verde-oliva)] transition-all cursor-move"
+                                 draggable="true"
+                                 (dragstart)="onDragStartNews($index)"
+                                 (dragover)="onDragOverNews($event)"
+                                 (drop)="onDropNews($index)">
+
+                                <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                                    <span class="text-gray-300 font-bold"><i class="fas fa-grip-vertical"></i></span>
+                                    @if (noticia.imagenUrl || noticia.imagen_url) {
+                                        <img [src]="getRutaImagen(noticia.imagenUrl || noticia.imagen_url, 'news')" class="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg border border-gray-200 shrink-0" onerror="this.src='/assets/images/museo/museo.jpg'">
+                                    }
+                                    <div class="min-w-0">
+                                        <h4 class="font-bold text-gray-900 m-0 text-sm sm:text-base truncate">{{ noticia.titulo }}</h4>
+                                        <p class="text-gray-500 text-xs sm:text-sm m-0 line-clamp-1">{{ noticia.descripcion }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-end gap-2.5 shrink-0">
+                                    <button type="button" class="px-3 py-1 rounded-full text-xs font-bold transition-colors"
+                                            [ngClass]="noticia.estado ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+                                            (click)="ejecutarAccion('toggle_noticia', {id: noticia.idNoticia || noticia.id_noticia})">
+                                        {{ noticia.estado ? 'Público' : 'Oculto' }}
+                                    </button>
+
+                                    <button type="button" class="w-9 h-9 rounded-lg bg-orange-100 text-[var(--terracota)] hover:bg-[var(--terracota)] hover:text-white transition-colors flex items-center justify-center" (click)="abrirModal('noticia', noticia)">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    <button type="button" class="w-9 h-9 rounded-lg bg-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center" (click)="ejecutarAccion('eliminar_noticia', {id: noticia.idNoticia || noticia.id_noticia})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        } @empty {
+                            <div class="text-center p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                <span class="text-gray-400 text-sm">No hay publicaciones en el boletín.</span>
+                            </div>
+                        }
+                    </div>
                 </div>
             }
-        </div>
-
-    </div>
-}
 
             @if (tabActivo === 'perfil') {
                 <div class="animate-fade-in">
-                    <h2 class="text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2 mb-6"><i class="fas fa-chart-line"></i> Mi Rendimiento</h2>
+                    <h2 class="text-xl sm:text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2 mb-6"><i class="fas fa-chart-line"></i> Mi Rendimiento</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-white p-8 rounded-xl border border-[var(--border-light)] text-center shadow-sm">
-                            <i class="fas fa-box-open text-5xl text-[var(--verde-pino)] mb-4"></i>
-                            <h1 class="text-6xl font-bold text-[var(--cafe-oscuro)] m-0">{{ historial_atendidas.length }}</h1>
+                        <div class="bg-white p-6 sm:p-8 rounded-xl border border-[var(--border-light)] text-center shadow-sm">
+                            <i class="fas fa-box-open text-4xl sm:text-5xl text-[var(--verde-pino)] mb-4"></i>
+                            <h1 class="text-5xl sm:text-6xl font-bold text-[var(--cafe-oscuro)] m-0">{{ historial_atendidas.length }}</h1>
                             <p class="font-bold text-gray-600 mt-2 mb-6">Órdenes Entregadas</p>
-                            <button class="w-full bg-[var(--verde-oscuro)] text-white py-3 rounded-lg font-bold hover:brightness-110 transition-all flex justify-center items-center gap-2" (click)="irConfiguracionPerfil()">
+                            <button type="button" class="w-full bg-[var(--verde-oscuro)] text-white py-3 rounded-lg font-bold hover:brightness-110 transition-all flex justify-center items-center gap-2 text-sm" (click)="irConfiguracionPerfil()">
                                 <i class="fas fa-user-cog"></i> Configurar mi cuenta
                             </button>
                         </div>
-                        <div class="md:col-span-2 bg-white p-8 rounded-xl border border-[var(--border-light)] border-l-8 border-l-[var(--terracota)] flex items-center justify-center shadow-sm">
-                            <p class="text-xl text-gray-600 italic text-center leading-relaxed">
+                        <div class="md:col-span-2 bg-white p-6 sm:p-8 rounded-xl border border-[var(--border-light)] border-l-8 border-l-[var(--terracota)] flex items-center justify-center shadow-sm">
+                            <p class="text-lg sm:text-xl text-gray-600 italic text-center leading-relaxed">
                                 "El buen servicio es la raíz de un negocio fuerte."<br><br>
-                                <strong class="text-[var(--cafe-oscuro)] font-bold">Cactus Cool</strong>
+                                <strong class="text-[var(--cafe-oscuro)] font-bold">Café Ayacuchano &amp; Cactus Museum</strong>
                             </p>
                         </div>
                     </div>
 
-                    <h3 class="text-xl font-bold text-[var(--verde-pino)] border-b-2 border-gray-100 pb-3 mb-4">Historial de Entregas</h3>
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-[var(--border-light)]">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-[var(--verde-pino)] text-white"><tr><th class="p-4">Orden</th><th class="p-4">Fecha</th><th class="p-4">Total</th><th class="p-4">Acción</th></tr></thead>
+                    <h3 class="text-lg sm:text-xl font-bold text-[var(--verde-pino)] border-b-2 border-gray-100 pb-3 mb-4">Historial de Entregas</h3>
+                    <div class="bg-white rounded-xl shadow-sm overflow-x-auto border border-[var(--border-light)]">
+                        <table class="w-full text-left border-collapse min-w-[420px]">
+                            <thead class="bg-[var(--verde-pino)] text-white">
+                                <tr><th class="p-3.5">Orden</th><th class="p-3.5">Fecha</th><th class="p-3.5">Total</th><th class="p-3.5">Acción</th></tr>
+                            </thead>
                             <tbody>
                                 @for (h of historial_atendidas; track h.id_reserva) {
                                     <tr class="border-b border-gray-100 hover:bg-[#fdfbf7]">
-                                        <td class="p-4"><strong class="text-[var(--cafe-oscuro)]">#{{ h.id_reserva }}</strong></td>
-                                        <td class="p-4 text-gray-600">{{ h.fecha_reserva | date:'short' }}</td>
-                                        <td class="p-4 font-bold text-[var(--cafe-oscuro)]">S/ {{ h.total_pagado }}</td>
-                                        <td class="p-4"><button class="bg-transparent border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-50 flex items-center gap-2" (click)="abrirPDF(h.id_reserva)"><i class="fas fa-print"></i> Imprimir</button></td>
+                                        <td class="p-3.5"><strong class="text-[var(--cafe-oscuro)]">#{{ h.id_reserva }}</strong></td>
+                                        <td class="p-3.5 text-gray-600">{{ h.fecha_reserva | date:'short' }}</td>
+                                        <td class="p-3.5 font-bold text-[var(--cafe-oscuro)]">S/ {{ h.total_pagado | number:'1.2-2' }}</td>
+                                        <td class="p-3.5">
+                                            <button type="button" class="bg-transparent border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-gray-50 flex items-center gap-2" (click)="abrirPDF(h.id_reserva)">
+                                                <i class="fas fa-print"></i> Imprimir
+                                            </button>
+                                        </td>
+                                    </tr>
+                                } @empty {
+                                    <tr>
+                                        <td colspan="4" class="p-6 text-center text-gray-400">Aún no hay entregas registradas.</td>
                                     </tr>
                                 }
                             </tbody>
@@ -402,19 +438,19 @@
             @if (tabActivo === 'ruleta') {
                 <div class="animate-fade-in">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2"><i class="fas fa-chart-pie"></i> Editor Visual de Ruleta</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-[var(--verde-pino)] flex items-center gap-2"><i class="fas fa-chart-pie"></i> Editor Visual de Ruleta</h2>
                     </div>
 
-                    <div class="bg-white p-8 rounded-xl shadow-sm border border-[var(--border-light)] grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div class="bg-white p-5 sm:p-8 rounded-xl shadow-sm border border-[var(--border-light)] grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
                         <div class="flex flex-col items-center">
-                            <p class="text-gray-500 mb-6 text-sm">Arrastra los círculos blancos para ajustar los tamaños.</p>
+                            <p class="text-gray-500 mb-6 text-xs sm:text-sm text-center">Arrastra los círculos blancos para ajustar las probabilidades o haz doble clic en una sección para editarla.</p>
                             <div class="relative select-none">
                                 <div class="absolute top-1/2 -left-6 -translate-y-1/2 text-4xl text-[var(--terracota)] z-10"><i class="fas fa-caret-right"></i></div>
-                                <svg id="ruleta-svg" width="300" height="300" viewBox="0 0 300 300" class="rounded-full drop-shadow-xl bg-[#fdfbf7]" [class.cursor-grabbing]="draggingIndex !== null">
-                                    @for (premio of premios_ruleta; track premio.id_premio) {
-                                        <path [attr.d]="crearPath(premio.startPct, premio.endPct)" [attr.fill]="premio.color_seccion" stroke="white" stroke-width="3" class="transition-colors duration-300 cursor-pointer" (dblclick)="abrirModal('premio_ruleta', premio)"></path>
+                                <svg id="ruleta-svg" width="280" height="280" viewBox="0 0 300 300" class="rounded-full drop-shadow-xl bg-[#fdfbf7] max-w-full h-auto" [class.cursor-grabbing]="draggingIndex !== null">
+                                    @for (premio of premios_ruleta; track (premio.id_premio || premio.idPremio || $index)) {
+                                        <path [attr.d]="crearPath(premio.startPct, premio.endPct)" [attr.fill]="premio.color_seccion || premio.colorSeccion || '#4f772d'" stroke="white" stroke-width="3" class="transition-colors duration-300 cursor-pointer" (dblclick)="abrirModal('premio_ruleta', premio)"></path>
                                     }
-                                    @for (premio of premios_ruleta | slice:0:-1; track premio.id_premio; let i = $index) {
+                                    @for (premio of premios_ruleta | slice:0:-1; track (premio.id_premio || premio.idPremio || $index); let i = $index) {
                                         <circle [attr.cx]="getCoordinatesForPercent(premio.endPct).x" [attr.cy]="getCoordinatesForPercent(premio.endPct).y" r="10" class="fill-white stroke-[var(--verde-pino)] stroke-4 cursor-grab hover:fill-gray-200 hover:stroke-[var(--terracota)] active:cursor-grabbing active:fill-[var(--terracota)] active:stroke-white transition-all" (pointerdown)="onPointerDown(i, $event)"></circle>
                                     }
                                 </svg>
@@ -422,30 +458,42 @@
                         </div>
 
                         <div class="flex flex-col">
-                            <div class="flex justify-between items-end mb-4">
+                            <div class="flex flex-wrap justify-between items-end gap-2 mb-4">
                                 <div>
-                                    <h3 class="text-lg font-bold text-[var(--cafe-oscuro)] m-0">Probabilidades Exactas</h3>
-                                    <p class="text-xs text-gray-500 m-0">Los valores se ajustan automáticamente.</p>
+                                    <h3 class="text-base sm:text-lg font-bold text-[var(--cafe-oscuro)] m-0">Probabilidades Exactas</h3>
+                                    <p class="text-xs text-gray-500 m-0">Haz clic en un premio para editarlo.</p>
                                 </div>
-                                <button class="bg-transparent border border-[var(--verde-pino)] text-[var(--verde-pino)] px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-[var(--verde-pino)] hover:text-white transition-colors flex items-center gap-2" (click)="abrirModalNuevoPremio()">
+                                <button type="button" class="bg-transparent border border-[var(--verde-pino)] text-[var(--verde-pino)] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-[var(--verde-pino)] hover:text-white transition-colors flex items-center gap-2" (click)="abrirModalNuevoPremio()">
                                     <i class="fas fa-plus"></i> Añadir Rebanada
                                 </button>
                             </div>
-                            
+
                             <div class="flex-1 max-h-60 overflow-y-auto pr-2 mb-4">
-                                @for (premio of premios_ruleta; track premio.id_premio) {
-                                    <div class="flex justify-between items-center p-3 border-b border-gray-100">
+                                @for (premio of premios_ruleta; track (premio.id_premio || premio.idPremio || $index)) {
+                                    <div class="flex justify-between items-center p-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg cursor-pointer" (click)="abrirModal('premio_ruleta', premio)">
                                         <div class="flex items-center gap-3">
-                                            <div [style.background]="premio.color_seccion" class="w-4 h-4 rounded shadow-sm"></div>
-                                            <strong class="text-[var(--cafe-oscuro)]">{{ premio.titulo }}</strong>
+                                            <div [style.background]="premio.color_seccion || premio.colorSeccion || '#4f772d'" class="w-4 h-4 rounded shadow-sm border border-black/10"></div>
+                                            <div>
+                                                <strong class="text-[var(--cafe-oscuro)] text-sm sm:text-base block">{{ premio.titulo || 'Premio sin nombre' }}</strong>
+                                                <small class="text-xs text-gray-500">{{ premio.descuento_porcentaje ?? premio.descuentoPorcentaje ?? 0 }}% de descuento</small>
+                                            </div>
                                         </div>
-                                        <span class="text-lg font-bold text-[var(--verde-pino)]">{{ premio.probabilidad | number:'1.1-1' }}%</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-base sm:text-lg font-bold text-[var(--verde-pino)]">{{ premio.probabilidad | number:'1.1-1' }}%</span>
+                                            <i class="fas fa-pen text-xs text-gray-400"></i>
+                                        </div>
+                                    </div>
+                                } @empty {
+                                    <div class="p-6 text-center text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-200 text-sm">
+                                        Aún no hay premios en la ruleta. Haz clic en "+ Añadir Rebanada".
                                     </div>
                                 }
                             </div>
                             <div class="flex justify-between items-center pt-4 border-t-2 border-gray-100 mt-auto">
-                                <span class="text-[var(--terracota)] text-lg font-bold">Total: 100%</span>
-                                <button class="bg-[var(--verde-oscuro)] text-white px-5 py-2.5 rounded-lg font-bold hover:brightness-110 transition-all flex items-center gap-2" (click)="guardarProbabilidades()"><i class="fas fa-save"></i> Guardar Tamaños</button>
+                                <span class="text-[var(--terracota)] text-base sm:text-lg font-bold">Total: 100%</span>
+                                <button type="button" class="bg-[var(--verde-oscuro)] text-white px-4 sm:px-5 py-2.5 rounded-lg font-bold hover:brightness-110 transition-all flex items-center gap-2 text-xs sm:text-sm" (click)="guardarProbabilidades()">
+                                    <i class="fas fa-save"></i> Guardar Tamaños
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -455,43 +503,40 @@
     </div>
 
     <!-- Footer Nav -->
-    <nav class="bg-[#dcd7cb] px-8 py-5 flex justify-between items-center border-t border-gray-300 w-full max-w-[1400px] mx-auto rounded-t-2xl shrink-0">
-        <div class="flex gap-4">
-            <button class="bg-white border border-[var(--verde-pino)] text-[var(--verde-pino)] px-5 py-2.5 rounded-full font-bold hover:bg-[var(--verde-pino)] hover:text-white transition-colors flex items-center gap-2" (click)="irTienda()"><i class="fas fa-store"></i> TIENDA</button>
+    <nav class="bg-[#dcd7cb] px-4 sm:px-8 py-4 flex flex-wrap justify-between items-center gap-3 border-t border-gray-300 w-full max-w-[1400px] mx-auto rounded-t-2xl shrink-0">
+        <div class="flex flex-wrap gap-3">
+            <button type="button" class="bg-white border border-[var(--verde-pino)] text-[var(--verde-pino)] px-4 sm:px-5 py-2 rounded-full font-bold hover:bg-[var(--verde-pino)] hover:text-white transition-colors flex items-center gap-2 text-xs sm:text-sm" (click)="irTienda()"><i class="fas fa-store"></i> TIENDA</button>
             @if (rolEmpleado === 'admin') {
-                <button class="bg-white border border-[var(--verde-pino)] text-[var(--verde-pino)] px-5 py-2.5 rounded-full font-bold hover:bg-[var(--verde-pino)] hover:text-white transition-colors flex items-center gap-2" (click)="irPanelAdmin()"><i class="fas fa-user-shield"></i> PANEL ADMIN</button>
+                <button type="button" class="bg-white border border-[var(--verde-pino)] text-[var(--verde-pino)] px-4 sm:px-5 py-2 rounded-full font-bold hover:bg-[var(--verde-pino)] hover:text-white transition-colors flex items-center gap-2 text-xs sm:text-sm" (click)="irPanelAdmin()"><i class="fas fa-user-shield"></i> PANEL ADMIN</button>
             }
         </div>
-        <button class="bg-white border border-[var(--terracota)] text-[var(--terracota)] px-5 py-2.5 rounded-full font-bold hover:bg-[var(--terracota)] hover:text-white transition-colors flex items-center gap-2" (click)="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> CERRAR SESIÓN</button>
+        <button type="button" class="bg-white border border-[var(--terracota)] text-[var(--terracota)] px-4 sm:px-5 py-2 rounded-full font-bold hover:bg-[var(--terracota)] hover:text-white transition-colors flex items-center gap-2 text-xs sm:text-sm" (click)="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> CERRAR SESIÓN</button>
     </nav>
 </div>
 
 <!-- Toast -->
 @if (toastMsg) {
-    <div class="fixed bottom-8 right-8 bg-[var(--verde-oliva)] text-white px-6 py-4 rounded-xl font-bold shadow-xl flex items-center gap-3 z-[999999] animate-bounce-short">
+    <div class="fixed bottom-8 right-8 bg-[var(--verde-oliva)] text-white px-6 py-4 rounded-xl font-bold shadow-xl flex items-center gap-3 z-[999999]">
         <i class="fas fa-check-circle text-xl"></i> {{ toastMsg }}
     </div>
 }
 
-<app-modales-empleado 
-    [modalAbierto]="modalAbierto" 
+<app-modales-empleado
+    [modalAbierto]="modalAbierto"
     [itemEditando]="itemEditando"
     [vistaInventario]="vistaInventario"
     [cargando]="cargando"
     [variantesDinamicas]="variantesDinamicas"
     [tieneEstilos]="tieneEstilos"
-    
     [categorias]="categorias"
     [verCategorias]="verCategorias"
     [catEditando]="catEditando"
-    
     (cerrar)="cerrarModales()"
     (guardar)="procesarFormulario($event.event, $event.accion)"
     (accionEspecial)="ejecutarAccion($event.accion, $event.data)"
     (toggleEstilos)="toggleEstilos($event)"
     (agregarVariante)="agregarVariante()"
     (eliminarVariante)="eliminarVariante($event)"
-    
     (gestionarCategorias)="abrirModalCategorias()"
     (cerrarCat)="cerrarCategorias()"
     (seleccionarCatParaEditar)="catEditando = $event">

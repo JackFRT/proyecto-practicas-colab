@@ -1,109 +1,163 @@
 @if (mostrarInterfazFlotante()) {
-    
-    
-    @if (isLoggedIn && (userRole === 'admin' || userRole === 'empleado')) {
-        <div class="fixed z-[2000] bottom-[15px] left-[15px] md:bottom-[30px] md:left-[30px] scale-85 md:scale-100 origin-bottom-left flex flex-col gap-3 items-start transition-all duration-500 font-['Montserrat']" id="ui-bottom-left">
-            @if (userRole === 'admin') {
-                <a routerLink="/admin/panel" class="bg-black/40 backdrop-blur-xl border border-white/10 text-white px-6 py-3.5 text-xs font-bold tracking-[1px] no-underline rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.3)] hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 transition-all duration-300 flex items-center">
-                    <i class="fas fa-terminal mr-2.5 opacity-80"></i> PANEL DE ADMINISTRACION
-                </a>
-            }
-            @if (userRole === 'empleado' || userRole === 'admin') {
-                <a routerLink="/empleado/dashboard" class="bg-black/40 backdrop-blur-xl border border-white/10 text-white px-6 py-3.5 text-xs font-bold tracking-[1px] no-underline rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.3)] hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 transition-all duration-300 flex items-center">
-                    <i class="fas fa-clipboard-list mr-2.5 opacity-80"></i> PANEL DE TRABAJO
-                </a>
-            }
-        </div>
-    }
 
-    
-    <div class="fixed z-[2000] top-[15px] right-[15px] md:top-[30px] md:right-[30px] font-['Montserrat'] transition-all duration-500" id="ui-profile">
-        
-        
-        <div id="profile-dropdown" class="absolute top-[calc(100%+15px)] right-0 bg-black/60 backdrop-blur-2xl border border-white/10 w-[290px] md:w-[320px] p-7 shadow-[0_15px_40px_rgba(0,0,0,0.6)] rounded-3xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
-             [ngClass]="menuPerfilAbierto ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-5'">
-            
-            @if (isLoggedIn) {
-                <div class="text-white/50 text-sm font-bold tracking-[1px] border-b border-white/10 pb-5 mb-5">
-                    <span>HOLA: <strong class="text-white block text-xl mt-1.5">{{ userName | uppercase }}</strong></span>
-                </div>
-                
-                <div class="flex flex-col gap-4">
-                    <a routerLink="/cliente/perfil" class="text-white no-underline text-sm font-bold tracking-[1px] flex items-center hover:text-[#d1b88e] hover:translate-x-1.5 transition-all">
-                        <i class="fas fa-id-card w-7 text-center opacity-80"></i> MI PERFIL
-                    </a>
-                    @if (userRole !== 'empleado') {
-                        <a href="#" (click)="abrirCarritoGlobal($event)" class="text-white no-underline text-sm font-bold tracking-[1px] flex items-center hover:text-[#d1b88e] hover:translate-x-1.5 transition-all">
-                            <i class="fas fa-shopping-basket w-7 text-center opacity-80"></i> CARRITO
+    <!-- Panel inferior izquierdo colapsable para Admin / Empleado -->
+    @if (isLoggedIn && (userRole === 'admin' || userRole === 'empleado')) {
+        <div class="fixed z-[1200] bottom-4 left-4 md:bottom-6 md:left-6 flex flex-col gap-2 items-start font-['Montserrat']" id="ui-bottom-left">
+            @if (panelAccesosAbierto) {
+                <div class="flex flex-col gap-2 items-start animate-[fadeIn_0.25s]">
+                    @if (userRole === 'admin') {
+                        <a routerLink="/admin/panel" class="bg-black/80 backdrop-blur-xl border border-white/20 text-white px-4 py-2.5 text-[11px] font-bold tracking-[1px] no-underline rounded-full shadow-lg hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] transition-all duration-300 flex items-center">
+                            <i class="fas fa-terminal mr-2 opacity-80"></i> PANEL ADMIN
+                        </a>
+                    }
+                    @if (userRole === 'empleado' || userRole === 'admin') {
+                        <a routerLink="/empleado/dashboard" class="bg-black/80 backdrop-blur-xl border border-white/20 text-white px-4 py-2.5 text-[11px] font-bold tracking-[1px] no-underline rounded-full shadow-lg hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] transition-all duration-300 flex items-center">
+                            <i class="fas fa-clipboard-list mr-2 opacity-80"></i> PANEL DE TRABAJO
                         </a>
                     }
                 </div>
-                <div class="h-[1px] bg-white/10 my-5"></div>
+            }
+            <button type="button"
+                    (click)="panelAccesosAbierto = !panelAccesosAbierto"
+                    class="bg-black/75 backdrop-blur-xl border border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black px-3.5 py-2 rounded-full text-[11px] font-extrabold tracking-[1px] shadow-lg transition-all cursor-pointer flex items-center gap-1.5"
+                    [title]="panelAccesosAbierto ? 'Ocultar accesos rápidos' : 'Mostrar accesos rápidos'">
+                <i class="fas" [ngClass]="panelAccesosAbierto ? 'fa-chevron-down' : 'fa-layer-group'"></i>
+                <span>{{ panelAccesosAbierto ? 'OCULTAR PANEL' : 'ACCESOS' }}</span>
+            </button>
+        </div>
+    }
+
+    <!-- Controles superiores derechos: Botón Modo Claro/Oscuro + Menú Usuario (sin duplicar Carrito) -->
+    <div class="fixed z-[1200] top-3 right-3 sm:top-4 sm:right-6 flex items-center gap-2 font-['Montserrat'] transition-all duration-300" id="ui-profile">
+
+        <!-- Botón de cambio de Tema Claro / Oscuro -->
+        <button
+            type="button"
+            (click)="themeService.toggleTheme()"
+            [attr.aria-label]="themeService.isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+            [title]="themeService.isDarkMode() ? 'Activar modo claro' : 'Activar modo oscuro'"
+            class="h-10 sm:h-11 px-3 sm:px-4 rounded-full backdrop-blur-xl border transition-all duration-300 flex items-center gap-2 text-[11px] font-extrabold tracking-[1px] shadow-lg hover:scale-105 cursor-pointer"
+            [ngClass]="themeService.isDarkMode()
+                ? 'bg-black/60 border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black'
+                : 'bg-[#f8f5ee]/95 border-[#8c583a]/30 text-[#4a2c18] hover:bg-[#8c583a] hover:text-white'">
+            @if (themeService.isDarkMode()) {
+                <i class="fas fa-sun text-sm"></i>
+                <span class="hidden md:inline">CLARO</span>
             } @else {
-                <div class="flex flex-col gap-4">
-                    <a routerLink="/login" class="text-[#d1b88e] no-underline text-sm font-bold tracking-[1px] flex items-center hover:text-white hover:translate-x-1.5 transition-all">
-                        <i class="fas fa-sign-in-alt w-7 text-center opacity-80"></i> INICIAR SESIÓN
+                <i class="fas fa-moon text-sm"></i>
+                <span class="hidden md:inline">OSCURO</span>
+            }
+        </button>
+
+        <!-- Dropdown de Perfil (sin opción de Carrito duplicada) -->
+        <div id="profile-dropdown"
+             class="absolute top-[calc(100%+10px)] right-0 backdrop-blur-2xl border w-[265px] sm:w-[295px] p-5 shadow-[0_15px_40px_rgba(0,0,0,0.6)] rounded-3xl transition-all duration-300"
+             [ngClass]="[
+                menuPerfilAbierto ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4 pointer-events-none',
+                themeService.isDarkMode() ? 'bg-black/90 border-white/15 text-white' : 'bg-[#f8f5ee]/95 border-[#8c583a]/25 text-[#1a281f]'
+             ]">
+
+            @if (isLoggedIn) {
+                <div class="text-xs font-bold tracking-[1px] border-b pb-3.5 mb-3.5"
+                     [ngClass]="themeService.isDarkMode() ? 'text-white/50 border-white/10' : 'text-[#8c583a] border-[#8c583a]/20'">
+                    <span>HOLA: <strong class="block text-base mt-0.5" [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">{{ userName | uppercase }}</strong></span>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <a routerLink="/cliente/perfil" (click)="menuPerfilAbierto = false" class="no-underline text-xs font-bold tracking-[1px] flex items-center hover:text-[#d1b88e] hover:translate-x-1.5 transition-all"
+                       [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
+                        <i class="fas fa-id-card w-7 text-center opacity-80"></i> MI PERFIL
                     </a>
                 </div>
-                <div class="h-[1px] bg-white/10 my-5"></div>
+                <div class="h-[1px] my-3.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
+            } @else {
+                <div class="flex flex-col gap-3">
+                    <a routerLink="/login" (click)="menuPerfilAbierto = false" class="text-[#d1b88e] no-underline text-xs font-bold tracking-[1px] flex items-center hover:translate-x-1.5 transition-all">
+                        <i class="fas fa-sign-in-alt w-7 text-center opacity-80"></i> INICIAR SESIÓN / REGISTRO
+                    </a>
+                </div>
+                <div class="h-[1px] my-3.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
             }
-            
-            
-            <div class="flex flex-col gap-4">
-                <a href="#" (click)="lanzarRuleta($event)" class="text-white no-underline text-sm font-bold tracking-[1px] flex items-center hover:text-[#d1b88e] hover:translate-x-1.5 transition-all">
+
+            <div class="flex flex-col gap-3">
+                <a href="#" (click)="lanzarRuleta($event)" class="no-underline text-xs font-bold tracking-[1px] flex items-center hover:text-[#d1b88e] hover:translate-x-1.5 transition-all"
+                   [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
                     <i class="fas fa-gift w-7 text-center opacity-80"></i> RULETA SEMANAL
                 </a>
             </div>
 
-            <div class="h-[1px] bg-white/10 my-5"></div>
+            <div class="h-[1px] my-3.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
 
-            <div class="flex justify-between items-center text-white/70 font-bold text-xs tracking-[1px]">
+            <div class="flex justify-between items-center font-bold text-xs tracking-[1px]"
+                 [ngClass]="themeService.isDarkMode() ? 'text-white/70' : 'text-[#4b5563]'">
                 <span>VOZ DE MOKA</span>
-                
-                <label class="relative inline-block w-[45px] h-[24px] cursor-pointer">
+                <label class="relative inline-block w-[44px] h-[24px] cursor-pointer">
                     <input type="checkbox" id="toggle-moka-sound" class="sr-only peer" [checked]="!mokaSilenciada" (change)="toggleVozMoka($event)">
-                    <div class="w-full h-full bg-white/10 rounded-full peer-checked:bg-[#d1b88e] transition-colors duration-300"></div>
-                    <div class="absolute w-4 h-4 bg-white rounded-full top-1 left-1 transition-transform duration-300 peer-checked:translate-x-[21px] shadow-sm"></div>
+                    <div class="w-full h-full bg-gray-500/30 rounded-full peer-checked:bg-[#d1b88e] transition-colors duration-300"></div>
+                    <div class="absolute w-4 h-4 bg-white rounded-full top-1 left-1 transition-transform duration-300 peer-checked:translate-x-[20px] shadow-sm"></div>
                 </label>
             </div>
-            
+
             @if (isLoggedIn) {
-                <a href="#" (click)="cerrarSesion($event)" class="block text-center bg-[#ff4757]/10 text-[#ff4757] no-underline p-3.5 border border-[#ff4757]/20 rounded-xl font-bold tracking-[1px] transition-all hover:bg-[#ff4757] hover:text-white mt-6">
+                <a href="#" (click)="cerrarSesion($event)" class="block text-center bg-[#ff4757]/10 text-[#ff4757] no-underline p-2.5 border border-[#ff4757]/20 rounded-xl text-xs font-bold tracking-[1px] transition-all hover:bg-[#ff4757] hover:text-white mt-4">
                     CERRAR SESIÓN
                 </a>
             }
         </div>
 
-        
-        <button class="w-[50px] h-[50px] md:w-[60px] md:h-[60px] bg-black/40 backdrop-blur-xl border border-white/10 text-white text-xl md:text-2xl rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.3)] hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-110 transition-all duration-300 flex items-center justify-center relative group" (click)="toggleProfileMenu($event)">
+        <!-- Botón de Perfil -->
+        <button
+            type="button"
+            class="w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-xl border text-base sm:text-lg rounded-full shadow-lg hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 transition-all duration-300 flex items-center justify-center relative cursor-pointer"
+            [ngClass]="themeService.isDarkMode()
+                ? 'bg-black/60 border-white/20 text-white'
+                : 'bg-[#f8f5ee]/95 border-[#8c583a]/30 text-[#4a2c18]'"
+            (click)="toggleProfileMenu($event)"
+            title="Menú de usuario">
             <i class="fas fa-user-astronaut"></i>
-            @if (isLoggedIn && userRole !== 'empleado' && cartService.getTotalPlantas() > 0) {
-                <span class="absolute -top-1 -right-1 bg-[#ff4757] text-white text-[0.7rem] font-black px-2 py-0.5 border-2 border-black rounded-full shadow-lg">
-                    {{ cartService.getTotalPlantas() }}
-                </span>
-            }
         </button>
     </div>
-} 
+}
 
+<!-- Asistente Barista Moka en la parte inferior derecha usando sprites de assets/images/barista/ -->
+@if (mostrarMokaGlobal()) {
+    <div class="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[1500] flex items-end gap-3 max-w-[92vw] sm:max-w-[420px] font-['Montserrat'] pointer-events-none select-none"
+         id="ui-moka"
+         [style.z-index]="router.url === '/login' ? '9999' : '1500'">
 
-@if (mostrarMokaGlobal() && mostrarHUDCompleto) {
-    <div class="fixed z-[2000] top-[15px] left-[15px] md:top-[30px] md:left-[30px] scale-85 md:scale-100 origin-top-left transition-all duration-500 font-['Montserrat']" id="ui-moka" [style.z-index]="router.url === '/login' ? '9999' : ''">
-        
-        
-        <div class="flex items-center bg-black/40 backdrop-blur-xl border border-white/10 cursor-pointer transition-all duration-300 rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.3)] hover:bg-white/10 hover:border-[#d1b88e]/50 hover:scale-105 p-1.5 pr-6" (click)="interactuarMoka()">
-            
-            
-            <div class="bg-white text-black w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-lg md:text-xl shrink-0 shadow-inner">
-                <i class="fas fa-headset"></i>
-            </div>
-            
-            @if (mensajeMoka) {
-                <div class="pl-4 text-white text-xs font-bold tracking-[1px] flex items-center gap-2">
-                    <strong class="text-[#d1b88e]">MOKA:</strong> {{ mensajeMoka | uppercase }}
+        @if (mensajeMoka) {
+            <div class="pointer-events-auto relative backdrop-blur-xl border px-4 py-3 rounded-2xl rounded-br-sm shadow-[0_12px_30px_rgba(0,0,0,0.45)] transition-all duration-300 animate-[fadeIn_0.25s] cursor-pointer"
+                 [ngClass]="themeService.isDarkMode()
+                    ? 'bg-black/85 border-[#d1b88e]/40 text-white'
+                    : 'bg-[#fffdf9]/95 border-[#8c583a]/35 text-[#1a281f]'"
+                 (click)="interactuarMoka()">
+                <button type="button"
+                        (click)="cerrarBurbujaMoka($event)"
+                        class="absolute -top-2 -left-2 w-5 h-5 rounded-full bg-[#d1b88e] text-black border-none text-xs font-black flex items-center justify-center shadow cursor-pointer hover:scale-110"
+                        title="Ocultar mensaje">
+                    &times;
+                </button>
+                <div class="text-[10px] font-black tracking-[1.5px] uppercase text-[#d1b88e] mb-0.5 flex items-center gap-1.5">
+                    <i class="fas fa-mug-hot"></i> MOKA • BARISTA
                 </div>
-            }
-        </div>
+                <p class="m-0 text-xs sm:text-[13px] font-bold leading-snug">
+                    {{ mensajeMoka }}
+                </p>
+            </div>
+        }
+
+        <button type="button"
+                (click)="interactuarMoka()"
+                class="pointer-events-auto relative w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#d1b88e] shadow-[0_10px_28px_rgba(0,0,0,0.5)] overflow-hidden transition-transform duration-300 hover:scale-110 active:scale-95 cursor-pointer shrink-0 p-0 group"
+                [ngClass]="themeService.isDarkMode() ? 'bg-[#1a1410]' : 'bg-[#f5ebd6]'"
+                title="Haz clic en Moka para hablar o recibir un dato curioso">
+            <img [src]="imagenMoka"
+                 alt="Moka Barista"
+                 class="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                 onerror="this.src='/assets/images/barista/barista_saludando.png'">
+            <span class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-black"
+                  [ngClass]="mokaSilenciada ? 'bg-gray-400' : 'bg-[#2ecc71]'"></span>
+        </button>
     </div>
 }
 

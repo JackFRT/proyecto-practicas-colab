@@ -40,22 +40,91 @@ public class Producto {
     @JsonProperty("detalles_tecnicos")
     private String detallesTecnicos; 
 
-    @Column(name = "precio_base") // Asegúrate de que coincida con tu BD (a veces es 'precio' o 'precio_base')
+    @Column(name = "precio_base")
     private BigDecimal precio;
 
-    private Integer stock;
+    private Integer stock = 0;
 
     private Boolean activo = true;
 
-    @ManyToOne
+    @Column(name = "contiene_alcohol")
+    @JsonProperty("contiene_alcohol")
+    private Boolean contieneAlcohol = false;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_categoria")
     private Categoria categoria;
 
-    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ImagenProducto> imagenes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<ProductoVariante> variantes = new ArrayList<>();
     
     public void addImagen(ImagenProducto imagen) {
         imagenes.add(imagen);
         imagen.setProducto(this);
+    }
+
+    public void addVariante(ProductoVariante variante) {
+        variantes.add(variante);
+        variante.setProducto(this);
+    }
+
+    @JsonProperty("id_cactus")
+    public Long getIdCactus() {
+        return idProducto;
+    }
+
+    @JsonProperty("idProducto")
+    public Long getIdProductoCamel() {
+        return idProducto;
+    }
+
+    @JsonProperty("nombre")
+    public String getNombrePlain() {
+        return nombre;
+    }
+
+    @JsonProperty("subtitulo")
+    public String getSubtituloPlain() {
+        return subtitulo;
+    }
+
+    @JsonProperty("tipo")
+    public String getTipo() {
+        return tipoProducto;
+    }
+
+    @JsonProperty("precio_base")
+    public BigDecimal getPrecioBase() {
+        return precio;
+    }
+
+    @JsonProperty("id_categoria")
+    public Long getIdCategoria() {
+        return categoria != null ? categoria.getIdCategoria() : null;
+    }
+
+    @JsonProperty("nombre_categoria")
+    public String getNombreCategoria() {
+        return categoria != null ? categoria.getNombre() : null;
+    }
+
+    @JsonProperty("contieneAlcohol")
+    public Boolean getContieneAlcoholCamel() {
+        return Boolean.TRUE.equals(contieneAlcohol);
+    }
+
+    @JsonProperty("imagen_url")
+    public String getImagenUrl() {
+        if (imagenes == null || imagenes.isEmpty()) {
+            return "";
+        }
+        return imagenes.stream()
+                .filter(img -> Boolean.TRUE.equals(img.getEsPrincipal()))
+                .map(ImagenProducto::getRutaImagen)
+                .findFirst()
+                .orElse(imagenes.get(0).getRutaImagen());
     }
 }

@@ -20,15 +20,23 @@ public class PremioRuleta {
 
     @JsonProperty("descuento_porcentaje")
     @Column(name = "descuento_porcentaje")
-    private Integer descuentoPorcentaje;
+    private Integer descuentoPorcentaje = 0;
 
     @JsonProperty("color_seccion")
     @Column(name = "color_seccion")
-    private String colorSeccion;
+    private String colorSeccion = "#A3B18A";
 
     private Double probabilidad = 0.0;
 
+    @Column(name = "activo")
+    private Boolean activo = true;
+
+    @Transient
     @JsonProperty("es_nuevo")
-    @Column(name = "es_nuevo")
     private Boolean esNuevo = false;
+
+    @JsonProperty("idPremio")
+    public Long getIdPremioCamel() {
+        return idPremio;
+    }
 }

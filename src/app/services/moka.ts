@@ -147,6 +147,17 @@ export class Moka {
     return { texto: this.obtenerFraseAleatoria('aburrimiento'), imagen: 'barista_aburrida.png' };
   }
 
+  public obtenerCharlaPeriodica(): { texto: string, imagen: string } {
+    const r = Math.random();
+    if (r < 0.45) {
+      return { texto: this.obtenerFraseAleatoria('datos_curiosos'), imagen: 'barista_emocionada.png' };
+    } else if (r < 0.8) {
+      return { texto: this.obtenerFraseAleatoria('normal'), imagen: 'barista_feliz.png' };
+    } else {
+      return { texto: this.obtenerFraseAleatoria('aburrimiento'), imagen: 'barista_aburrida.png' };
+    }
+  }
+
   public reaccionarPassword(visible: boolean): { texto: string, imagen: string } {
     if (visible) {
         return { texto: this.obtenerFraseAleatoria('seguridad'), imagen: 'barista_cara_cubierta.png' };

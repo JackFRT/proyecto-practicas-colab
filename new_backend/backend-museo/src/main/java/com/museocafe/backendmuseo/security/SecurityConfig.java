@@ -34,33 +34,43 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // === AQUÍ ESTÁ LA MAGIA ===
-                // Añadimos "/api/archivos/**" para que Angular pueda descargar las fotos sin token
-                .requestMatchers("/api/auth/**", "/api/publico/**", "/images/**", "/error", "/api/archivos/**").permitAll()
-                
-                .requestMatchers("/api/admin/**").hasAuthority("admin")
-                .requestMatchers("/api/empleado/**", "/api/inventario/**").hasAnyAuthority("empleado", "admin")
-                
-                // Marketing y Cupones (Aseguramos que el admin tenga pase libre)
-                .requestMatchers("/api/marketing/**", "/api/marketing/cupones/**").hasAnyAuthority("admin", "ROLE_ADMIN")
-                .requestMatchers("/api/marketing/noticias/**").hasAnyAuthority("empleado", "admin", "ROLE_ADMIN")
-                
+                // Rutas públicas: autenticación, inicio público, imágenes, comprobantes imprimibles y premios de ruleta
+                .requestMatchers(
+                        "/api/auth/**",
+                        "/api/publico/**",
+                        "/api/pedidos/ticket/**",
+                        "/api/pedidos/comprobante/**",
+                        "/api/ruleta/premios",
+                        "/api/ruleta/cargar/**",
+                        "/images/**",
+                        "/error",
+                        "/api/archivos/**"
+                ).permitAll()
+
+                .requestMatchers("/api/admin/**").hasAnyAuthority("admin", "ROLE_ADMIN")
+                .requestMatchers(
+                        "/api/empleado/**",
+                        "/api/inventario/**",
+                        "/api/marketing/**",
+                        "/api/usuarios/**"
+                ).hasAnyAuthority("empleado", "admin", "ROLE_EMPLEADO", "ROLE_ADMIN")
+
                 .anyRequest().authenticated()
             );
 
         http.addFilterBefore(jwtRequestFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:80"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

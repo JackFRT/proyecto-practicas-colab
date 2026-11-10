@@ -21,6 +21,7 @@ export class CartService {
   mostrarCarrito$ = this.mostrarCarritoSource.asObservable();
 
   get items() { return this.carritoSource.getValue(); }
+  get modalAbierto(): boolean { return this.mostrarCarritoSource.getValue(); }
 
   private saveCart(items: any[]) {
     if (typeof localStorage !== 'undefined') {

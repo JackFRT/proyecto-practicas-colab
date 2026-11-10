@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { ThemeService } from '../../services/theme';
 
 @Component({
   selector: 'app-about',
@@ -12,33 +13,34 @@ import { CommonModule } from '@angular/common';
 export class About implements OnInit, OnDestroy {
   http = inject(HttpClient);
   cdr = inject(ChangeDetectorRef);
-  
+  themeService = inject(ThemeService);
+
   noticias: any[] = [];
   noticiaActualIndex: number = 0;
 
-  finalDuration: number = 30000;
-  
+  finalDuration: number = 12000;
+
   currentProgress = signal<number>(0);
 
-  intervaloPase: any; 
-  intervaloProgreso: any; 
+  intervaloPase: any;
+  intervaloProgreso: any;
 
   tarjetaActiva: number | null = null;
 
   getRutaImagen(nombreArchivo: string, carpeta: string = 'news'): string {
-    if (!nombreArchivo) return ''; 
-    
-    return `http://localhost:8080/images/${carpeta}/${nombreArchivo}`;
+    if (!nombreArchivo) return '/assets/images/museo/museo.jpg';
+    if (nombreArchivo.startsWith('http') || nombreArchivo.startsWith('/assets')) {
+      return nombreArchivo;
+    }
+    return `http://localhost:8080/api/archivos/images/${carpeta}/${nombreArchivo}`;
   }
 
   ngOnInit() {
-    
     const urlAPI = 'http://localhost:8080/api/publico/inicio';
 
     this.http.get<any>(urlAPI).subscribe({
       next: (data) => {
-        this.noticias = (data.noticias || []).sort((a: any, b: any) => a.prioridad - b.prioridad);
-        
+        this.noticias = (data.noticias || []).sort((a: any, b: any) => (a.prioridad ?? 99) - (b.prioridad ?? 99));
         this.iniciarCarruselConProgreso();
         this.cdr.detectChanges();
       },
@@ -47,16 +49,12 @@ export class About implements OnInit, OnDestroy {
   }
 
   toggleTarjeta(index: number) {
-    if (this.tarjetaActiva === index) {
-      this.tarjetaActiva = null; 
-    } else {
-      this.tarjetaActiva = index; 
-    }
+    this.tarjetaActiva = this.tarjetaActiva === index ? null : index;
   }
 
   moverNoticia(direccion: number) {
     if (this.noticias.length <= 1) return;
-    
+
     this.noticiaActualIndex += direccion;
 
     if (this.noticiaActualIndex >= this.noticias.length) {
@@ -64,7 +62,7 @@ export class About implements OnInit, OnDestroy {
     } else if (this.noticiaActualIndex < 0) {
       this.noticiaActualIndex = this.noticias.length - 1;
     }
-    
+
     this.iniciarCarruselConProgreso();
   }
 
@@ -83,10 +81,10 @@ export class About implements OnInit, OnDestroy {
         this.moverNoticia(1);
       }, this.finalDuration);
 
-      const step = 100 / (this.finalDuration / 50); 
-      
+      const step = 100 / (this.finalDuration / 50);
+
       this.intervaloProgreso = setInterval(() => {
-        this.currentProgress.update(prev => prev + step);
+        this.currentProgress.update(prev => Math.min(100, prev + step));
       }, 50);
     }
   }

@@ -1,5 +1,6 @@
 package com.museocafe.backendmuseo.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -30,4 +31,24 @@ public class Noticia {
     private LocalDateTime fechaPublicacion = LocalDateTime.now();
 
     private Integer prioridad = 0;
+
+    @JsonProperty("id_noticia")
+    public Long getIdNoticiaSnake() {
+        return idNoticia;
+    }
+
+    @JsonProperty("imagen_url")
+    public String getImagenUrlSnake() {
+        return imagenUrl;
+    }
+
+    @JsonProperty("link_destino")
+    public String getLinkDestinoSnake() {
+        return linkDestino;
+    }
+
+    @JsonProperty("fecha_publicacion")
+    public LocalDateTime getFechaPublicacionSnake() {
+        return fechaPublicacion;
+    }
 }

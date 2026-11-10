@@ -22,6 +22,7 @@ export class Empleado implements OnInit {
   rolEmpleado: string = 'empleado';
   tabActivo: string = 'ordenes';
   cargando: boolean = true;
+  menuLateralAbierto: boolean = true;
   
   vistaInventario: 'cactus' | 'cafe' | 'recuerdo' = 'cactus';
   terminoBusqueda: string = '';
@@ -78,8 +79,8 @@ export class Empleado implements OnInit {
         console.error("CRÍTICO: No se pudo obtener el ID del usuario del localStorage:", user);
     }
 
-    this.nombreEmpleado = user.nombre.toUpperCase();
-    this.idEmpleado = user.id_usuario || user.id || 0; 
+    this.nombreEmpleado = (user.nombre || 'Empleado').toUpperCase();
+    this.idEmpleado = user.id_usuario || user.idUsuario || user.id || 0;
     this.rolEmpleado = user.rol;
     
     this.prepararRuleta(); 
@@ -125,7 +126,8 @@ export class Empleado implements OnInit {
     fileName = fileName.split('\\').pop()?.split('/').pop() || fileName;
 
     // Si no pasan el tipo, intentamos deducirlo o usamos 'cactus' por defecto
-    const carpetaTipo = tipo ? tipo : 'cactus'; 
+    let carpetaTipo = tipo ? tipo : 'cactus';
+    if (carpetaTipo === 'noticias') carpetaTipo = 'news';
     return `http://localhost:8080/api/archivos/images/${carpetaTipo}/${fileName}`;
   }
 
@@ -287,10 +289,12 @@ export class Empleado implements OnInit {
       this.noticias.splice(this.draggedNewsIndex, 1);
       this.noticias.splice(index, 0, draggedItem);
       
-      const ordenIds = this.noticias.map(n => n.id_noticia);
-      // Actualizado a ruta REST (Asegúrate de que este endpoint exista en MarketingController)
-      this.http.post<any>('http://localhost:8080/api/marketing/noticias/reordenar', { orden: ordenIds }).subscribe({
-        next: (res) => { if(res.success) this.mostrarToast("Prioridad actualizada"); }
+      const ordenPayload = this.noticias.map((n, idx) => ({
+        id_noticia: n.id_noticia || n.idNoticia,
+        prioridad: idx + 1
+      }));
+      this.http.post<any>('http://localhost:8080/api/marketing/noticias/reordenar', ordenPayload).subscribe({
+        next: (res) => { if (res.success) this.mostrarToast("Prioridad actualizada"); }
       });
     }
     this.draggedNewsIndex = null;
@@ -468,6 +472,9 @@ export class Empleado implements OnInit {
             const activo = formData.get('activo');
             if (activo !== null) cleanFormData.append('activo', activo);
 
+            const contieneAlcohol = formData.get('contiene_alcohol');
+            cleanFormData.append('contiene_alcohol', contieneAlcohol ? 'true' : 'false');
+
             // 3. Categoría (aseguramos que no vaya vacía para evitar error 500)
             const idCat = formData.get('id_categoria');
             if (idCat && idCat !== '') {
@@ -486,13 +493,17 @@ export class Empleado implements OnInit {
             }
 
             // 6. Fotos Adicionales (Múltiples)
-            // En el HTML el input tiene name="fotos_adicionales[]"
             const fotosAdicionales = formData.getAll('fotos_adicionales[]');
             fotosAdicionales.forEach(foto => {
                 if ((foto as File).size > 0) {
-                    // Importante: Spring Boot espera "fotos_adicionales[]" tal cual
-                    cleanFormData.append('fotos_adicionales[]', foto); 
+                    cleanFormData.append('fotos_adicionales[]', foto);
                 }
+            });
+
+            // 7. Fotos de Variantes
+            const fotosVariantes = formData.getAll('fotos_variantes[]');
+            fotosVariantes.forEach(fotoVar => {
+                cleanFormData.append('fotos_variantes[]', fotoVar);
             });
             
             console.log("🚀 Enviando Producto a Java (FormData)");
@@ -537,7 +548,9 @@ export class Empleado implements OnInit {
         else {
             formData.forEach((value, key) => payload[key] = value);
             payload.id_empleado = this.idEmpleado;
-            if (payload.id_premio === '') delete payload.id_premio;
+            if (!payload.id_premio || payload.id_premio === '' || payload.id_premio === 'undefined' || payload.id_premio === 'null') {
+                delete payload.id_premio;
+            }
         }
         
         console.log("🚀 Enviando Payload a Java:", payload);
@@ -546,8 +559,10 @@ export class Empleado implements OnInit {
             next: (res) => this.manejarRespuesta(res, accion, form),
             error: (err) => { 
                 console.error("Error del backend:", err);
-                alert("Error de conexión. Revisa la consola F12."); 
-                this.cargando = false; 
+                const msg = err.error?.mensaje || "Error de conexión con el servidor.";
+                alert(msg);
+                this.cargando = false;
+                this.cdr.detectChanges();
             }
         });
     }
@@ -609,9 +624,11 @@ export class Empleado implements OnInit {
           const idCat = extraData.id || extraData.id_categoria || extraData.idCategoria;
           urlTarget = `http://localhost:8080/api/inventario/categorias/eliminar/${idCat}`;
           metodo = 'DELETE';
-      } else if (accion === 'aprobar' || accion === 'listo' || accion === 'completar') {
+      } else if (accion === 'aprobar' || accion === 'listo' || accion === 'completar' || accion === 'cancelar' || accion === 'reportar') {
           urlTarget = `http://localhost:8080/api/empleado/ordenes/${extraData.id_reserva}/estado`;
+          extraData.accion = accion;
           extraData.nuevo_estado = accion;
+          extraData.id_empleado = this.idEmpleado;
       } else if (accion === 'registrar_visita') {
           urlTarget = `http://localhost:8080/api/usuarios/${extraData.id_cliente}/visita`;
       } else if (accion === 'toggle_noticia') {
@@ -749,13 +766,17 @@ export class Empleado implements OnInit {
   onPointerUp() { this.draggingIndex = null; }
 
   guardarProbabilidades() {
-    const payload: any = {};
-    this.premios_ruleta.forEach(p => payload[p.id_premio] = Math.round(p.probabilidad * 10) / 10);
-    this.ejecutarAccion('guardar_probabilidades_ruleta', { probabilidades: payload });
+    const listaPremios = this.premios_ruleta.map(p => ({
+      id_premio: p.id_premio || p.idPremio,
+      probabilidad: Math.round(p.probabilidad * 10) / 10
+    }));
+    this.ejecutarAccion('guardar_probabilidades_ruleta', { premios: listaPremios });
   }
 
   abrirModalNuevoPremio() {
-    this.itemEditando = { titulo: '', descuento_porcentaje: 0, color_seccion: '#e2e8f0', es_nuevo: true };
+    const coloresSugeridos = ['#4f772d', '#e07a5f', '#d1b88e', '#2a9d8f', '#e76f51', '#8c583a', '#3a5a40'];
+    const colorElegido = coloresSugeridos[this.premios_ruleta.length % coloresSugeridos.length];
+    this.itemEditando = { titulo: '', descuento_porcentaje: 10, color_seccion: colorElegido, es_nuevo: true };
     this.modalAbierto = 'premio_ruleta';
   }
 
@@ -763,41 +784,55 @@ export class Empleado implements OnInit {
       if (this.premios_ruleta.length === 0) return;
       let hayCambios = false;
 
-      const premiosNuevos = this.premios_ruleta.filter(p => parseFloat(p.probabilidad) === 0);
+      const premiosNuevos = this.premios_ruleta.filter(p => !(parseFloat(p.probabilidad) > 0));
       const premiosValidos = this.premios_ruleta.filter(p => parseFloat(p.probabilidad) > 0);
 
       if (premiosNuevos.length > 0) {
           hayCambios = true;
-          const porcentajeParaNuevos = 5.0 * premiosNuevos.length;
-          const porcentajeRestante = 100.0 - porcentajeParaNuevos;
-
-          let sumaActual = 0;
-          premiosValidos.forEach(p => sumaActual += parseFloat(p.probabilidad));
-
-          let nuevaSuma = 0;
-          let maxIndex = 0;
-          let maxVal = -1;
-
-          if (sumaActual > 0) {
-              premiosValidos.forEach((p, i) => {
-                  const proporcion = parseFloat(p.probabilidad) / sumaActual;
-                  p.probabilidad = Number((proporcion * porcentajeRestante).toFixed(1));
-                  nuevaSuma += p.probabilidad;
-
-                  if (p.probabilidad > maxVal) { maxVal = p.probabilidad; maxIndex = i; }
+          if (premiosValidos.length === 0) {
+              const cuota = Number((100.0 / premiosNuevos.length).toFixed(1));
+              let suma = 0;
+              premiosNuevos.forEach((p, idx) => {
+                  if (idx === premiosNuevos.length - 1) {
+                      p.probabilidad = Number((100.0 - suma).toFixed(1));
+                  } else {
+                      p.probabilidad = cuota;
+                      suma += cuota;
+                  }
               });
+          } else {
+              const cuotaUnitaria = Math.min(15.0, Number((100.0 / this.premios_ruleta.length).toFixed(1)));
+              const porcentajeParaNuevos = Number((cuotaUnitaria * premiosNuevos.length).toFixed(1));
+              const porcentajeRestante = Number((100.0 - porcentajeParaNuevos).toFixed(1));
 
-              const diferencia = Number((porcentajeRestante - nuevaSuma).toFixed(1));
-              premiosValidos[maxIndex].probabilidad = Number((premiosValidos[maxIndex].probabilidad + diferencia).toFixed(1));
+              let sumaActual = 0;
+              premiosValidos.forEach(p => sumaActual += parseFloat(p.probabilidad));
+
+              let nuevaSuma = 0;
+              let maxIndex = 0;
+              let maxVal = -1;
+
+              if (sumaActual > 0) {
+                  premiosValidos.forEach((p, i) => {
+                      const proporcion = parseFloat(p.probabilidad) / sumaActual;
+                      p.probabilidad = Number((proporcion * porcentajeRestante).toFixed(1));
+                      nuevaSuma += p.probabilidad;
+
+                      if (p.probabilidad > maxVal) { maxVal = p.probabilidad; maxIndex = i; }
+                  });
+
+                  const diferencia = Number((porcentajeRestante - nuevaSuma).toFixed(1));
+                  premiosValidos[maxIndex].probabilidad = Number((premiosValidos[maxIndex].probabilidad + diferencia).toFixed(1));
+              }
+
+              premiosNuevos.forEach(p => p.probabilidad = cuotaUnitaria);
           }
-
-          premiosNuevos.forEach(p => p.probabilidad = 5.0);
       } 
       else {
           let sumaTotal = 0;
           this.premios_ruleta.forEach(p => sumaTotal += parseFloat(p.probabilidad));
           
-          if (Math.abs(sumaTotal - 100.0) > 0.5) {
+          if (sumaTotal > 0 && Math.abs(sumaTotal - 100.0) > 0.5) {
               hayCambios = true;
               let nuevaSuma = 0;
               let maxIndex = 0;
@@ -815,6 +850,14 @@ export class Empleado implements OnInit {
                   this.premios_ruleta[maxIndex].probabilidad = Number((this.premios_ruleta[maxIndex].probabilidad + diferencia).toFixed(1));
               }
           }
+      }
+
+      if (hayCambios) {
+          const listaPremios = this.premios_ruleta.map(p => ({
+              id_premio: p.id_premio || p.idPremio,
+              probabilidad: Math.round((parseFloat(p.probabilidad) || 0) * 10) / 10
+          }));
+          this.http.post<any>('http://localhost:8080/api/ruleta/probabilidades', { premios: listaPremios }).subscribe();
       }
   }
 }

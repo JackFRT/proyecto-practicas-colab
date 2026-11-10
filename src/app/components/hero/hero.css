@@ -1,40 +1,25 @@
-#mask-container {
-  
-  --mask-size: 35vh; 
-  
-  
+#mask-container, #logo-blanco-overlay {
+  --mask-size: 35vh;
+
   -webkit-mask-image: url('/assets/images/museo/logo_cafeteria.svg');
   mask-image: url('/assets/images/museo/logo_cafeteria.svg');
-  
+
   -webkit-mask-position: center;
   mask-position: center;
-  
+
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  
-  
+
   -webkit-mask-size: var(--mask-size);
   mask-size: var(--mask-size);
 }
 
+#mask-container.mask-disabled,
+#logo-blanco-overlay.mask-disabled {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
 
 html {
   scroll-behavior: smooth;
-}
-
-
-#mask-container, #logo-blanco-overlay {
-  --mask-size: 35vh; 
-  
-  -webkit-mask-image: url('/assets/images/museo/logo_cafeteria.svg');
-  mask-image: url('/assets/images/museo/logo_cafeteria.svg');
-  
-  -webkit-mask-position: center;
-  mask-position: center;
-  
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  
-  -webkit-mask-size: var(--mask-size);
-  mask-size: var(--mask-size);
 }

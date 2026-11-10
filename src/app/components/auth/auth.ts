@@ -38,9 +38,10 @@ export class Auth implements OnInit, OnDestroy {
   mokaImg: string = 'barista_saludando.png';
 
   ngOnInit() {
-      const saludo = this.mokaService.interactuar();
+      const saludo = this.mokaService.interactuarAuth();
       this.mokaTexto = "¡Hola! Estoy aquí para asegurarme de que entres a salvo al museo.";
       this.mokaImg = saludo.imagen;
+      this.mokaService.dispararEvento(this.mokaTexto, 'barista_saludando.png', false);
   }
 
   ngOnDestroy() {
@@ -55,6 +56,7 @@ export class Auth implements OnInit, OnDestroy {
     
     this.mokaTexto = this.isLoginMode ? "¿De vuelta al Oasis? ¡Qué alegría!" : "¡Genial! Una nueva cuenta. Te prometo muchos beneficios.";
     this.mokaImg = "barista_feliz.png";
+    this.mokaService.dispararEvento(this.mokaTexto, this.mokaImg, false);
   }
 
   abrirRecuperacion(event: Event) {
@@ -66,6 +68,7 @@ export class Auth implements OnInit, OnDestroy {
     
     this.mokaTexto = "Uy... ¿olvidaste la llave? No te preocupes, yo te ayudo a recuperarla.";
     this.mokaImg = "barista_emocionada.png";
+    this.mokaService.dispararEvento(this.mokaTexto, this.mokaImg, false);
   }
 
   volverLogin() {

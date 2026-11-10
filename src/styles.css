@@ -1,50 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-    --bg-darker: #111111;
-    --bg-dark: #1a1a1a;
-    --text-light: #f5f5f5;
-    --text-muted: #a0a0a0;
-    --green-accent: #A3B18A; 
-    --green-dark: #344E41;   
-    --terracota-accent: #D65A31;
-    --color-catalogo: #A3B18A; 
-    --bubble-color: #ffb6c1;
-    --font-main: 'Outfit', sans-serif;
-    --glass-border: rgba(255, 255, 255, 0.1);
+  --bg-primary: #050b07;
+  --bg-secondary: #0c1a12;
+  --text-primary: #f4f1ea;
+  --text-muted: #9ca3af;
 }
 
-html { scroll-behavior: smooth; }
+html.light {
+  --bg-primary: #f8f5ee;
+  --bg-secondary: #efe9dc;
+  --text-primary: #1a281f;
+  --text-muted: #4b5563;
+}
+
 body {
-    font-family: var(--font-main);
-    background-color: var(--bg-darker);
-    color: var(--text-light);
-    margin: 0; padding: 0;
-    overflow-x: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
-.modal-overlay { z-index: 999999 !important; }
-.modal-content, .admin-modal-content, #modal-ruleta, #modal-carrito { z-index: 1000000 !important; }
-
-.toast-container {
-    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-    background: var(--green-accent); color: var(--bg-darker); padding: 12px 25px;
-    border-radius: 30px; font-weight: bold; font-size: 0.95rem; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-    z-index: 9999; display: none; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; text-align: center;
+/* Adaptación global de modo claro (html.light) para mantener armonía visual en toda la app */
+html.light body {
+  background-color: #f8f5ee;
+  color: #1a281f;
 }
 
-@keyframes bounceDown { 
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 
-    40% { transform: translateY(-10px); } 
-    60% { transform: translateY(-5px); } 
+html.light .theme-surface {
+  background-color: #f8f5ee !important;
+  color: #1a281f !important;
 }
 
-html, body {
-    width: 100%;
-    max-width: 100vw;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden !important;
+html.light .theme-surface-alt {
+  background-color: #efe9dc !important;
+  color: #1a281f !important;
+}
+
+html.light .theme-card {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(140, 88, 58, 0.22) !important;
+  color: #1a281f !important;
+  box-shadow: 0 10px 30px -10px rgba(26, 40, 31, 0.12) !important;
+}
+
+html.light .theme-text {
+  color: #1a281f !important;
+}
+
+html.light .theme-text-muted {
+  color: #4b5563 !important;
+}
+
+html.light .theme-nav {
+  background-color: rgba(248, 245, 238, 0.92) !important;
+  border-color: rgba(26, 40, 31, 0.12) !important;
+  color: #1a281f !important;
+}
+
+/* Scrollbar elegante */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: #2ecc71;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4a373;
 }

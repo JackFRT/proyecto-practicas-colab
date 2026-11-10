@@ -23,14 +23,12 @@ export class Ruleta implements OnInit {
   isGirando: boolean = false;
   rotacionActual: number = 0;
 
-  
   premios: any[] = [
-    { titulo: '10% DTO', probabilidad: '20', color_seccion: '#A3B18A', anguloInicioRad: 0, anguloFinRad: 0 },
-    { titulo: '15% DTO', probabilidad: '20', color_seccion: '#588157', anguloInicioRad: 0, anguloFinRad: 0 },
-    { titulo: '20% DTO', probabilidad: '20', color_seccion: '#3A5A40', anguloInicioRad: 0, anguloFinRad: 0 },
-    { titulo: '25% DTO', probabilidad: '20', color_seccion: '#D65A31', anguloInicioRad: 0, anguloFinRad: 0 },
-    { titulo: '50% DTO', probabilidad: '10', color_seccion: '#FFE066', anguloInicioRad: 0, anguloFinRad: 0 },
-    { titulo: 'INTENTA OTRA VEZ', probabilidad: '10', color_seccion: '#333333', anguloInicioRad: 0, anguloFinRad: 0 }
+    { id_premio: 1, titulo: '5% Dscto', descuento_porcentaje: 5, probabilidad: 40, color_seccion: '#3498db', anguloInicioRad: 0, anguloFinRad: 0 },
+    { id_premio: 2, titulo: '10% Dscto', descuento_porcentaje: 10, probabilidad: 30, color_seccion: '#2ecc71', anguloInicioRad: 0, anguloFinRad: 0 },
+    { id_premio: 3, titulo: '15% Dscto', descuento_porcentaje: 15, probabilidad: 15, color_seccion: '#f1c40f', anguloInicioRad: 0, anguloFinRad: 0 },
+    { id_premio: 4, titulo: '20% Dscto', descuento_porcentaje: 20, probabilidad: 10, color_seccion: '#e67e22', anguloInicioRad: 0, anguloFinRad: 0 },
+    { id_premio: 5, titulo: '¡Sigue Intentando!', descuento_porcentaje: 0, probabilidad: 5, color_seccion: '#95a5a6', anguloInicioRad: 0, anguloFinRad: 0 }
   ];
 
   mokaMensaje: string = 'Cargando ruleta...';
@@ -47,32 +45,66 @@ export class Ruleta implements OnInit {
 
   ngOnInit() {
     const userGuardado = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario_cactus') : null;
-    if (!userGuardado) { this.router.navigate(['/login']); return; }
+    if (!userGuardado) {
+      this.cerrarModal();
+      this.router.navigate(['/login']);
+      return;
+    }
     this.usuarioActual = JSON.parse(userGuardado);
     this.cargarRuleta();
   }
 
   cargarRuleta() {
-    
-    this.haGirado = this.usuarioActual.girosExtra <= 0;
+    const idUsuario = this.usuarioActual.idUsuario || this.usuarioActual.id_usuario;
 
+    this.http.get<any>(`http://localhost:8080/api/ruleta/cargar/${idUsuario}`).subscribe({
+      next: (res) => {
+        if (res.premios && res.premios.length > 0) {
+          this.premios = res.premios.map((p: any) => ({
+            ...p,
+            titulo: p.titulo || p.titulo_premio || 'Premio',
+            probabilidad: parseFloat(p.probabilidad) || 20,
+            color_seccion: p.color_seccion || p.colorSeccion || '#2ecc71',
+            descuento_porcentaje: p.descuento_porcentaje ?? p.descuentoPorcentaje ?? 0,
+            anguloInicioRad: 0,
+            anguloFinRad: 0
+          }));
+        }
+
+        this.haGirado = !res.puede_girar;
+        this.usuarioActual.girosExtra = res.giros_extra ?? 0;
+        localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
+
+        this.actualizarEstadoInicialUI(res.dias_restantes || 0);
+        this.cdr.detectChanges();
+        setTimeout(() => this.dibujarRuleta(), 80);
+      },
+      error: () => {
+        const girosExtra = this.usuarioActual.girosExtra ?? this.usuarioActual.giros_extra ?? 0;
+        this.haGirado = girosExtra <= 0 && !!this.usuarioActual.fecha_ultimo_giro;
+        this.actualizarEstadoInicialUI(7);
+        this.cdr.detectChanges();
+        setTimeout(() => this.dibujarRuleta(), 80);
+      }
+    });
+  }
+
+  actualizarEstadoInicialUI(diasRestantes: number) {
     if (this.userRole === 'admin' || this.userRole === 'empleado') {
-      this.setMoka('Modo Visualización: Comprueba que los premios se vean bien. ¡No intentes jugar!', 'barista_saludando.png', 'rgba(255, 224, 102, 0.15)');
-      this.resultadoTexto = 'MODO EMPLEADO';
+      this.setMoka('Modo Visualización: Comprueba que los premios y colores de la ruleta se vean bien.', 'barista_saludando.png', 'rgba(255, 224, 102, 0.15)');
+      this.resultadoTexto = 'MODO VISTA';
       this.resultadoColor = '#FFE066';
     } else if (this.haGirado) {
-      this.setMoka('Ya giraste. ¡Registra una visita presencial para obtener más giros!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.15)');
+      const extraMsg = diasRestantes > 0 ? ` Vuelve en ${diasRestantes} día(s) o registra una visita en tienda.` : ' ¡Registra una visita presencial para ganar giros extra!';
+      this.setMoka('Ya usaste tu giro disponible.' + extraMsg, 'barista_incomoda.png', 'rgba(255, 107, 107, 0.15)');
       this.resultadoTexto = 'SIN GIROS';
       this.resultadoColor = 'gray';
     } else {
       const nombre = this.usuarioActual.nombre ? this.usuarioActual.nombre.split(' ')[0] : 'Cliente';
-      this.setMoka(`¡Hola, ${nombre}! ¿Listo para probar tu suerte?`, 'barista_saludando.png', 'rgba(163, 177, 138, 0.15)');
+      this.setMoka(`¡Hola, ${nombre}! Haz clic en la rueda para probar tu suerte.`, 'barista_saludando.png', 'rgba(163, 177, 138, 0.15)');
       this.resultadoTexto = '¡A GIRAR!';
       this.resultadoColor = '#FFE066';
     }
-    
-    this.cdr.detectChanges();
-    setTimeout(() => { this.dibujarRuleta(); }, 100);
   }
 
   dibujarRuleta() {
@@ -85,18 +117,19 @@ export class Ruleta implements OnInit {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     let startAngle = 0;
 
+    const totalPeso = this.premios.reduce((acc, p) => acc + (parseFloat(p.probabilidad) > 0 ? parseFloat(p.probabilidad) : 10), 0);
+
     this.premios.forEach(premio => {
-      const prob = parseFloat(premio.probabilidad);
-      if (prob <= 0) return;
-      
-      const sliceAngle = (prob / 100) * 2 * Math.PI;
+      const prob = parseFloat(premio.probabilidad) > 0 ? parseFloat(premio.probabilidad) : 10;
+      const sliceAngle = (prob / totalPeso) * 2 * Math.PI;
+
       ctx.beginPath();
       ctx.moveTo(center, center);
       ctx.arc(center, center, center, startAngle, startAngle + sliceAngle);
       ctx.closePath();
-      ctx.fillStyle = premio.color_seccion || '#333';
+      ctx.fillStyle = premio.color_seccion || premio.colorSeccion || '#333';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; 
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -107,21 +140,22 @@ export class Ruleta implements OnInit {
       ctx.translate(center, center);
       const textAngle = startAngle + sliceAngle / 2;
       ctx.rotate(textAngle);
-      
-      ctx.font = "bold 14px 'Outfit', sans-serif";
+
+      ctx.font = "bold 13px 'Outfit', sans-serif";
       ctx.fillStyle = "#ffffff";
       ctx.shadowColor = "rgba(0,0,0,0.8)";
       ctx.shadowBlur = 5;
-      
-      let texto = premio.titulo.length > 15 ? premio.titulo.substring(0, 15) + '...' : premio.titulo;
-      
+
+      const tituloStr = premio.titulo || 'Premio';
+      const texto = tituloStr.length > 16 ? tituloStr.substring(0, 16) + '...' : tituloStr;
+
       if (textAngle > Math.PI / 2 && textAngle < 3 * Math.PI / 2) {
         ctx.rotate(Math.PI);
         ctx.textAlign = "left";
-        ctx.fillText(texto, -center + 25, 5);
+        ctx.fillText(texto, -center + 22, 5);
       } else {
         ctx.textAlign = "right";
-        ctx.fillText(texto, center - 25, 5);
+        ctx.fillText(texto, center - 22, 5);
       }
       ctx.restore();
       startAngle += sliceAngle;
@@ -130,71 +164,77 @@ export class Ruleta implements OnInit {
 
   girar() {
     if (this.userRole === 'admin' || this.userRole === 'empleado') {
-      this.setMoka('¡Oye! Tú trabajas aquí, no puedes jugar con la ruleta de los clientes.', 'barista_en_alerta.png', 'rgba(255, 107, 107, 0.2)');
+      this.setMoka('¡Oye! Tú trabajas aquí, la ruleta es exclusiva para los clientes.', 'barista_en_alerta.png', 'rgba(255, 107, 107, 0.2)');
       this.cdr.detectChanges();
       return;
     }
 
     if (this.isGirando) return;
     if (this.haGirado) {
-      this.setMoka('Las reglas son claras. ¡Necesitas registrar una visita presencial!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.2)');
+      this.setMoka('Ya giraste esta semana. ¡Visítanos en la cafetería para ganar giros extra!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.2)');
       this.cdr.detectChanges();
       return;
     }
 
     this.isGirando = true;
-    this.setMoka('¡Validando con los dioses del cactus...!', 'barista_asustada.png', 'rgba(214, 90, 49, 0.2)');
-    this.resultadoTexto = '¡ESPERA...!';
+    this.setMoka('¡Validando con los dioses del café y el cactus...!', 'barista_asustada.png', 'rgba(214, 90, 49, 0.2)');
+    this.resultadoTexto = '¡GIRANDO...!';
     this.resultadoColor = '#D65A31';
     this.cdr.detectChanges();
 
-    
-    this.http.post<any>(`http://localhost:8080/api/ruleta/girar/${this.usuarioActual.idUsuario}`, {}).subscribe({
-      next: (data) => {
-        
-        const tituloObjetivo = data.descuento > 0 ? `${data.descuento}% DTO` : 'INTENTA OTRA VEZ';
-        const premioObjetivo = this.premios.find(p => p.titulo === tituloObjetivo);
-        
-        if (premioObjetivo) {
-          this.setMoka('¡Ahí va! ¡Qué nervios!', 'barista_asustada.png', 'rgba(214, 90, 49, 0.2)');
-          this.resultadoTexto = '¡GIRANDO...!';
-          
-          const anguloMedio = (premioObjetivo.anguloInicioRad + premioObjetivo.anguloFinRad) / 2;
-          const giroBase = 180 - (anguloMedio * (180 / Math.PI)); 
-          this.rotacionActual = giroBase + (5 * 360);
-          
-          this.cdr.detectChanges();
-          setTimeout(() => this.mostrarResultadoFinal(data, tituloObjetivo), 4500); 
+    const idUsuario = this.usuarioActual.idUsuario || this.usuarioActual.id_usuario;
 
-          
-          this.usuarioActual.girosExtra = data.girosRestantes;
-          localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
+    this.http.post<any>(`http://localhost:8080/api/ruleta/girar/${idUsuario}`, {}).subscribe({
+      next: (data) => {
+        const premioBackend = data.premio;
+        let premioObjetivo = this.premios.find(p =>
+          (premioBackend?.id_premio && p.id_premio === premioBackend.id_premio) ||
+          (premioBackend?.titulo && p.titulo === premioBackend.titulo) ||
+          (p.descuento_porcentaje === data.descuento)
+        );
+        if (!premioObjetivo) {
+          premioObjetivo = this.premios[0];
         }
+
+        const anguloMedio = (premioObjetivo.anguloInicioRad + premioObjetivo.anguloFinRad) / 2;
+        const giroBase = 180 - (anguloMedio * (180 / Math.PI));
+        this.rotacionActual = giroBase + (5 * 360);
+
+        this.cdr.detectChanges();
+        setTimeout(() => this.mostrarResultadoFinal(data, premioObjetivo.titulo), 4500);
+
+        this.usuarioActual.girosExtra = data.giros_extra ?? 0;
+        localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
       },
       error: (err) => {
         this.isGirando = false;
-        const msg = err.error && typeof err.error === 'string' ? err.error : 'Error de conexión. Intenta de nuevo.';
+        const msg = err.error?.mensaje || (typeof err.error === 'string' ? err.error : 'No se pudo realizar el giro.');
         this.setMoka(msg, 'barista_sad.png', 'rgba(255, 107, 107, 0.2)');
+        this.resultadoTexto = 'DETENIDO';
         this.cdr.detectChanges();
       }
     });
   }
 
   mostrarResultadoFinal(data: any, tituloStr: string) {
-    this.haGirado = data.girosRestantes <= 0;
+    const girosRestantes = data.giros_extra ?? 0;
+    this.haGirado = girosRestantes <= 0;
     this.isGirando = false;
-    this.resultadoTexto = tituloStr;
+    this.resultadoTexto = tituloStr.toUpperCase();
 
-    if (data.descuento === 0) {
+    const codigoCupon = data.codigo_cupon || data.codigoCupon;
+    const descuento = data.descuento ?? 0;
+
+    if (descuento <= 0) {
       this.resultadoColor = 'gray';
-      this.setMoka('¡Oh no! No hubo suerte esta vez. Necesitas otra visita presencial.', 'barista_sad.png', 'rgba(255, 255, 255, 0.1)');
+      this.setMoka('¡Casi! No hubo premio esta vez, pero en tu próxima visita tendrás otra oportunidad.', 'barista_sad.png', 'rgba(255, 255, 255, 0.1)');
     } else {
       this.resultadoColor = '#A3B18A';
-      if (data.descuento >= 25) {
+      if (descuento >= 20) {
         this.resultadoColor = '#FFE066';
-        this.setMoka(`¡INCREÍBLE! ¡Te llevaste el premio grande! Tu código es ${data.codigoCupon}`, 'barista_emocionada.png', 'rgba(255, 224, 102, 0.2)');
+        this.setMoka(`¡INCREÍBLE! Ganaste ${descuento}% de descuento. Tu cupón es: ${codigoCupon} (guardado en tu Perfil).`, 'barista_emocionada.png', 'rgba(255, 224, 102, 0.2)');
       } else {
-        this.setMoka(`¡Felicidades! Ganaste un ${data.descuento}% de descuento. Tu código es ${data.codigoCupon}`, 'barista_feliz.png', 'rgba(163, 177, 138, 0.2)');
+        this.setMoka(`¡Felicidades! Ganaste un ${descuento}% de descuento. Tu cupón es: ${codigoCupon} (guardado en tu Perfil).`, 'barista_feliz.png', 'rgba(163, 177, 138, 0.2)');
       }
     }
     this.cdr.detectChanges();
@@ -206,7 +246,7 @@ export class Ruleta implements OnInit {
     this.mokaColor = color;
   }
 
-  cerrarModal() { 
-    this.cerrar.emit(); 
+  cerrarModal() {
+    this.cerrar.emit();
   }
 }

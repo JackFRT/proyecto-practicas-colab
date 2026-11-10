@@ -1,6 +1,7 @@
 package com.museocafe.backendmuseo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -50,6 +51,9 @@ public class Usuario {
     @Column(name = "fecha_registro", updatable = false)
     private LocalDateTime fechaRegistro = LocalDateTime.now();
 
+    @Column(name = "bloqueado_hasta")
+    private LocalDateTime bloqueadoHasta;
+
     @Column(length = 15)
     private String dni;
 
@@ -64,4 +68,44 @@ public class Usuario {
     @JsonIgnore
     @Column(name = "expiracion_codigo")
     private LocalDateTime expiracionCodigo;
+
+    @JsonProperty("id_usuario")
+    public Long getIdUsuarioSnake() {
+        return idUsuario;
+    }
+
+    @JsonProperty("visitas_presenciales")
+    public Integer getVisitasPresencialesSnake() {
+        return visitasPresenciales != null ? visitasPresenciales : 0;
+    }
+
+    @JsonProperty("fecha_ultima_visita")
+    public LocalDate getFechaUltimaVisitaSnake() {
+        return fechaUltimaVisita;
+    }
+
+    @JsonProperty("productos_comprados")
+    public Integer getProductosCompradosSnake() {
+        return productosComprados != null ? productosComprados : 0;
+    }
+
+    @JsonProperty("fecha_ultimo_giro")
+    public LocalDateTime getFechaUltimoGiroSnake() {
+        return fechaUltimoGiro;
+    }
+
+    @JsonProperty("giros_extra")
+    public Integer getGirosExtraSnake() {
+        return girosExtra != null ? girosExtra : 0;
+    }
+
+    @JsonProperty("fecha_registro")
+    public LocalDateTime getFechaRegistroSnake() {
+        return fechaRegistro;
+    }
+
+    @JsonProperty("bloqueado_hasta")
+    public LocalDateTime getBloqueadoHastaSnake() {
+        return bloqueadoHasta;
+    }
 }
