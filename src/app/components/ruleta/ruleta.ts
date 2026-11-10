@@ -71,7 +71,7 @@ export class Ruleta implements OnInit {
           }));
         }
 
-        this.haGirado = !res.puede_girar;
+        this.haGirado = this.userRole === 'admin' ? false : !res.puede_girar;
         this.usuarioActual.girosExtra = res.giros_extra ?? 0;
         localStorage.setItem('usuario_cactus', JSON.stringify(this.usuarioActual));
 
@@ -81,7 +81,7 @@ export class Ruleta implements OnInit {
       },
       error: () => {
         const girosExtra = this.usuarioActual.girosExtra ?? this.usuarioActual.giros_extra ?? 0;
-        this.haGirado = girosExtra <= 0 && !!this.usuarioActual.fecha_ultimo_giro;
+        this.haGirado = this.userRole === 'admin' ? false : (girosExtra <= 0 && !!this.usuarioActual.fecha_ultimo_giro);
         this.actualizarEstadoInicialUI(7);
         this.cdr.detectChanges();
         setTimeout(() => this.dibujarRuleta(), 80);
@@ -90,9 +90,13 @@ export class Ruleta implements OnInit {
   }
 
   actualizarEstadoInicialUI(diasRestantes: number) {
-    if (this.userRole === 'admin' || this.userRole === 'empleado') {
+    if (this.userRole === 'empleado') {
       this.setMoka('Modo Visualización: Comprueba que los premios y colores de la ruleta se vean bien.', 'barista_saludando.png', 'rgba(255, 224, 102, 0.15)');
       this.resultadoTexto = 'MODO VISTA';
+      this.resultadoColor = '#FFE066';
+    } else if (this.userRole === 'admin') {
+      this.setMoka('¡Modo Administrador! Tienes libertad total para girar la ruleta y probar los premios.', 'barista_saludando.png', 'rgba(163, 177, 138, 0.2)');
+      this.resultadoTexto = '¡GIRO LIBRE!';
       this.resultadoColor = '#FFE066';
     } else if (this.haGirado) {
       const extraMsg = diasRestantes > 0 ? ` Vuelve en ${diasRestantes} día(s) o registra una visita en tienda.` : ' ¡Registra una visita presencial para ganar giros extra!';
@@ -163,14 +167,14 @@ export class Ruleta implements OnInit {
   }
 
   girar() {
-    if (this.userRole === 'admin' || this.userRole === 'empleado') {
-      this.setMoka('¡Oye! Tú trabajas aquí, la ruleta es exclusiva para los clientes.', 'barista_en_alerta.png', 'rgba(255, 107, 107, 0.2)');
+    if (this.userRole === 'empleado') {
+      this.setMoka('¡Oye! Tú trabajas aquí, la ruleta está restringida para cuentas de empleados.', 'barista_en_alerta.png', 'rgba(255, 107, 107, 0.2)');
       this.cdr.detectChanges();
       return;
     }
 
     if (this.isGirando) return;
-    if (this.haGirado) {
+    if (this.haGirado && this.userRole !== 'admin') {
       this.setMoka('Ya giraste esta semana. ¡Visítanos en la cafetería para ganar giros extra!', 'barista_incomoda.png', 'rgba(255, 107, 107, 0.2)');
       this.cdr.detectChanges();
       return;
@@ -198,7 +202,8 @@ export class Ruleta implements OnInit {
 
         const anguloMedio = (premioObjetivo.anguloInicioRad + premioObjetivo.anguloFinRad) / 2;
         const giroBase = 180 - (anguloMedio * (180 / Math.PI));
-        this.rotacionActual = giroBase + (5 * 360);
+        const vueltasPrevias = Math.ceil(this.rotacionActual / 360) * 360;
+        this.rotacionActual = vueltasPrevias + giroBase + (5 * 360);
 
         this.cdr.detectChanges();
         setTimeout(() => this.mostrarResultadoFinal(data, premioObjetivo.titulo), 4500);
@@ -218,7 +223,7 @@ export class Ruleta implements OnInit {
 
   mostrarResultadoFinal(data: any, tituloStr: string) {
     const girosRestantes = data.giros_extra ?? 0;
-    this.haGirado = girosRestantes <= 0;
+    this.haGirado = this.userRole === 'admin' ? false : (girosRestantes <= 0);
     this.isGirando = false;
     this.resultadoTexto = tituloStr.toUpperCase();
 

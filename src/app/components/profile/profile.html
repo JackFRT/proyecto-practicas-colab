@@ -1,9 +1,9 @@
 <div class="perfil-glass-wrapper">
     <header class="perfil-header">
         <div class="flex items-center gap-3">
-            <button type="button" class="btn-glass-outline" (click)="menuLateralAbierto = !menuLateralAbierto" [title]="menuLateralAbierto ? 'Ocultar menú lateral' : 'Desplegar menú lateral'">
-                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-outdent' : 'fa-bars'"></i>
-                <span>{{ menuLateralAbierto ? 'Ocultar Menú' : 'Menú' }}</span>
+            <button type="button" class="btn-glass-outline flex items-center gap-2 rounded-full px-3.5 py-2" (click)="menuLateralAbierto = !menuLateralAbierto" [title]="menuLateralAbierto ? 'Ocultar menú lateral' : 'Desplegar menú lateral'">
+                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-times' : 'fa-bars'"></i>
+                <span class="hidden sm:inline">{{ menuLateralAbierto ? 'Ocultar Menú' : 'Menú' }}</span>
             </button>
             <img src="/assets/images/museo/logo-cafe.png" alt="Logo" class="w-11 h-11 rounded-full object-cover border border-[#A3B18A]">
             <h1>Café Ayacuchano &amp; Cactus Museum</h1>
@@ -110,17 +110,32 @@
                             </div>
                             <div class="grid-2">
                                 <div class="form-group">
-                                    <label>DNI / RUC</label>
-                                    <input type="text" class="glass-input" [(ngModel)]="editDni" placeholder="Tu DNI o RUC">
+                                    <label>DNI <small>(Máx. 8 dígitos)</small></label>
+                                    <input type="text" inputmode="numeric" class="glass-input" [(ngModel)]="editDni" placeholder="Tu DNI (8 dígitos)">
+                                    @if (alertaDni) {
+                                        <div style="margin-top: 6px; padding: 8px 12px; border-radius: 10px; background: rgba(255, 71, 87, 0.15); border-left: 4px solid #ff4757; color: #ff6b81; font-size: 0.78rem; font-weight: 700;">
+                                            <i class="fas fa-exclamation-circle"></i> {{ alertaDni }}
+                                        </div>
+                                    }
                                 </div>
                                 <div class="form-group">
-                                    <label>Celular / WhatsApp</label>
-                                    <input type="text" class="glass-input" [(ngModel)]="editTelefono" placeholder="Para coordinaciones">
+                                    <label>Celular / WhatsApp <small>(Máx. 9 dígitos)</small></label>
+                                    <input type="text" inputmode="numeric" class="glass-input" [(ngModel)]="editTelefono" placeholder="Ej: 999888777">
+                                    @if (alertaTelefono) {
+                                        <div style="margin-top: 6px; padding: 8px 12px; border-radius: 10px; background: rgba(255, 71, 87, 0.15); border-left: 4px solid #ff4757; color: #ff6b81; font-size: 0.78rem; font-weight: 700;">
+                                            <i class="fas fa-exclamation-circle"></i> {{ alertaTelefono }}
+                                        </div>
+                                    }
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>Nueva Contraseña <small>(Deja en blanco si no quieres cambiarla)</small></label>
                                 <input type="password" class="glass-input" [(ngModel)]="editPass" placeholder="••••••••">
+                                @if (alertaPassword) {
+                                    <div style="margin-top: 6px; padding: 10px 14px; border-radius: 10px; background: rgba(243, 156, 18, 0.18); border-left: 4px solid #f39c12; color: #f8c291; font-size: 0.8rem; font-weight: 700;">
+                                        <i class="fas fa-shield-alt"></i> {{ alertaPassword }}
+                                    </div>
+                                }
                             </div>
                             <button type="button" class="btn-glass-solid mt-15" (click)="actualizarPerfil()" [disabled]="cargando">
                                 <i class="fas fa-save"></i> {{ cargando ? 'Guardando...' : 'Guardar Cambios' }}

@@ -79,7 +79,15 @@ export class Hero implements AfterViewInit {
   }
 
   toggleBarraNav() {
-    this.barraNavAbierta = !this.barraNavAbierta;
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      this.menuMovilAbierto = !this.menuMovilAbierto;
+    } else {
+      this.barraNavAbierta = !this.barraNavAbierta;
+    }
+  }
+
+  cerrarMenuMovil() {
+    this.menuMovilAbierto = false;
   }
 
   toggleMapa() {

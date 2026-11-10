@@ -158,7 +158,66 @@ export class Profile implements OnInit {
     return `http://localhost:8080/api/archivos/images/${tipo}/${img}`;
   }
 
+  get alertaDni(): string {
+    if (!this.editDni) return '';
+    const limpio = this.editDni.trim();
+    if (limpio.length > 8) {
+      return `¡Alerta! El DNI supera los 8 dígitos permitidos (actualmente tiene ${limpio.length}).`;
+    }
+    if (!/^\d+$/.test(limpio)) {
+      return 'El DNI solo debe contener dígitos numéricos.';
+    }
+    return '';
+  }
+
+  get alertaTelefono(): string {
+    if (!this.editTelefono) return '';
+    const sinEspacios = this.editTelefono.replace(/\s+/g, '');
+    if (sinEspacios.length > 9) {
+      return `¡Alerta! El número de teléfono supera los 9 dígitos permitidos (actualmente tiene ${sinEspacios.length}).`;
+    }
+    if (!/^\d+$/.test(sinEspacios)) {
+      return 'El número de teléfono solo debe contener dígitos.';
+    }
+    return '';
+  }
+
+  get alertaPassword(): string {
+    if (!this.editPass) return '';
+    const pass = this.editPass.trim();
+    const lower = pass.toLowerCase();
+    const genericas = [
+      '123456', '1234567', '12345678', '123456789', '1234567890',
+      '12345', '1234', 'password', 'contraseña', 'contrasena',
+      'admin', 'admin123', 'qwerty', 'qwerty123', '111111',
+      '000000', 'abcdef', 'abc123', 'cafe123', 'cactus123', 'usuario', '123123'
+    ];
+    if (
+      genericas.includes(lower) ||
+      /^(\w)\1{3,}$/.test(lower) ||
+      '0123456789'.includes(lower) ||
+      '9876543210'.includes(lower)
+    ) {
+      return '¡Atención! Esta contraseña es muy genérica e insegura. Usa una combinación más difícil de adivinar.';
+    }
+    if (pass.length > 0 && pass.length < 6) {
+      return 'Contraseña débil: Usa al menos 6 caracteres combinando letras y números.';
+    }
+    if (/^\d+$/.test(pass)) {
+      return 'Contraseña poco segura: Contiene solo números. Añade letras para mayor seguridad.';
+    }
+    return '';
+  }
+
   actualizarPerfil() {
+    if (this.alertaDni) {
+      this.mostrarToast(this.alertaDni);
+      return;
+    }
+    if (this.alertaTelefono) {
+      this.mostrarToast(this.alertaTelefono);
+      return;
+    }
     this.cargando = true;
     const idUsuario = this.usuario.idUsuario || this.usuario.id_usuario;
     const payload = {

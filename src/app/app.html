@@ -27,34 +27,36 @@
         </div>
     }
 
-    <!-- Controles superiores derechos: Botón Modo Claro/Oscuro + Menú Usuario (sin duplicar Carrito) -->
-    <div class="fixed z-[1200] top-3 right-3 sm:top-4 sm:right-6 flex items-center gap-2 font-['Montserrat'] transition-all duration-300" id="ui-profile">
+    <!-- Controles superiores derechos: Durante la animación inicial solo se muestra el botón flotante de perfil -->
+    <div class="fixed z-[1200] top-3 right-3 sm:top-4 sm:right-6 flex items-center gap-2.5 font-['Montserrat'] transition-all duration-300" id="ui-profile">
 
-        <!-- Botón de cambio de Tema Claro / Oscuro -->
-        <button
-            type="button"
-            (click)="themeService.toggleTheme()"
-            [attr.aria-label]="themeService.isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-            [title]="themeService.isDarkMode() ? 'Activar modo claro' : 'Activar modo oscuro'"
-            class="h-10 sm:h-11 px-3 sm:px-4 rounded-full backdrop-blur-xl border transition-all duration-300 flex items-center gap-2 text-[11px] font-extrabold tracking-[1px] shadow-lg hover:scale-105 cursor-pointer"
-            [ngClass]="themeService.isDarkMode()
-                ? 'bg-black/60 border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black'
-                : 'bg-[#f8f5ee]/95 border-[#8c583a]/30 text-[#4a2c18] hover:bg-[#8c583a] hover:text-white'">
-            @if (themeService.isDarkMode()) {
-                <i class="fas fa-sun text-sm"></i>
-                <span class="hidden md:inline">CLARO</span>
-            } @else {
-                <i class="fas fa-moon text-sm"></i>
-                <span class="hidden md:inline">OSCURO</span>
-            }
-        </button>
+        <!-- Botón de cambio de Tema Claro / Oscuro (oculto durante la animación inicial del logo) -->
+        @if (!enAnimacionInicial()) {
+            <button
+                type="button"
+                (click)="themeService.toggleTheme()"
+                [attr.aria-label]="themeService.isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                [title]="themeService.isDarkMode() ? 'Activar modo claro' : 'Activar modo oscuro'"
+                class="h-10 sm:h-11 px-3.5 sm:px-4 rounded-full backdrop-blur-xl border transition-all duration-300 flex items-center gap-2 text-[11px] font-extrabold tracking-[1px] shadow-lg hover:scale-105 active:scale-95 cursor-pointer animate-[fadeIn_0.35s]"
+                [ngClass]="themeService.isDarkMode()
+                    ? 'bg-black/70 border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black'
+                    : 'bg-[#f8f5ee]/95 border-[#8c583a]/30 text-[#4a2c18] hover:bg-[#8c583a] hover:text-white'">
+                @if (themeService.isDarkMode()) {
+                    <i class="fas fa-sun text-sm"></i>
+                    <span class="hidden xl:inline">CLARO</span>
+                } @else {
+                    <i class="fas fa-moon text-sm"></i>
+                    <span class="hidden xl:inline">OSCURO</span>
+                }
+            </button>
+        }
 
         <!-- Dropdown de Perfil (sin opción de Carrito duplicada) -->
         <div id="profile-dropdown"
-             class="absolute top-[calc(100%+10px)] right-0 backdrop-blur-2xl border w-[265px] sm:w-[295px] p-5 shadow-[0_15px_40px_rgba(0,0,0,0.6)] rounded-3xl transition-all duration-300"
+             class="absolute top-[calc(100%+10px)] right-0 backdrop-blur-2xl border w-[270px] sm:w-[300px] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.65)] rounded-3xl transition-all duration-300"
              [ngClass]="[
                 menuPerfilAbierto ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4 pointer-events-none',
-                themeService.isDarkMode() ? 'bg-black/90 border-white/15 text-white' : 'bg-[#f8f5ee]/95 border-[#8c583a]/25 text-[#1a281f]'
+                themeService.isDarkMode() ? 'bg-[#0c0c0c]/95 border-white/15 text-white' : 'bg-[#f8f5ee]/98 border-[#8c583a]/25 text-[#1a281f]'
              ]">
 
             @if (isLoggedIn) {
@@ -63,44 +65,44 @@
                     <span>HOLA: <strong class="block text-base mt-0.5" [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">{{ userName | uppercase }}</strong></span>
                 </div>
 
-                <div class="flex flex-col gap-3">
-                    <a routerLink="/cliente/perfil" (click)="menuPerfilAbierto = false" class="no-underline text-xs font-bold tracking-[1px] flex items-center hover:text-[#d1b88e] hover:translate-x-1.5 transition-all"
+                <div class="flex flex-col gap-2.5">
+                    <a routerLink="/cliente/perfil" (click)="menuPerfilAbierto = false" class="no-underline text-xs font-bold tracking-[1px] flex items-center py-1.5 px-2 rounded-xl hover:bg-[#d1b88e]/15 hover:text-[#d1b88e] hover:translate-x-1 transition-all"
                        [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
                         <i class="fas fa-id-card w-7 text-center opacity-80"></i> MI PERFIL
                     </a>
                 </div>
-                <div class="h-[1px] my-3.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
+                <div class="h-[1px] my-3" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
             } @else {
-                <div class="flex flex-col gap-3">
-                    <a routerLink="/login" (click)="menuPerfilAbierto = false" class="text-[#d1b88e] no-underline text-xs font-bold tracking-[1px] flex items-center hover:translate-x-1.5 transition-all">
+                <div class="flex flex-col gap-2.5">
+                    <a routerLink="/login" (click)="menuPerfilAbierto = false" class="text-[#d1b88e] no-underline text-xs font-bold tracking-[1px] flex items-center py-1.5 px-2 rounded-xl hover:bg-[#d1b88e]/15 hover:translate-x-1 transition-all">
                         <i class="fas fa-sign-in-alt w-7 text-center opacity-80"></i> INICIAR SESIÓN / REGISTRO
                     </a>
                 </div>
-                <div class="h-[1px] my-3.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
+                <div class="h-[1px] my-3" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
             }
 
-            <div class="flex flex-col gap-3">
-                <a href="#" (click)="lanzarRuleta($event)" class="no-underline text-xs font-bold tracking-[1px] flex items-center hover:text-[#d1b88e] hover:translate-x-1.5 transition-all"
+            <div class="flex flex-col gap-2.5">
+                <a href="#" (click)="lanzarRuleta($event)" class="no-underline text-xs font-bold tracking-[1px] flex items-center py-1.5 px-2 rounded-xl hover:bg-[#d1b88e]/15 hover:text-[#d1b88e] hover:translate-x-1 transition-all"
                    [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
                     <i class="fas fa-gift w-7 text-center opacity-80"></i> RULETA SEMANAL
                 </a>
             </div>
 
-            <div class="h-[1px] my-3.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
+            <div class="h-[1px] my-3" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
 
-            <div class="flex justify-between items-center font-bold text-xs tracking-[1px]"
-                 [ngClass]="themeService.isDarkMode() ? 'text-white/70' : 'text-[#4b5563]'">
-                <span>VOZ DE MOKA</span>
+            <div class="flex justify-between items-center font-bold text-xs tracking-[1px] py-1 px-2"
+                 [ngClass]="themeService.isDarkMode() ? 'text-white/80' : 'text-[#374151]'">
+                <span class="flex items-center gap-2"><i class="fas fa-volume-up opacity-75"></i> VOZ DE MOKA</span>
                 <label class="relative inline-block w-[44px] h-[24px] cursor-pointer">
                     <input type="checkbox" id="toggle-moka-sound" class="sr-only peer" [checked]="!mokaSilenciada" (change)="toggleVozMoka($event)">
-                    <div class="w-full h-full bg-gray-500/30 rounded-full peer-checked:bg-[#d1b88e] transition-colors duration-300"></div>
+                    <div class="w-full h-full bg-gray-500/35 rounded-full peer-checked:bg-[#d1b88e] transition-colors duration-300"></div>
                     <div class="absolute w-4 h-4 bg-white rounded-full top-1 left-1 transition-transform duration-300 peer-checked:translate-x-[20px] shadow-sm"></div>
                 </label>
             </div>
 
             @if (isLoggedIn) {
-                <a href="#" (click)="cerrarSesion($event)" class="block text-center bg-[#ff4757]/10 text-[#ff4757] no-underline p-2.5 border border-[#ff4757]/20 rounded-xl text-xs font-bold tracking-[1px] transition-all hover:bg-[#ff4757] hover:text-white mt-4">
-                    CERRAR SESIÓN
+                <a href="#" (click)="cerrarSesion($event)" class="block text-center bg-[#ff4757]/15 text-[#ff4757] no-underline p-2.5 border border-[#ff4757]/30 rounded-xl text-xs font-extrabold tracking-[1px] transition-all hover:bg-[#ff4757] hover:text-white mt-4 shadow-sm">
+                    <i class="fas fa-sign-out-alt mr-1.5"></i> CERRAR SESIÓN
                 </a>
             }
         </div>
@@ -108,9 +110,9 @@
         <!-- Botón de Perfil -->
         <button
             type="button"
-            class="w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-xl border text-base sm:text-lg rounded-full shadow-lg hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 transition-all duration-300 flex items-center justify-center relative cursor-pointer"
+            class="w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-xl border text-base sm:text-lg rounded-full shadow-lg hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center relative cursor-pointer"
             [ngClass]="themeService.isDarkMode()
-                ? 'bg-black/60 border-white/20 text-white'
+                ? 'bg-black/70 border-white/20 text-white'
                 : 'bg-[#f8f5ee]/95 border-[#8c583a]/30 text-[#4a2c18]'"
             (click)="toggleProfileMenu($event)"
             title="Menú de usuario">
@@ -119,10 +121,13 @@
     </div>
 }
 
-<!-- Asistente Barista Moka en la parte inferior derecha usando sprites de assets/images/barista/ -->
+<!-- Asistente Barista Moka en la parte inferior derecha con animación de desplazamiento/desvanecimiento al silenciar -->
 @if (mostrarMokaGlobal()) {
-    <div class="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[1500] flex items-end gap-3 max-w-[92vw] sm:max-w-[420px] font-['Montserrat'] pointer-events-none select-none"
+    <div class="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[1500] flex items-end gap-3 max-w-[92vw] sm:max-w-[420px] font-['Montserrat'] select-none transition-all duration-500 ease-in-out"
          id="ui-moka"
+         [ngClass]="mokaSilenciada
+            ? 'translate-x-36 opacity-0 pointer-events-none scale-90'
+            : 'translate-x-0 opacity-100 pointer-events-none scale-100'"
          [style.z-index]="router.url === '/login' ? '9999' : '1500'">
 
         @if (mensajeMoka) {
@@ -148,8 +153,11 @@
 
         <button type="button"
                 (click)="interactuarMoka()"
-                class="pointer-events-auto relative w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#d1b88e] shadow-[0_10px_28px_rgba(0,0,0,0.5)] overflow-hidden transition-transform duration-300 hover:scale-110 active:scale-95 cursor-pointer shrink-0 p-0 group"
-                [ngClass]="themeService.isDarkMode() ? 'bg-[#1a1410]' : 'bg-[#f5ebd6]'"
+                class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#d1b88e] shadow-[0_10px_28px_rgba(0,0,0,0.5)] overflow-hidden transition-transform duration-300 hover:scale-110 active:scale-95 cursor-pointer shrink-0 p-0 group"
+                [ngClass]="[
+                    themeService.isDarkMode() ? 'bg-[#1a1410]' : 'bg-[#f5ebd6]',
+                    mokaSilenciada ? 'pointer-events-none' : 'pointer-events-auto'
+                ]"
                 title="Haz clic en Moka para hablar o recibir un dato curioso">
             <img [src]="imagenMoka"
                  alt="Moka Barista"

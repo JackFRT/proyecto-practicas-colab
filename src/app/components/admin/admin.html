@@ -3,9 +3,10 @@
         <div class="logo-area" style="display: flex; align-items: center; gap: 14px;">
             <button type="button"
                     class="btn-action-glass text-gold"
+                    style="border-radius: 9999px; padding: 8px 16px;"
                     (click)="menuLateralAbierto = !menuLateralAbierto"
                     [title]="menuLateralAbierto ? 'Ocultar menú lateral' : 'Desplegar menú lateral'">
-                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-outdent' : 'fa-bars'"></i>
+                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-times' : 'fa-bars'"></i>
                 <span style="margin-left: 6px;">{{ menuLateralAbierto ? 'Ocultar Menú' : 'Menú' }}</span>
             </button>
             <h1><i class="fas fa-chess-king text-gold"></i> Panel Supremo</h1>

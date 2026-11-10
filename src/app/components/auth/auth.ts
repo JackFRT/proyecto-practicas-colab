@@ -99,6 +99,57 @@ export class Auth implements OnInit, OnDestroy {
       this.mokaImg = reaccion.imagen;
   }
 
+  get alertaDni(): string {
+    if (!this.dni) return '';
+    const limpio = this.dni.trim();
+    if (limpio.length > 8) {
+      return `¡Alerta! El DNI no debe superar los 8 dígitos (ingresaste ${limpio.length}).`;
+    }
+    if (!/^\d+$/.test(limpio)) {
+      return 'El DNI solo debe contener números.';
+    }
+    return '';
+  }
+
+  get alertaTelefono(): string {
+    if (!this.telefono) return '';
+    const sinEspacios = this.telefono.replace(/\s+/g, '');
+    if (sinEspacios.length > 9) {
+      return `¡Alerta! El número de teléfono supera los 9 dígitos permitidos (ingresaste ${sinEspacios.length}).`;
+    }
+    if (!/^\d+$/.test(sinEspacios)) {
+      return 'El número de teléfono solo debe contener dígitos.';
+    }
+    return '';
+  }
+
+  get alertaPassword(): string {
+    if (!this.password) return '';
+    const pass = this.password.trim();
+    const lower = pass.toLowerCase();
+    const genericas = [
+      '123456', '1234567', '12345678', '123456789', '1234567890',
+      '12345', '1234', 'password', 'contraseña', 'contrasena',
+      'admin', 'admin123', 'qwerty', 'qwerty123', '111111',
+      '000000', 'abcdef', 'abc123', 'cafe123', 'cactus123', 'usuario', '123123'
+    ];
+    if (
+      genericas.includes(lower) ||
+      /^(\w)\1{3,}$/.test(lower) ||
+      '0123456789'.includes(lower) ||
+      '9876543210'.includes(lower)
+    ) {
+      return '¡Atención! Esta contraseña es muy genérica e insegura. Usa una combinación más difícil de adivinar.';
+    }
+    if (!this.isLoginMode && pass.length > 0 && pass.length < 6) {
+      return 'Contraseña débil: Te recomendamos usar al menos 6 caracteres combinando letras y números.';
+    }
+    if (!this.isLoginMode && /^\d+$/.test(pass)) {
+      return 'Contraseña poco segura: Contiene solo números. Añade letras para mayor seguridad.';
+    }
+    return '';
+  }
+
   onSubmit() {
     if (this.isRecuperarMode) {
       this.procesarRecuperacion();
@@ -107,6 +158,16 @@ export class Auth implements OnInit, OnDestroy {
 
     if (!this.email || !this.password || (!this.isLoginMode && !this.nombre)) {
       this.mensajeError = "Por favor, completa todos los campos requeridos.";
+      return;
+    }
+
+    if (!this.isLoginMode && this.alertaDni) {
+      this.mensajeError = this.alertaDni;
+      return;
+    }
+
+    if (!this.isLoginMode && this.alertaTelefono) {
+      this.mensajeError = this.alertaTelefono;
       return;
     }
 

@@ -95,8 +95,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
   evaluarScroll() {
     if (typeof window !== 'undefined') {
-      this.heroScrolled = window.scrollY > window.innerHeight * 0.25;
+      this.heroScrolled = window.scrollY > window.innerHeight * 0.35;
     }
+  }
+
+  public enAnimacionInicial(): boolean {
+    const enHome = this.router.url === '/' || this.router.url.startsWith('/#');
+    return enHome && !this.isLoggedIn && !this.heroScrolled;
   }
 
   get isLoggedIn(): boolean {
@@ -122,6 +127,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   public mostrarMokaGlobal(): boolean {
     if (this.cartService.modalAbierto || this.mostrarRuleta) return false;
+    if (this.enAnimacionInicial()) return false;
     return this.router.url === '/' || this.router.url.startsWith('/#') || this.router.url === '/login';
   }
 
@@ -170,14 +176,14 @@ export class AppComponent implements OnInit, OnDestroy {
     this.mokaSilenciada = !event.target.checked;
 
     if (this.mokaSilenciada) {
-      this.imagenMoka = '/assets/images/barista/barista_sad.png';
-      this.mensajeMoka = 'Asistencia de Moka silenciada.';
+      if (this.mokaTimeout) clearTimeout(this.mokaTimeout);
+      this.mensajeMoka = null;
     } else {
       this.imagenMoka = '/assets/images/barista/barista_saludando.png';
       this.mensajeMoka = '¡Genial! Volveré a contarte datos curiosos.';
+      this.programarOcultarMensaje(3500);
     }
     this.cdr.detectChanges();
-    this.programarOcultarMensaje(3000);
   }
 
   toggleProfileMenu(event: Event) {

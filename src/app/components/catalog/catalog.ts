@@ -501,13 +501,13 @@ export class Catalog implements OnInit {
 
   procesarPago(event?: Event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    if (!this.archivoComprobante) {
+    if (!this.archivoComprobante && this.userRole !== 'admin') {
       this.mostrarToast('Sube la captura de tu pago por Yape o Plin para continuar.');
       return;
     }
 
     const finalTel = this.telefonoCliente || this.usuarioActual?.telefono || '';
-    if (this.cartService.getTotalPlantas() >= 4 && !finalTel) {
+    if (this.cartService.getTotalPlantas() >= 4 && !finalTel && this.userRole !== 'admin') {
       this.mostrarToast('Para pedidos de 4 o más unidades ingresa tu número de celular.');
       return;
     }
@@ -527,7 +527,9 @@ export class Catalog implements OnInit {
     formData.append('telefono_cliente', finalTel);
     formData.append('notas_cliente', finalTel ? `Cel/Wsp: ${finalTel}` : 'Sin notas');
     formData.append('carrito', JSON.stringify(this.cartService.items));
-    formData.append('comprobante', this.archivoComprobante);
+    if (this.archivoComprobante) {
+      formData.append('comprobante', this.archivoComprobante);
+    }
 
     this.http.post<any>('http://localhost:8080/api/pedidos/crear', formData).subscribe({
       next: (res) => {

@@ -253,7 +253,11 @@ public class PedidoController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Este cupón ha expirado."));
         }
 
-        if (cupon.getUsuario() != null && idUsuario != null && !cupon.getUsuario().getIdUsuario().equals(idUsuario)) {
+        boolean solicitanteEsAdmin = idUsuario != null && usuarioRepository.findById(idUsuario)
+                .map(u -> "admin".equalsIgnoreCase(u.getRol()))
+                .orElse(false);
+
+        if (!solicitanteEsAdmin && cupon.getUsuario() != null && idUsuario != null && !cupon.getUsuario().getIdUsuario().equals(idUsuario)) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Este cupón pertenece a otro usuario."));
         }
 
@@ -305,7 +309,7 @@ public class PedidoController {
             @RequestParam(value = "telefono_cliente", defaultValue = "") String telefonoCliente,
             @RequestParam(value = "notas_cliente", defaultValue = "") String notasCliente,
             @RequestParam("carrito") String carritoJson,
-            @RequestParam("comprobante") MultipartFile archivoComprobante
+            @RequestParam(value = "comprobante", required = false) MultipartFile archivoComprobante
     ) {
         try {
             Usuario usuario = usuarioRepository.findById(idUsuario)
@@ -345,6 +349,7 @@ public class PedidoController {
             List<Map<String, Object>> carrito = mapper.readValue(carritoJson, new TypeReference<List<Map<String, Object>>>() {});
 
             int totalUnidadesCompradas = 0;
+            boolean esAdmin = "admin".equalsIgnoreCase(usuario.getRol());
 
             for (Map<String, Object> item : carrito) {
                 Object idProdObj = item.get("id_producto") != null ? item.get("id_producto") : item.get("id_cactus");
@@ -356,8 +361,10 @@ public class PedidoController {
                 Object precioObj = item.get("precio") != null ? item.get("precio") : item.get("precio_base");
                 BigDecimal precioUnit = precioObj != null ? new BigDecimal(precioObj.toString()) : producto.getPrecio();
 
-                // Descontar stock inteligente (variante + producto general)
-                descontarStockProducto(producto, estilo, cantidad);
+                // Descontar stock inteligente solo si no es compra de prueba de administrador
+                if (!esAdmin) {
+                    descontarStockProducto(producto, estilo, cantidad);
+                }
 
                 DetallePedido detalle = new DetallePedido();
                 detalle.setPedido(nuevoPedido);

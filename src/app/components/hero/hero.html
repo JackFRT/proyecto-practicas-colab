@@ -7,7 +7,7 @@
     <div id="mask-container" class="w-full h-full"
          [class.mask-disabled]="isLoggedIn || maskCompletado"
          [ngClass]="themeService.isDarkMode() ? 'bg-[#050505]' : 'bg-[#f8f5ee]'">
-      <img src="/assets/images/museo/museo.jpg"
+      <img src="/assets/images/museo/imagen-presentacion.png"
            class="w-full h-full object-cover transition-opacity duration-500"
            [ngClass]="themeService.isDarkMode() ? 'opacity-80' : 'opacity-90 brightness-105'"
            alt="Fondo Museo Café Ayacuchano" />
@@ -23,69 +23,125 @@
     </div>
   </div>
 
-  <!-- Barra de Navegación Superior con botón para desplegar/ocultar menú -->
+  <!-- Barra de Navegación Superior Centrada con Botón Hamburguesa Responsivo -->
   @if (!cartService.modalAbierto && !mapaActivo) {
     <nav id="main-nav"
-         class="fixed top-0 left-0 w-full px-3 sm:px-6 py-3 flex items-center justify-between lg:justify-center gap-3 md:gap-8 z-[900] transition-all duration-500 lg:pr-44"
+         class="fixed top-0 left-0 w-full px-3 sm:px-6 py-3 flex items-center justify-center z-[900] transition-all duration-500"
          [ngClass]="[
            (isLoggedIn || maskCompletado) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
-           barraNavAbierta ? 'bg-black/65 backdrop-blur-md border-b border-white/10 shadow-lg' : 'bg-transparent pointer-events-none'
+           (barraNavAbierta || menuMovilAbierto) ? 'bg-black/70 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)]' : 'bg-transparent pointer-events-none'
          ]">
 
-      <!-- Botón Izquierdo para Desplegar / Ocultar el Menú de Botones -->
-      <div class="pointer-events-auto flex items-center gap-2 lg:absolute lg:left-6">
+      <!-- Controles Izquierdos: Botón Hamburguesa (Móvil y Desktop) + Acceso Rápido Carrito Móvil -->
+      <div class="pointer-events-auto absolute left-3 sm:left-6 flex items-center gap-2">
         <button type="button"
                 (click)="toggleBarraNav()"
-                class="h-10 px-3.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black transition-all duration-300 flex items-center gap-2 text-[11px] font-extrabold tracking-[1px] cursor-pointer shadow-md"
-                [title]="barraNavAbierta ? 'Ocultar barra de menú' : 'Desplegar barra de menú'">
-          <i class="fas" [ngClass]="barraNavAbierta ? 'fa-eye-slash' : 'fa-bars'"></i>
-          <span class="hidden sm:inline">{{ barraNavAbierta ? 'OCULTAR MENÚ' : 'MENÚ' }}</span>
+                class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center text-base cursor-pointer shadow-lg"
+                [title]="menuMovilAbierto || !barraNavAbierta ? 'Alternar menú de navegación' : 'Ocultar o desplegar menú'">
+          <i class="fas transition-transform duration-300"
+             [ngClass]="(menuMovilAbierto) ? 'fa-times rotate-90' : 'fa-bars'"></i>
         </button>
 
-        @if (barraNavAbierta) {
-          <button type="button"
-                  (click)="abrirCarrito($event)"
-                  class="lg:hidden h-10 px-3.5 rounded-full bg-[#d1b88e] text-black border-none font-black text-[11px] tracking-[1px] flex items-center gap-1.5 shadow-md cursor-pointer">
-            <i class="fas fa-shopping-bag"></i>
-            <span>({{ cartService.getTotalPlantas() }})</span>
-          </button>
-        }
+        <button type="button"
+                (click)="abrirCarrito($event)"
+                class="lg:hidden h-10 px-3.5 rounded-full bg-[#d1b88e] hover:bg-white text-[#1a1410] border-none font-black text-xs tracking-[1px] flex items-center gap-1.5 shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer">
+          <i class="fas fa-shopping-bag"></i>
+          <span>({{ cartService.getTotalPlantas() }})</span>
+        </button>
       </div>
 
+      <!-- Logo Móvil Centrado -->
+      <div class="lg:hidden flex items-center justify-center pointer-events-auto cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+        <img src="/assets/images/museo/logo-cafe.png" class="w-10 h-10 object-cover rounded-full border border-[#d1b88e]/60 shadow-md" alt="Museo"/>
+      </div>
+
+      <!-- Menú Superior Centrado (Desktop) -->
       @if (barraNavAbierta) {
-        <!-- Links Izquierda (Desktop) -->
-        <div class="hidden lg:flex items-center gap-6 xl:gap-8 text-white/90 font-black text-[0.68rem] tracking-[2.5px] uppercase drop-shadow-md">
-          <a href="#nosotros" (click)="scrollToSection($event, 'nosotros')" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/90">Nosotros</a>
-          <a href="#catalogo-section" (click)="scrollToSection($event, 'catalogo-section')" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/90">Carta &amp; Tienda</a>
-          <a href="#boletin" (click)="scrollToSection($event, 'boletin')" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/90">Boletín</a>
-        </div>
+        <div class="hidden lg:flex items-center justify-center gap-6 xl:gap-9 mx-auto animate-[fadeIn_0.25s]">
+          <!-- Links Izquierda (Desktop) -->
+          <div class="flex items-center gap-6 xl:gap-8 text-white/95 font-extrabold text-[0.72rem] tracking-[2px] uppercase drop-shadow-md">
+            <a href="#nosotros" (click)="scrollToSection($event, 'nosotros')" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/95 py-1">Nosotros</a>
+            <a href="#catalogo-section" (click)="scrollToSection($event, 'catalogo-section')" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/95 py-1">Carta &amp; Tienda</a>
+            <a href="#boletin" (click)="scrollToSection($event, 'boletin')" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/95 py-1">Boletín</a>
+          </div>
 
-        <!-- Logo Central -->
-        <div class="relative group cursor-pointer shrink-0 hidden sm:block" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-          <div class="absolute inset-0 bg-[#d1b88e] blur-md opacity-20 group-hover:opacity-60 transition-opacity duration-500 rounded-full"></div>
-          <img src="/assets/images/museo/logo-cafe.png" class="relative w-11 h-11 md:w-13 md:h-13 object-cover rounded-full opacity-95 border-2 border-transparent group-hover:border-[#d1b88e] group-hover:scale-105 transition-all duration-500 shadow-lg" alt="Museo"/>
-        </div>
+          <!-- Logo Central -->
+          <div class="relative group cursor-pointer shrink-0 mx-1" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+            <div class="absolute inset-0 bg-[#d1b88e] blur-md opacity-25 group-hover:opacity-65 transition-opacity duration-500 rounded-full"></div>
+            <img src="/assets/images/museo/logo-cafe.png" class="relative w-12 h-12 object-cover rounded-full opacity-95 border-2 border-[#d1b88e]/40 group-hover:border-[#d1b88e] group-hover:scale-105 transition-all duration-500 shadow-lg" alt="Museo"/>
+          </div>
 
-        <!-- Links Derecha (Desktop) -->
-        <div class="hidden lg:flex items-center gap-6 xl:gap-8 text-white/90 font-black text-[0.68rem] tracking-[2.5px] uppercase drop-shadow-md">
-          <button type="button" (click)="toggleMapa()" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 uppercase cursor-pointer bg-transparent border-none text-white/90 font-black text-[0.68rem] tracking-[2.5px]">Ubicación</button>
-          <a href="/login" (click)="irAMiClub($event)" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/90">Mi Club</a>
-          <button type="button" (click)="abrirCarrito($event)" class="border border-[#d1b88e]/60 hover:border-[#d1b88e] hover:bg-[#d1b88e] hover:text-black rounded-full px-4 py-2 transition-all duration-300 flex items-center gap-2 cursor-pointer bg-black/50 text-[#d1b88e] font-black text-[0.68rem] tracking-[2px]">
-            <i class="fas fa-shopping-bag"></i>
-            <span>Carrito ({{ cartService.getTotalPlantas() }})</span>
-          </button>
+          <!-- Links Derecha (Desktop) -->
+          <div class="flex items-center gap-6 xl:gap-8 text-white/95 font-extrabold text-[0.72rem] tracking-[2px] uppercase drop-shadow-md">
+            <button type="button" (click)="toggleMapa()" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 uppercase cursor-pointer bg-transparent border-none text-white/95 font-extrabold text-[0.72rem] tracking-[2px] py-1">Ubicación</button>
+            <a href="/login" (click)="irAMiClub($event)" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/95 py-1">Mi Club</a>
+            <button type="button" (click)="abrirCarrito($event)" class="border border-[#d1b88e]/70 hover:border-[#d1b88e] bg-[#d1b88e]/15 hover:bg-[#d1b88e] text-[#d1b88e] hover:text-black rounded-full px-4 py-2 transition-all duration-300 flex items-center gap-2 cursor-pointer font-extrabold text-[0.72rem] tracking-[1.5px] shadow-md hover:scale-105 active:scale-95">
+              <i class="fas fa-shopping-bag"></i>
+              <span>Carrito ({{ cartService.getTotalPlantas() }})</span>
+            </button>
+          </div>
         </div>
       }
     </nav>
 
-    <!-- Submenú rápido móvil cuando barraNavAbierta está activa -->
-    @if (barraNavAbierta && (isLoggedIn || maskCompletado)) {
-      <div class="lg:hidden fixed top-[58px] left-0 w-full z-[890] bg-black/75 backdrop-blur-md border-b border-white/10 px-3 py-2 flex items-center justify-center gap-4 overflow-x-auto text-[10px] font-black tracking-[1.5px] uppercase text-white/90">
-        <a href="#nosotros" (click)="scrollToSection($event, 'nosotros')" class="no-underline text-white/90 hover:text-[#d1b88e] whitespace-nowrap">Nosotros</a>
-        <a href="#catalogo-section" (click)="scrollToSection($event, 'catalogo-section')" class="no-underline text-white/90 hover:text-[#d1b88e] whitespace-nowrap">Carta &amp; Tienda</a>
-        <a href="#boletin" (click)="scrollToSection($event, 'boletin')" class="no-underline text-white/90 hover:text-[#d1b88e] whitespace-nowrap">Boletín</a>
-        <button type="button" (click)="toggleMapa()" class="bg-transparent border-none text-white/90 hover:text-[#d1b88e] font-black text-[10px] tracking-[1.5px] uppercase whitespace-nowrap cursor-pointer p-0">Ubicación</button>
-        <a href="/login" (click)="irAMiClub($event)" class="no-underline text-[#d1b88e] whitespace-nowrap">Mi Club</a>
+    <!-- Menú Desplegable Tipo Hamburguesa (Responsivo Móvil / Tablet) -->
+    @if (menuMovilAbierto && (isLoggedIn || maskCompletado)) {
+      <div class="lg:hidden fixed inset-0 z-[895] bg-black/50 backdrop-blur-xs animate-[fadeIn_0.2s]" (click)="cerrarMenuMovil()">
+        <div class="fixed top-[66px] left-3 right-3 sm:left-6 sm:w-[320px] rounded-3xl border p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] backdrop-blur-2xl transition-all duration-300"
+             [ngClass]="themeService.isDarkMode()
+               ? 'bg-[#0d0d0d]/95 border-white/15 text-white'
+               : 'bg-[#f8f5ee]/98 border-[#8c583a]/30 text-[#1a281f]'"
+             (click)="$event.stopPropagation()">
+          <div class="text-[10px] font-black tracking-[2px] uppercase opacity-60 px-3 pb-2 mb-2 border-b"
+               [ngClass]="themeService.isDarkMode() ? 'border-white/10 text-[#d1b88e]' : 'border-[#8c583a]/20 text-[#8c583a]'">
+            Navegación Principal
+          </div>
+
+          <div class="flex flex-col gap-1.5 font-extrabold text-xs tracking-[1.5px] uppercase">
+            <a href="#nosotros" (click)="scrollToSection($event, 'nosotros')"
+               class="no-underline flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all hover:bg-[#d1b88e]/20 hover:text-[#d1b88e]"
+               [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
+              <i class="fas fa-seedling w-5 text-center text-[#d1b88e]"></i>
+              <span>Nosotros</span>
+            </a>
+
+            <a href="#catalogo-section" (click)="scrollToSection($event, 'catalogo-section')"
+               class="no-underline flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all hover:bg-[#d1b88e]/20 hover:text-[#d1b88e]"
+               [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
+              <i class="fas fa-mug-hot w-5 text-center text-[#d1b88e]"></i>
+              <span>Carta &amp; Tienda</span>
+            </a>
+
+            <a href="#boletin" (click)="scrollToSection($event, 'boletin')"
+               class="no-underline flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all hover:bg-[#d1b88e]/20 hover:text-[#d1b88e]"
+               [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
+              <i class="fas fa-newspaper w-5 text-center text-[#d1b88e]"></i>
+              <span>Boletín</span>
+            </a>
+
+            <button type="button" (click)="toggleMapa()"
+                    class="w-full text-left bg-transparent border-none flex items-center gap-3 px-3.5 py-3 rounded-2xl font-extrabold text-xs tracking-[1.5px] uppercase cursor-pointer transition-all hover:bg-[#d1b88e]/20 hover:text-[#d1b88e]"
+                    [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
+              <i class="fas fa-map-marker-alt w-5 text-center text-[#d1b88e]"></i>
+              <span>Ubicación</span>
+            </button>
+
+            <a href="/login" (click)="irAMiClub($event)"
+               class="no-underline flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all hover:bg-[#d1b88e]/20 hover:text-[#d1b88e]"
+               [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
+              <i class="fas fa-crown w-5 text-center text-[#d1b88e]"></i>
+              <span>Mi Club</span>
+            </a>
+
+            <div class="h-[1px] my-1.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
+
+            <button type="button" (click)="abrirCarrito($event)"
+                    class="w-full bg-[#d1b88e] hover:bg-white text-[#1a1410] border-none flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl font-black text-xs tracking-[1.5px] uppercase cursor-pointer shadow-md transition-all">
+              <i class="fas fa-shopping-bag"></i>
+              <span>Ver Carrito ({{ cartService.getTotalPlantas() }})</span>
+            </button>
+          </div>
+        </div>
       </div>
     }
   }
@@ -98,7 +154,7 @@
       CAFÉ<br>AYACUCHANO
     </h1>
     <p class="text-white/90 text-sm sm:text-lg font-medium tracking-[4px] sm:tracking-widest text-center drop-shadow-md mb-8">
-      "MÁS QUE UN CAFÉ... UN MUSEO VIVO"
+      "MÁS QUE UN CAFÉ..."
     </p>
 
     <div class="flex flex-wrap items-center justify-center gap-4 pointer-events-auto">

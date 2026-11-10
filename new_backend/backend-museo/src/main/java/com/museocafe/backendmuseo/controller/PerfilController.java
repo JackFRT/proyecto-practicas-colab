@@ -97,7 +97,7 @@ public class PerfilController {
 
         LocalDateTime ahora = LocalDateTime.now();
         List<Cupon> cuponesDisponibles = cuponRepository.findAll().stream()
-                .filter(c -> (c.getUsuario() == null || c.getUsuario().getIdUsuario().equals(idUsuario)))
+                .filter(c -> c.getUsuario() != null && c.getUsuario().getIdUsuario().equals(idUsuario))
                 .filter(c -> (c.getUsosActuales() == null ? 0 : c.getUsosActuales()) < (c.getLimiteUsos() == null ? 1 : c.getLimiteUsos()))
                 .filter(c -> c.getFechaVencimiento() == null || c.getFechaVencimiento().isAfter(ahora))
                 .collect(Collectors.toList());

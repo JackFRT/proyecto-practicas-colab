@@ -49,7 +49,9 @@ public class RuletaController {
         if (usuarioOpt.isPresent()) {
             Usuario u = usuarioOpt.get();
             girosExtra = u.getGirosExtra() != null ? u.getGirosExtra() : 0;
-            if (girosExtra > 0) {
+            if ("admin".equalsIgnoreCase(u.getRol())) {
+                puedeGirar = true;
+            } else if (girosExtra > 0) {
                 puedeGirar = true;
             } else if (u.getFechaUltimoGiro() == null) {
                 puedeGirar = true;
@@ -80,19 +82,22 @@ public class RuletaController {
         }
 
         Usuario usuario = usuarioOpt.get();
+        boolean esAdmin = "admin".equalsIgnoreCase(usuario.getRol());
         int girosExtra = usuario.getGirosExtra() != null ? usuario.getGirosExtra() : 0;
         boolean usaGiroExtra = false;
 
-        if (girosExtra > 0) {
-            usaGiroExtra = true;
-        } else if (usuario.getFechaUltimoGiro() != null) {
-            long dias = ChronoUnit.DAYS.between(usuario.getFechaUltimoGiro(), LocalDateTime.now());
-            if (dias < 7) {
-                long faltan = 7 - dias;
-                return ResponseEntity.badRequest().body(Map.of(
-                        "success", false,
-                        "mensaje", "Ya usaste tu giro semanal. Vuelve en " + faltan + " día(s) o solicita un giro extra en tienda."
-                ));
+        if (!esAdmin) {
+            if (girosExtra > 0) {
+                usaGiroExtra = true;
+            } else if (usuario.getFechaUltimoGiro() != null) {
+                long dias = ChronoUnit.DAYS.between(usuario.getFechaUltimoGiro(), LocalDateTime.now());
+                if (dias < 7) {
+                    long faltan = 7 - dias;
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "success", false,
+                            "mensaje", "Ya usaste tu giro semanal. Vuelve en " + faltan + " día(s) o solicita un giro extra en tienda."
+                    ));
+                }
             }
         }
 

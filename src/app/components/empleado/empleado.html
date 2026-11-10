@@ -4,9 +4,9 @@
         <div class="flex items-center gap-3 min-w-0">
             <button type="button"
                     (click)="menuLateralAbierto = !menuLateralAbierto"
-                    class="bg-white/15 hover:bg-white text-white hover:text-[var(--verde-pino)] px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm transition-colors flex items-center gap-2 shrink-0 cursor-pointer border border-white/25"
+                    class="bg-white/15 hover:bg-white text-white hover:text-[var(--verde-pino)] px-4 py-2 rounded-full font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2 shrink-0 cursor-pointer border border-white/25 shadow-sm hover:scale-105 active:scale-95"
                     [title]="menuLateralAbierto ? 'Ocultar menú de botones' : 'Desplegar menú de botones'">
-                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-outdent' : 'fa-bars'"></i>
+                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-times' : 'fa-bars'"></i>
                 <span class="hidden sm:inline">{{ menuLateralAbierto ? 'Ocultar Menú' : 'Menú' }}</span>
             </button>
             <h1 class="text-white text-base sm:text-xl md:text-2xl m-0 font-normal truncate pr-2">
@@ -21,36 +21,46 @@
 
         <!-- Menú Lateral Colapsable -->
         @if (menuLateralAbierto) {
-        <aside class="w-full lg:w-64 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto pb-2 lg:pb-0 lg:pr-2 shrink-0 animate-[fadeIn_0.2s]">
+        <aside class="w-full lg:w-64 flex flex-row lg:flex-col gap-2.5 overflow-x-auto lg:overflow-y-auto pb-2 lg:pb-0 lg:pr-2 shrink-0 animate-[fadeIn_0.2s]">
             <button type="button"
-                    [ngClass]="tabActivo === 'ordenes' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
-                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 flex justify-between items-center gap-2 shadow-sm text-xs sm:text-sm shrink-0"
+                    [ngClass]="tabActivo === 'ordenes' ? 'bg-[var(--verde-pino)] text-white shadow-lg scale-[1.02]' : 'bg-[var(--bg-card)] text-gray-700 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-2xl transition-all duration-300 flex justify-between items-center gap-2 shadow-sm text-xs sm:text-sm shrink-0 cursor-pointer border border-black/5"
                     (click)="cambiarTab('ordenes')">
-                <span>NOTIFICACIONES</span>
+                <span class="flex items-center gap-2.5"><i class="fas fa-bell w-4 text-center opacity-80"></i> NOTIFICACIONES</span>
                 @if (num_notificaciones > 0) {
-                    <span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs">{{ num_notificaciones }}</span>
+                    <span class="bg-red-500 text-white px-2.5 py-0.5 rounded-full text-xs font-black">{{ num_notificaciones }}</span>
                 }
             </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'inventario' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
-                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
-                    (click)="cambiarTab('inventario')">INVENTARIO</button>
+                    [ngClass]="tabActivo === 'inventario' ? 'bg-[var(--verde-pino)] text-white shadow-lg scale-[1.02]' : 'bg-[var(--bg-card)] text-gray-700 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-2xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0 flex items-center gap-2.5 cursor-pointer border border-black/5"
+                    (click)="cambiarTab('inventario')">
+                <i class="fas fa-boxes w-4 text-center opacity-80"></i> INVENTARIO
+            </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'fidelidad' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
-                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
-                    (click)="cambiarTab('fidelidad')">FIDELIDAD</button>
+                    [ngClass]="tabActivo === 'fidelidad' ? 'bg-[var(--verde-pino)] text-white shadow-lg scale-[1.02]' : 'bg-[var(--bg-card)] text-gray-700 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-2xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0 flex items-center gap-2.5 cursor-pointer border border-black/5"
+                    (click)="cambiarTab('fidelidad')">
+                <i class="fas fa-medal w-4 text-center opacity-80"></i> FIDELIDAD
+            </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'marketing' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
-                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
-                    (click)="cambiarTab('marketing')">MARKETING</button>
+                    [ngClass]="tabActivo === 'marketing' ? 'bg-[var(--verde-pino)] text-white shadow-lg scale-[1.02]' : 'bg-[var(--bg-card)] text-gray-700 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-2xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0 flex items-center gap-2.5 cursor-pointer border border-black/5"
+                    (click)="cambiarTab('marketing')">
+                <i class="fas fa-bullhorn w-4 text-center opacity-80"></i> MARKETING
+            </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'ruleta' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
-                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
-                    (click)="cambiarTab('ruleta')">RULETA</button>
+                    [ngClass]="tabActivo === 'ruleta' ? 'bg-[var(--verde-pino)] text-white shadow-lg scale-[1.02]' : 'bg-[var(--bg-card)] text-gray-700 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-2xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0 flex items-center gap-2.5 cursor-pointer border border-black/5"
+                    (click)="cambiarTab('ruleta')">
+                <i class="fas fa-dharmachakra w-4 text-center opacity-80"></i> RULETA
+            </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'perfil' ? 'bg-[var(--verde-pino)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)]'"
-                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0"
-                    (click)="cambiarTab('perfil')">MI PERFIL</button>
+                    [ngClass]="tabActivo === 'perfil' ? 'bg-[var(--verde-pino)] text-white shadow-lg scale-[1.02]' : 'bg-[var(--bg-card)] text-gray-700 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    class="whitespace-nowrap lg:w-full text-left font-extrabold px-4 sm:px-5 py-3 lg:py-4 rounded-2xl transition-all duration-300 shadow-sm text-xs sm:text-sm shrink-0 flex items-center gap-2.5 cursor-pointer border border-black/5"
+                    (click)="cambiarTab('perfil')">
+                <i class="fas fa-user-circle w-4 text-center opacity-80"></i> MI PERFIL
+            </button>
         </aside>
         }
 
