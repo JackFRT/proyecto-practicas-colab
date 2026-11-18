@@ -5,6 +5,7 @@ import com.museocafe.backendmuseo.dto.ResetearRuletaRequest;
 import com.museocafe.backendmuseo.model.Pedido;
 import com.museocafe.backendmuseo.model.Usuario;
 import com.museocafe.backendmuseo.repository.PedidoRepository;
+import com.museocafe.backendmuseo.repository.ProductoRepository;
 import com.museocafe.backendmuseo.repository.UsuarioRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,15 +23,18 @@ public class AdminController {
 
     private final UsuarioRepository usuarioRepository;
     private final PedidoRepository pedidoRepository;
+    private final ProductoRepository productoRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AdminController(
             UsuarioRepository usuarioRepository,
             PedidoRepository pedidoRepository,
+            ProductoRepository productoRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.usuarioRepository = usuarioRepository;
         this.pedidoRepository = pedidoRepository;
+        this.productoRepository = productoRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -38,9 +42,12 @@ public class AdminController {
     public ResponseEntity<?> cargarDashboard() {
         Map<String, Object> respuesta = new HashMap<>();
 
-        respuesta.put("usuarios", usuarioRepository.findAll());
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        respuesta.put("usuarios", usuarios);
 
-        List<Pedido> ventas = pedidoRepository.findAll().stream()
+        List<Pedido> todosPedidos = pedidoRepository.findAll();
+
+        List<Pedido> ventas = todosPedidos.stream()
                 .filter(p -> "recogido".equalsIgnoreCase(p.getEstado()) || "entregado".equalsIgnoreCase(p.getEstado()))
                 .sorted(Comparator.comparing(
                         (Pedido p) -> p.getFechaPedido() != null ? p.getFechaPedido() : LocalDateTime.MIN
@@ -48,6 +55,16 @@ public class AdminController {
                 .collect(Collectors.toList());
 
         respuesta.put("ventas", ventas);
+
+        Map<String, Long> resumenEstados = new HashMap<>();
+        resumenEstados.put("pendiente", todosPedidos.stream().filter(p -> "pendiente".equalsIgnoreCase(p.getEstado())).count());
+        resumenEstados.put("esperando_recojo", todosPedidos.stream().filter(p -> "esperando_recojo".equalsIgnoreCase(p.getEstado()) || "listo".equalsIgnoreCase(p.getEstado())).count());
+        resumenEstados.put("recogido", (long) ventas.size());
+        resumenEstados.put("cancelado", todosPedidos.stream().filter(p -> "cancelado".equalsIgnoreCase(p.getEstado())).count());
+
+        respuesta.put("resumen_estados", resumenEstados);
+        respuesta.put("total_pedidos", todosPedidos.size());
+        respuesta.put("total_productos", productoRepository.count());
 
         BigDecimal ingresosTotales = ventas.stream()
                 .map(p -> p.getTotalPagado() != null ? p.getTotalPagado() : BigDecimal.ZERO)

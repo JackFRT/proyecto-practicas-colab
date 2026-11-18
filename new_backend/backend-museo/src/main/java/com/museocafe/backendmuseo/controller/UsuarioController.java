@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,11 +24,11 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public List<Usuario> listarUsuarios(@RequestParam(value = "termino", required = false) String termino) {
+    public ResponseEntity<?> listarUsuarios(@RequestParam(value = "termino", required = false) String termino) {
         if (termino != null && !termino.trim().isEmpty()) {
-            return usuarioRepository.buscarClientesParaEmpleado(termino.trim());
+            return ResponseEntity.ok(usuarioService.buscarClientesConPrivacidad(termino.trim()));
         }
-        return usuarioService.obtenerTodos();
+        return ResponseEntity.ok(usuarioService.obtenerTodos());
     }
 
     @PostMapping
@@ -54,8 +53,8 @@ public class UsuarioController {
         Usuario actualizado = usuarioService.registrarVisitaPresencial(id);
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "mensaje", "¡Visita presencial registrada con éxito! Se otorgó +1 giro en la ruleta.",
-                "usuario", actualizado
+                "mensaje", "¡Visita presencial registrada para " + actualizado.getNombre() + "! (+1 visita y +1 giro extra en la ruleta).",
+                "visitas_presenciales", actualizado.getVisitasPresenciales()
         ));
     }
 }

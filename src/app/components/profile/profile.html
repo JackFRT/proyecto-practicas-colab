@@ -1,25 +1,25 @@
 <div class="perfil-glass-wrapper">
     <header class="perfil-header">
-        <div class="flex items-center gap-3">
-            <button type="button" class="btn-glass-outline flex items-center gap-2 rounded-full px-3.5 py-2" (click)="menuLateralAbierto = !menuLateralAbierto" [title]="menuLateralAbierto ? 'Ocultar menú lateral' : 'Desplegar menú lateral'">
-                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-times' : 'fa-bars'"></i>
-                <span class="hidden sm:inline">{{ menuLateralAbierto ? 'Ocultar Menú' : 'Menú' }}</span>
+        <div class="header-left-group">
+            <button type="button" class="btn-glass-discreet" (click)="menuLateralAbierto = !menuLateralAbierto" [title]="menuLateralAbierto ? 'Ocultar menú lateral' : 'Desplegar menú lateral'">
+                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-bars-staggered' : 'fa-bars'"></i>
+                <span>{{ menuLateralAbierto ? 'Ocultar menú' : 'Menú' }}</span>
             </button>
-            <img src="/assets/images/museo/logo-cafe.png" alt="Logo" class="w-11 h-11 rounded-full object-cover border border-[#A3B18A]">
+            <img src="/assets/images/museo/logo-cafe.png" alt="Logo" class="w-9 h-9 rounded-full object-cover border border-[#A3B18A]/60 shrink-0">
             <h1>Café Ayacuchano &amp; Cactus Museum</h1>
         </div>
         <div class="header-actions">
-            <button type="button" class="btn-glass-outline" (click)="themeService.toggleTheme()">
-                <i class="fas" [ngClass]="themeService.isDarkMode() ? 'fa-sun' : 'fa-moon'"></i>
-                {{ themeService.isDarkMode() ? 'Modo Claro' : 'Modo Oscuro' }}
+            <button type="button" class="btn-glass-discreet" (click)="themeService.toggleTheme()">
+                <i class="fas" [ngClass]="themeService.isDarkMode() ? 'fa-sun text-[#FFE066]' : 'fa-moon'"></i>
+                <span>{{ themeService.isDarkMode() ? 'Claro' : 'Oscuro' }}</span>
             </button>
             @if (rolUsuario === 'empleado') {
-                <button type="button" class="btn-glass-outline" (click)="irPanelEmpleado()"><i class="fas fa-boxes"></i> Panel Empleado</button>
+                <button type="button" class="btn-glass-discreet" (click)="irPanelEmpleado()"><i class="fas fa-clipboard-list"></i> <span>Panel Empleado</span></button>
             } @else if (rolUsuario === 'admin') {
-                <button type="button" class="btn-glass-outline" (click)="irPanelAdmin()"><i class="fas fa-user-shield"></i> Panel Admin</button>
+                <button type="button" class="btn-glass-discreet" (click)="irPanelAdmin()"><i class="fas fa-user-shield"></i> <span>Panel Admin</span></button>
             }
-            <button type="button" class="btn-glass-outline" (click)="irTienda()"><i class="fas fa-store"></i> Volver al Inicio</button>
-            <button type="button" class="btn-glass-danger" (click)="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> Salir</button>
+            <button type="button" class="btn-glass-discreet" (click)="irTienda()"><i class="fas fa-store"></i> <span>Inicio</span></button>
+            <button type="button" class="btn-glass-danger-discreet" (click)="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> <span>Salir</span></button>
         </div>
     </header>
 
@@ -110,8 +110,8 @@
                             </div>
                             <div class="grid-2">
                                 <div class="form-group">
-                                    <label>DNI <small>(Máx. 8 dígitos)</small></label>
-                                    <input type="text" inputmode="numeric" class="glass-input" [(ngModel)]="editDni" placeholder="Tu DNI (8 dígitos)">
+                                    <label>DNI <small>(Opcional - Para mejor reconocimiento, máx. 8 dígitos)</small></label>
+                                    <input type="text" inputmode="numeric" class="glass-input" [(ngModel)]="editDni" placeholder="Opcional (8 dígitos)">
                                     @if (alertaDni) {
                                         <div style="margin-top: 6px; padding: 8px 12px; border-radius: 10px; background: rgba(255, 71, 87, 0.15); border-left: 4px solid #ff4757; color: #ff6b81; font-size: 0.78rem; font-weight: 700;">
                                             <i class="fas fa-exclamation-circle"></i> {{ alertaDni }}
@@ -186,11 +186,14 @@
                                                     }
                                                 </div>
                                                 <div class="order-footer-actions">
-                                                    <span class="comprobante-text"><i class="fas fa-file-invoice"></i> {{ (reserva.tipo_comprobante || 'boleta') | titlecase }}</span>
+                                                    <span class="comprobante-text">
+                                                        <i class="fas fa-receipt"></i> Ticket Simple de Compra •
+                                                        <a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank" rel="noopener noreferrer" style="color: #A3B18A; text-decoration: underline;">Recojo en Local Único (Maps)</a>
+                                                    </span>
 
                                                     @if (reserva.estado !== 'cancelado') {
                                                         <button type="button" class="btn-glass-pdf" (click)="abrirPDF(reserva.id_reserva)">
-                                                            <i class="fas fa-print"></i> Ver / Imprimir Boleta
+                                                            <i class="fas fa-print"></i> Ver / Imprimir Ticket
                                                         </button>
                                                     }
                                                 </div>

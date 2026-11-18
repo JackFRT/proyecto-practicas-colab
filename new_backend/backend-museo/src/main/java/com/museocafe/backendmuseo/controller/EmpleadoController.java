@@ -11,6 +11,7 @@ import com.museocafe.backendmuseo.repository.PedidoRepository;
 import com.museocafe.backendmuseo.repository.PremioRuletaRepository;
 import com.museocafe.backendmuseo.repository.ProductoRepository;
 import com.museocafe.backendmuseo.repository.UsuarioRepository;
+import com.museocafe.backendmuseo.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class EmpleadoController {
     private final PedidoRepository pedidoRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
+    private final UsuarioService usuarioService;
 
     public EmpleadoController(
             PedidoRepository pedidoRepository,
@@ -37,7 +39,8 @@ public class EmpleadoController {
             CuponRepository cuponRepository,
             NoticiaRepository noticiaRepository,
             PremioRuletaRepository premioRuletaRepository,
-            ProductoRepository productoRepository
+            ProductoRepository productoRepository,
+            UsuarioService usuarioService
     ) {
         this.pedidoRepository = pedidoRepository;
         this.usuarioRepository = usuarioRepository;
@@ -45,6 +48,7 @@ public class EmpleadoController {
         this.noticiaRepository = noticiaRepository;
         this.premioRuletaRepository = premioRuletaRepository;
         this.productoRepository = productoRepository;
+        this.usuarioService = usuarioService;
     }
 
     @GetMapping("/dashboard/{idEmpleado}")
@@ -64,11 +68,19 @@ public class EmpleadoController {
                 ).reversed())
                 .collect(Collectors.toList());
 
+        List< com.museocafe.backendmuseo.model.Cupon> cuponesPublicos = cuponRepository.findAll().stream()
+                .filter(c -> c.getUsuario() == null)
+                .filter(c -> {
+                    String cod = c.getCodigo() != null ? c.getCodigo().trim().toUpperCase() : "";
+                    return !cod.startsWith("RUL-") && !cod.startsWith("MOKA-");
+                })
+                .collect(Collectors.toList());
+
         respuesta.put("success", true);
         respuesta.put("ordenesActivas", ordenesActivas);
         respuesta.put("historial", historial);
         respuesta.put("totalAtendidas", historial.size());
-        respuesta.put("cupones", cuponRepository.findAll());
+        respuesta.put("cupones", cuponesPublicos);
         respuesta.put("noticias", noticiaRepository.findAll());
         respuesta.put("ruleta", premioRuletaRepository.findAll());
 
@@ -77,7 +89,14 @@ public class EmpleadoController {
 
     @GetMapping("/cupones/listar")
     public ResponseEntity<?> listarCupones() {
-        return ResponseEntity.ok(cuponRepository.findAll());
+        List<com.museocafe.backendmuseo.model.Cupon> cuponesPublicos = cuponRepository.findAll().stream()
+                .filter(c -> c.getUsuario() == null)
+                .filter(c -> {
+                    String cod = c.getCodigo() != null ? c.getCodigo().trim().toUpperCase() : "";
+                    return !cod.startsWith("RUL-") && !cod.startsWith("MOKA-");
+                })
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(cuponesPublicos);
     }
 
     @PostMapping("/ordenes/estado")
@@ -176,7 +195,7 @@ public class EmpleadoController {
     @PostMapping("/clientes/buscar")
     public ResponseEntity<?> buscarClientes(@RequestBody Map<String, String> payload) {
         String termino = payload.getOrDefault("termino", "");
-        List<Usuario> clientes = usuarioRepository.buscarClientesParaEmpleado(termino);
+        List<Map<String, Object>> clientes = usuarioService.buscarClientesConPrivacidad(termino);
         return ResponseEntity.ok(Map.of("success", true, "clientes", clientes));
     }
 
@@ -195,12 +214,12 @@ public class EmpleadoController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Este cliente ya registró una visita el día de hoy. ¡Debe volver mañana!"));
         }
 
-        cliente.setVisitasPresenciales((cliente.getVisitasPresenciales() != null ? cliente.getVisitasPresenciales() : 0) + 1);
-        cliente.setFechaUltimaVisita(hoy);
-        cliente.setGirosExtra((cliente.getGirosExtra() != null ? cliente.getGirosExtra() : 0) + 1);
+        Usuario actualizado = usuarioService.registrarVisitaPresencial(idCliente);
 
-        usuarioRepository.save(cliente);
-
-        return ResponseEntity.ok(Map.of("success", true, "mensaje", "¡Visita presencial registrada con éxito! (+1 Giro Extra)"));
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "mensaje", "¡Visita presencial registrada para " + actualizado.getNombre() + "! (+1 Giro Extra)",
+                "visitas_presenciales", actualizado.getVisitasPresenciales()
+        ));
     }
 }

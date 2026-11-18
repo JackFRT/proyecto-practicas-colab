@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,21 +25,62 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+    // Protección Anti-Fuerza Bruta en memoria
+    private static class IntentoLogin {
+        int fallos = 0;
+        LocalDateTime bloqueadoHasta = null;
+    }
+
+    private final Map<String, IntentoLogin> intentosPorCorreo = new ConcurrentHashMap<>();
+    private static final int MAX_INTENTOS_FALLIDOS = 5;
+
     public AuthController(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
 
+    private String sanitizarTexto(String input) {
+        if (input == null) return "";
+        return input.replaceAll("[<>\"']", "").trim();
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        String email = loginRequest.getEmail();
-        String password = loginRequest.getPassword();
+        // 1. Verificación Honeypot Anti-Bots
+        if (loginRequest.getWebsiteHp() != null && !loginRequest.getWebsiteHp().trim().isEmpty()) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "mensaje", "Solicitud bloqueada por el escudo anti-bots."
+            ));
+        }
 
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        String email = loginRequest.getEmail() != null ? loginRequest.getEmail().trim().toLowerCase() : "";
+        String password = loginRequest.getPassword() != null ? loginRequest.getPassword() : "";
+
+        if (email.isEmpty() || password.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Ingresa tu correo y contraseña."));
+        }
+
+        // 2. Verificación Anti-Fuerza Bruta por cuenta
+        IntentoLogin registroIntento = intentosPorCorreo.computeIfAbsent(email, k -> new IntentoLogin());
+        if (registroIntento.bloqueadoHasta != null && registroIntento.bloqueadoHasta.isAfter(LocalDateTime.now())) {
+            return ResponseEntity.status(429).body(Map.of(
+                    "success", false,
+                    "mensaje", "Demasiados intentos fallidos. Por seguridad, espera 3 minutos antes de volver a intentarlo."
+            ));
+        }
+
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(loginRequest.getEmail().trim());
+        if (usuarioOpt.isEmpty()) {
+            usuarioOpt = usuarioRepository.findByEmail(email);
+        }
 
         if (usuarioOpt.isPresent() && passwordEncoder.matches(password, usuarioOpt.get().getPassword())) {
             Usuario usuario = usuarioOpt.get();
+
+            // Limpiar contador de fallos al iniciar sesión con éxito
+            intentosPorCorreo.remove(email);
 
             // Verificar si el usuario tiene bloqueo temporal activo (ej. por comprobante falso)
             if (usuario.getBloqueadoHasta() != null && usuario.getBloqueadoHasta().isAfter(LocalDateTime.now())) {
@@ -58,15 +100,32 @@ public class AuthController {
             return ResponseEntity.ok(respuesta);
         }
 
+        // Registrar fallo para protección anti-fuerza bruta
+        registroIntento.fallos++;
+        if (registroIntento.fallos >= MAX_INTENTOS_FALLIDOS) {
+            registroIntento.bloqueadoHasta = LocalDateTime.now().plusMinutes(3);
+            registroIntento.fallos = 0;
+            return ResponseEntity.status(429).body(Map.of(
+                    "success", false,
+                    "mensaje", "Se detectaron 5 intentos fallidos seguidos. Cuenta protegida temporalmente por 3 minutos."
+            ));
+        }
+
         return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Correo o contraseña incorrectos."));
     }
 
     @PostMapping("/registro")
     public ResponseEntity<?> registro(@RequestBody Map<String, String> payload) {
         try {
-            String email = payload.get("email");
-            if (email == null || email.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "El correo es obligatorio."));
+            // 1. Verificación Honeypot Anti-Bots
+            String honeypot = payload.get("websiteHp");
+            if (honeypot != null && !honeypot.trim().isEmpty()) {
+                return ResponseEntity.status(403).body(Map.of("success", false, "mensaje", "Registro bloqueado por protección anti-bots."));
+            }
+
+            String email = sanitizarTexto(payload.get("email"));
+            if (email.isEmpty() || !email.contains("@")) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Ingresa un correo electrónico válido."));
             }
 
             if (usuarioRepository.findByEmail(email).isPresent()) {
@@ -78,12 +137,17 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "La contraseña es obligatoria."));
             }
 
+            String nombreLimpio = sanitizarTexto(payload.get("nombre"));
+            if (nombreLimpio.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "El nombre es obligatorio."));
+            }
+
             Usuario nuevoUsuario = new Usuario();
-            nuevoUsuario.setNombre(payload.get("nombre"));
-            nuevoUsuario.setEmail(email.trim());
+            nuevoUsuario.setNombre(nombreLimpio);
+            nuevoUsuario.setEmail(email);
             nuevoUsuario.setPassword(passwordEncoder.encode(passwordPlano));
-            nuevoUsuario.setDni(payload.get("dni"));
-            nuevoUsuario.setTelefono(payload.get("telefono"));
+            nuevoUsuario.setDni(sanitizarTexto(payload.get("dni")));
+            nuevoUsuario.setTelefono(sanitizarTexto(payload.get("telefono")));
             nuevoUsuario.setRol("cliente");
 
             usuarioRepository.save(nuevoUsuario);
@@ -96,7 +160,7 @@ public class AuthController {
 
     @PostMapping("/recuperar/solicitar")
     public ResponseEntity<?> solicitarCodigo(@RequestBody Map<String, String> payload) {
-        String email = payload.get("email");
+        String email = sanitizarTexto(payload.get("email"));
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
 
         if (usuarioOpt.isEmpty()) {
@@ -123,8 +187,8 @@ public class AuthController {
 
     @PostMapping("/recuperar/cambiar")
     public ResponseEntity<?> cambiarPassword(@RequestBody Map<String, String> payload) {
-        String email = payload.get("email");
-        String codigo = payload.get("codigo");
+        String email = sanitizarTexto(payload.get("email"));
+        String codigo = sanitizarTexto(payload.get("codigo"));
         String nuevaPassword = payload.get("nueva_password");
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);

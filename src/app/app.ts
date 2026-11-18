@@ -131,6 +131,11 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.router.url === '/' || this.router.url.startsWith('/#') || this.router.url === '/login';
   }
 
+  @HostListener('window:abrir-ruleta-semanal')
+  onAbrirRuletaSemanal() {
+    this.lanzarRuleta();
+  }
+
   lanzarRuleta(event?: Event) {
     if (event) event.preventDefault();
     this.mostrarRuleta = true;

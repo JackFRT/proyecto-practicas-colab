@@ -28,6 +28,9 @@ export class Empleado implements OnInit {
   terminoBusqueda: string = '';
   categoriaFiltro: string = 'todas';
 
+  terminoBusquedaOrden: string = '';
+  filtroEstadoOrden: 'todos' | 'pendiente' | 'esperando_recojo' = 'todos';
+
   reservas_activas: any[] = [];
   historial_atendidas: any[] = [];
   inventario: any[] = [];
@@ -47,19 +50,27 @@ export class Empleado implements OnInit {
   terminoFidelidad: string = '';
   sugerenciasClientes: any[] = [];
   clienteSeleccionado: any = null;
+  busquedaFidelidadActiva: boolean = false;
+  mensajeFidelidadEstado: { tipo: 'exito' | 'error', texto: string } | null = null;
   verCategorias: boolean = false;
   catEditando: any = null;
 
   ofuscarEmail(email: string): string {
-    if (!email || !email.includes('@')) return email;
+    if (!email) return '•••@•••';
+    if (email.includes('••')) return email;
+    if (!email.includes('@')) return '•••@•••';
     const [nombre, dominio] = email.split('@');
-    if (nombre.length <= 2) return `${nombre}***@${dominio}`;
-    return `${nombre.substring(0, 2)}***@${dominio}`;
+    const prefijo = nombre.length <= 2 ? nombre.substring(0, 1) : nombre.substring(0, 2);
+    const sufijoDom = dominio.length > 3 ? dominio.substring(dominio.length - 3) : dominio;
+    return `${prefijo}••••@•••${sufijoDom}`;
   }
 
   ofuscarDni(dni: string): string {
-    if (!dni || dni.length < 4) return dni;
-    return `${dni.substring(0, 2)}****${dni.substring(dni.length - 2)}`;
+    if (!dni) return '';
+    if (dni.includes('••')) return dni;
+    const limpio = dni.trim();
+    if (limpio.length <= 2) return `••••••${limpio}`;
+    return `••••••${limpio.substring(limpio.length - 2)}`;
   }
 
   irConfiguracionPerfil() {
@@ -110,6 +121,86 @@ export class Empleado implements OnInit {
 
   toggleOrden(id: number) {
     this.ordenesExpandidas.has(id) ? this.ordenesExpandidas.delete(id) : this.ordenesExpandidas.add(id);
+  }
+
+  get ordenesActivasFiltradas(): any[] {
+    const q = (this.terminoBusquedaOrden || '').toLowerCase().trim();
+    return (this.reservas_activas || []).filter(r => {
+      if (this.filtroEstadoOrden !== 'todos') {
+        if (this.filtroEstadoOrden === 'pendiente' && r.estado !== 'pendiente') return false;
+        if (this.filtroEstadoOrden === 'esperando_recojo' && r.estado !== 'esperando_recojo') return false;
+      }
+      if (!q) return true;
+
+      const idStr = String(r.id_reserva || r.idPedido || '');
+      const cliente = (r.cliente || '').toLowerCase();
+      const dni = this.obtenerDniOrden(r).toLowerCase();
+      const tel = this.obtenerTelefonoOrden(r).toLowerCase();
+      const productos = Array.isArray(r.detalles)
+        ? r.detalles.map((d: any) => (d.nombre_comun || d.producto?.nombre || '')).join(' ').toLowerCase()
+        : '';
+
+      return idStr.includes(q) || cliente.includes(q) || dni.includes(q) || tel.includes(q) || productos.includes(q);
+    });
+  }
+
+  obtenerDniOrden(reserva: any): string {
+    if (!reserva) return '';
+    let raw = reserva.dni_opcional ?? reserva.dniOpcional ?? reserva.usuario?.dni ?? '';
+    raw = String(raw).trim();
+    if (!raw) return '';
+
+    if (raw.includes(' | ')) {
+      raw = raw.split(' | ')[0].trim();
+    }
+    if (
+      !raw ||
+      raw.toLowerCase().includes('cel/wsp') ||
+      raw.toLowerCase().includes('sin documento') ||
+      raw.toLowerCase().includes('sin notas') ||
+      raw.toLowerCase().includes('no especificado')
+    ) {
+      return '';
+    }
+    return raw;
+  }
+
+  obtenerTelefonoOrden(reserva: any): string {
+    if (!reserva) return '';
+    let raw = reserva.telefono_cliente ?? '';
+    if (!raw && reserva.notasCliente) {
+      raw = reserva.notasCliente;
+    }
+    if (!raw && reserva.notas_cliente) {
+      raw = reserva.notas_cliente;
+    }
+    if (!raw && reserva.dni_opcional && String(reserva.dni_opcional).toLowerCase().includes('cel/wsp')) {
+      const partes = String(reserva.dni_opcional).split(/cel\/wsp:?/i);
+      raw = partes.length > 1 ? partes[1] : '';
+    }
+    if (!raw && reserva.usuario?.telefono) {
+      raw = reserva.usuario.telefono;
+    }
+
+    let limpio = String(raw).replace(/cel\/wsp:?/gi, '').trim();
+    if (
+      !limpio ||
+      limpio.toLowerCase() === 'sin notas' ||
+      limpio.toLowerCase() === 'no provisto' ||
+      limpio.toLowerCase() === 'no especificado'
+    ) {
+      return '';
+    }
+    return limpio;
+  }
+
+  filtrarSoloCuponesPublicos(lista: any[]): any[] {
+    if (!Array.isArray(lista)) return [];
+    return lista.filter(c => {
+      if (c.usuario || c.id_usuario || c.idUsuario) return false;
+      const cod = String(c.codigo || '').trim().toUpperCase();
+      return !cod.startsWith('RUL-') && !cod.startsWith('MOKA-');
+    });
   }
 
   getRutaImagen(rutaBD: any, tipo: string = ''): string {
@@ -300,36 +391,98 @@ export class Empleado implements OnInit {
     this.draggedNewsIndex = null;
   }
 
-  buscarClientes(event: Event) {
-    const valor = (event.target as HTMLInputElement).value;
-    this.terminoFidelidad = valor;
-    this.clienteSeleccionado = null; 
+  buscarClientes(event?: Event) {
+    if (event) {
+      this.terminoFidelidad = (event.target as HTMLInputElement).value;
+    }
+    const valor = (this.terminoFidelidad || '').trim();
+    this.clienteSeleccionado = null;
+    this.mensajeFidelidadEstado = null;
 
-    if (valor.length < 2) {
+    if (valor.length < 1) {
       this.sugerenciasClientes = [];
+      this.busquedaFidelidadActiva = false;
       return;
     }
 
-    // Adaptado a la API REST de Usuarios
-    this.http.get<any>(`http://localhost:8080/api/usuarios?termino=${valor}`).subscribe({
-      next: (res) => { 
-        this.sugerenciasClientes = res || []; 
+    this.busquedaFidelidadActiva = true;
+
+    this.http.get<any>(`http://localhost:8080/api/usuarios?termino=${encodeURIComponent(valor)}`).subscribe({
+      next: (res) => {
+        const lista = Array.isArray(res) ? res : (res?.clientes || []);
+        this.sugerenciasClientes = lista;
         this.cdr.detectChanges();
+      },
+      error: () => {
+        this.http.post<any>('http://localhost:8080/api/empleado/clientes/buscar', { termino: valor }).subscribe({
+          next: (res2) => {
+            this.sugerenciasClientes = res2?.clientes || [];
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.sugerenciasClientes = [];
+            this.cdr.detectChanges();
+          }
+        });
       }
     });
   }
 
   seleccionarCliente(cliente: any) {
     this.clienteSeleccionado = cliente;
-    this.terminoFidelidad = `${cliente.nombre} (${this.ofuscarEmail(cliente.email)})`;
+    // Solo mostramos el nombre completo del cliente en el buscador
+    this.terminoFidelidad = cliente.nombre;
     this.sugerenciasClientes = [];
+    this.busquedaFidelidadActiva = false;
+    this.mensajeFidelidadEstado = null;
+    this.cdr.detectChanges();
+  }
+
+  limpiarSeleccionCliente() {
+    this.clienteSeleccionado = null;
+    this.terminoFidelidad = '';
+    this.sugerenciasClientes = [];
+    this.busquedaFidelidadActiva = false;
+    this.cdr.detectChanges();
   }
 
   registrarVisita() {
     if (!this.clienteSeleccionado) return;
-    this.ejecutarAccion('registrar_visita', { id_cliente: this.clienteSeleccionado.idUsuario || this.clienteSeleccionado.id_usuario });
-    this.clienteSeleccionado = null;
-    this.terminoFidelidad = '';
+    const idCliente = this.clienteSeleccionado.idUsuario || this.clienteSeleccionado.id_usuario;
+    if (!idCliente) return;
+
+    this.cargando = true;
+    this.mensajeFidelidadEstado = null;
+
+    this.http.post<any>(`http://localhost:8080/api/usuarios/${idCliente}/visita`, {}).subscribe({
+      next: (res) => {
+        this.cargando = false;
+        if (res && res.success) {
+          this.mostrarToast(res.mensaje);
+          this.mensajeFidelidadEstado = {
+            tipo: 'exito',
+            texto: res.mensaje || `¡Visita presencial registrada con éxito para ${this.clienteSeleccionado?.nombre}!`
+          };
+          this.clienteSeleccionado = null;
+          this.terminoFidelidad = '';
+        } else {
+          this.mensajeFidelidadEstado = {
+            tipo: 'error',
+            texto: res?.mensaje || 'No se pudo registrar la visita.'
+          };
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.cargando = false;
+        const msg = err.error?.mensaje || 'Este cliente ya registró una visita el día de hoy o hubo un error.';
+        this.mensajeFidelidadEstado = {
+          tipo: 'error',
+          texto: msg
+        };
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   cargarDashboard() {
@@ -344,14 +497,14 @@ export class Empleado implements OnInit {
           this.stats_empleado = { total_atendidas: res.totalAtendidas || 0 };
           this.num_notificaciones = this.reservas_activas.length;
 
-          // Asignamos cupones y noticias directamente del backend o respaldamos con listados
-          this.cupones = res.cupones || [];
+          // Asignamos solo cupones públicos (sin cupones de ruleta) y noticias
+          this.cupones = this.filtrarSoloCuponesPublicos(res.cupones || []);
           this.noticias = res.noticias || [];
           this.premios_ruleta = res.ruleta || res.premios_ruleta || [];
           
           if (this.cupones.length === 0) {
               this.http.get<any[]>('http://localhost:8080/api/marketing/cupones/listar').subscribe(c => {
-                  this.cupones = c || [];
+                  this.cupones = this.filtrarSoloCuponesPublicos(c || []);
                   this.cdr.detectChanges();
               });
           }
@@ -581,7 +734,7 @@ export class Empleado implements OnInit {
           // Refrescamos los datos específicos al instante
           if (accion === 'guardar_cupon') {
               this.http.get<any[]>('http://localhost:8080/api/marketing/cupones/listar').subscribe({
-                  next: (lista) => { this.cupones = lista || []; this.cdr.detectChanges(); }
+                  next: (lista) => { this.cupones = this.filtrarSoloCuponesPublicos(lista || []); this.cdr.detectChanges(); }
               });
           } else if (accion === 'guardar_noticia') {
               this.http.get<any[]>('http://localhost:8080/api/marketing/noticias/listar').subscribe({
@@ -600,7 +753,7 @@ export class Empleado implements OnInit {
   cargarCupones() {
     this.http.get<any[]>('http://localhost:8080/api/marketing/cupones/listar').subscribe({
       next: (res) => {
-        this.cupones = res || [];
+        this.cupones = this.filtrarSoloCuponesPublicos(res || []);
         this.cdr.detectChanges();
       },
       error: (err) => {

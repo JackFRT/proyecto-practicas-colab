@@ -27,6 +27,7 @@ export class Auth implements OnInit, OnDestroy {
   password: string = '';
   dni: string = '';
   telefono: string = '';
+  websiteHp: string = '';
   codigoRecuperacion: string = ''; 
   pasoRecuperacion: number = 1; 
   
@@ -151,6 +152,11 @@ export class Auth implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    if (this.websiteHp && this.websiteHp.trim().length > 0) {
+      this.mensajeError = "Actividad automatizada detectada y bloqueada.";
+      return;
+    }
+
     if (this.isRecuperarMode) {
       this.procesarRecuperacion();
       return;
@@ -178,7 +184,8 @@ export class Auth implements OnInit, OnDestroy {
     if (this.isLoginMode) {
       this.http.post<any>('http://localhost:8080/api/auth/login', { 
         email: this.email, 
-        password: this.password 
+        password: this.password,
+        websiteHp: this.websiteHp
       }).subscribe({
         next: (res) => {
           this.cargando = false;
@@ -217,7 +224,8 @@ export class Auth implements OnInit, OnDestroy {
         email: this.email, 
         password: this.password, 
         dni: this.dni, 
-        telefono: this.telefono 
+        telefono: this.telefono,
+        websiteHp: this.websiteHp
       };
 
       this.http.post<any>('http://localhost:8080/api/auth/registro', payload).subscribe({

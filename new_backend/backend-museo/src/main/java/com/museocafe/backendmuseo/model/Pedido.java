@@ -92,14 +92,33 @@ public class Pedido {
 
     @JsonProperty("dni_opcional")
     public String getDniOpcionalSnake() {
-        if (dniOpcional != null && !dniOpcional.isEmpty()) {
-            return dniOpcional;
+        if (dniOpcional != null && !dniOpcional.trim().isEmpty() && !dniOpcional.toLowerCase().contains("cel/wsp")) {
+            return dniOpcional.trim();
         }
-        if (notasCliente != null && !notasCliente.isEmpty() && !"Sin notas".equalsIgnoreCase(notasCliente)) {
-            String dniUser = (usuario != null && usuario.getDni() != null) ? usuario.getDni() : "";
-            return dniUser.isEmpty() ? notasCliente : (dniUser + " | " + notasCliente);
+        if (usuario != null && usuario.getDni() != null && !usuario.getDni().trim().isEmpty()) {
+            return usuario.getDni().trim();
         }
-        return (usuario != null && usuario.getDni() != null) ? usuario.getDni() : "";
+        return "";
+    }
+
+    @JsonProperty("telefono_cliente")
+    public String getTelefonoClienteSnake() {
+        if (notasCliente != null && !notasCliente.trim().isEmpty() && !"Sin notas".equalsIgnoreCase(notasCliente.trim())) {
+            String limpio = notasCliente.replace("Cel/Wsp:", "").replace("Cel/Wsp", "").trim();
+            if (!limpio.isEmpty()) {
+                return limpio;
+            }
+        }
+        if (dniOpcional != null && dniOpcional.toLowerCase().contains("cel/wsp")) {
+            String[] partes = dniOpcional.split("(?i)cel/wsp:?");
+            if (partes.length > 1 && !partes[1].trim().isEmpty()) {
+                return partes[1].trim();
+            }
+        }
+        if (usuario != null && usuario.getTelefono() != null && !usuario.getTelefono().trim().isEmpty()) {
+            return usuario.getTelefono().trim();
+        }
+        return "";
     }
 
     @JsonProperty("cliente")

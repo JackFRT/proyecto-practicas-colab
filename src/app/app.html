@@ -1,17 +1,17 @@
 @if (mostrarInterfazFlotante()) {
 
-    <!-- Panel inferior izquierdo colapsable para Admin / Empleado -->
+    <!-- Panel inferior izquierdo colapsable y discreto para Admin / Empleado -->
     @if (isLoggedIn && (userRole === 'admin' || userRole === 'empleado')) {
-        <div class="fixed z-[1200] bottom-4 left-4 md:bottom-6 md:left-6 flex flex-col gap-2 items-start font-['Montserrat']" id="ui-bottom-left">
+        <div class="fixed z-[1200] bottom-4 left-4 md:bottom-5 md:left-5 flex flex-col gap-1.5 items-start font-['Montserrat']" id="ui-bottom-left">
             @if (panelAccesosAbierto) {
-                <div class="flex flex-col gap-2 items-start animate-[fadeIn_0.25s]">
+                <div class="flex flex-col gap-1.5 items-start animate-[fadeIn_0.25s]">
                     @if (userRole === 'admin') {
-                        <a routerLink="/admin/panel" class="bg-black/80 backdrop-blur-xl border border-white/20 text-white px-4 py-2.5 text-[11px] font-bold tracking-[1px] no-underline rounded-full shadow-lg hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] transition-all duration-300 flex items-center">
+                        <a routerLink="/admin/panel" class="bg-black/75 backdrop-blur-xl border border-white/15 text-white/90 px-3.5 py-2 text-[10px] font-bold tracking-[1px] no-underline rounded-full shadow-md hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] transition-all duration-300 flex items-center whitespace-nowrap">
                             <i class="fas fa-terminal mr-2 opacity-80"></i> PANEL ADMIN
                         </a>
                     }
                     @if (userRole === 'empleado' || userRole === 'admin') {
-                        <a routerLink="/empleado/dashboard" class="bg-black/80 backdrop-blur-xl border border-white/20 text-white px-4 py-2.5 text-[11px] font-bold tracking-[1px] no-underline rounded-full shadow-lg hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] transition-all duration-300 flex items-center">
+                        <a routerLink="/empleado/dashboard" class="bg-black/75 backdrop-blur-xl border border-white/15 text-white/90 px-3.5 py-2 text-[10px] font-bold tracking-[1px] no-underline rounded-full shadow-md hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] transition-all duration-300 flex items-center whitespace-nowrap">
                             <i class="fas fa-clipboard-list mr-2 opacity-80"></i> PANEL DE TRABAJO
                         </a>
                     }
@@ -19,103 +19,100 @@
             }
             <button type="button"
                     (click)="panelAccesosAbierto = !panelAccesosAbierto"
-                    class="bg-black/75 backdrop-blur-xl border border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black px-3.5 py-2 rounded-full text-[11px] font-extrabold tracking-[1px] shadow-lg transition-all cursor-pointer flex items-center gap-1.5"
+                    class="bg-black/70 backdrop-blur-xl border border-white/15 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black px-3 py-1.5 rounded-full text-[10px] font-bold tracking-[1px] shadow-md transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                     [title]="panelAccesosAbierto ? 'Ocultar accesos rápidos' : 'Mostrar accesos rápidos'">
                 <i class="fas" [ngClass]="panelAccesosAbierto ? 'fa-chevron-down' : 'fa-layer-group'"></i>
-                <span>{{ panelAccesosAbierto ? 'OCULTAR PANEL' : 'ACCESOS' }}</span>
+                <span>{{ panelAccesosAbierto ? 'OCULTAR' : 'ACCESOS' }}</span>
             </button>
         </div>
     }
 
-    <!-- Controles superiores derechos: Durante la animación inicial solo se muestra el botón flotante de perfil -->
-    <div class="fixed z-[1200] top-3 right-3 sm:top-4 sm:right-6 flex items-center gap-2.5 font-['Montserrat'] transition-all duration-300" id="ui-profile">
+    <!-- Control superior derecho: Solo el botón flotante de perfil y su tarjeta desplegable -->
+    <div class="fixed z-[1200] top-3.5 right-4 sm:top-4 sm:right-6 flex items-center font-['Montserrat'] transition-all duration-300" id="ui-profile">
 
-        <!-- Botón de cambio de Tema Claro / Oscuro (oculto durante la animación inicial del logo) -->
-        @if (!enAnimacionInicial()) {
-            <button
-                type="button"
-                (click)="themeService.toggleTheme()"
-                [attr.aria-label]="themeService.isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-                [title]="themeService.isDarkMode() ? 'Activar modo claro' : 'Activar modo oscuro'"
-                class="h-10 sm:h-11 px-3.5 sm:px-4 rounded-full backdrop-blur-xl border transition-all duration-300 flex items-center gap-2 text-[11px] font-extrabold tracking-[1px] shadow-lg hover:scale-105 active:scale-95 cursor-pointer animate-[fadeIn_0.35s]"
-                [ngClass]="themeService.isDarkMode()
-                    ? 'bg-black/70 border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black'
-                    : 'bg-[#f8f5ee]/95 border-[#8c583a]/30 text-[#4a2c18] hover:bg-[#8c583a] hover:text-white'">
-                @if (themeService.isDarkMode()) {
-                    <i class="fas fa-sun text-sm"></i>
-                    <span class="hidden xl:inline">CLARO</span>
-                } @else {
-                    <i class="fas fa-moon text-sm"></i>
-                    <span class="hidden xl:inline">OSCURO</span>
-                }
-            </button>
-        }
-
-        <!-- Dropdown de Perfil (sin opción de Carrito duplicada) -->
+        <!-- Tarjeta Flotante Desplegable (incluye Iniciar Sesión / Perfil, Ruleta, Modo Oscuro y Voz de Moka) -->
         <div id="profile-dropdown"
-             class="absolute top-[calc(100%+10px)] right-0 backdrop-blur-2xl border w-[270px] sm:w-[300px] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.65)] rounded-3xl transition-all duration-300"
+             class="absolute top-[calc(100%+10px)] right-0 backdrop-blur-2xl border w-[265px] sm:w-[290px] p-4 sm:p-5 shadow-[0_18px_45px_rgba(0,0,0,0.65)] rounded-2xl transition-all duration-300"
              [ngClass]="[
-                menuPerfilAbierto ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4 pointer-events-none',
-                themeService.isDarkMode() ? 'bg-[#0c0c0c]/95 border-white/15 text-white' : 'bg-[#f8f5ee]/98 border-[#8c583a]/25 text-[#1a281f]'
+                menuPerfilAbierto ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-3 pointer-events-none',
+                themeService.isDarkMode() ? 'bg-[#0e0f0d]/95 border-white/15 text-white' : 'bg-[#f8f5ee]/98 border-[#8c583a]/25 text-[#1a281f]'
              ]">
 
             @if (isLoggedIn) {
-                <div class="text-xs font-bold tracking-[1px] border-b pb-3.5 mb-3.5"
+                <div class="text-[11px] font-bold tracking-[1px] border-b pb-3 mb-3"
                      [ngClass]="themeService.isDarkMode() ? 'text-white/50 border-white/10' : 'text-[#8c583a] border-[#8c583a]/20'">
-                    <span>HOLA: <strong class="block text-base mt-0.5" [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">{{ userName | uppercase }}</strong></span>
+                    <span>HOLA: <strong class="block text-sm mt-0.5" [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">{{ userName | uppercase }}</strong></span>
                 </div>
 
-                <div class="flex flex-col gap-2.5">
-                    <a routerLink="/cliente/perfil" (click)="menuPerfilAbierto = false" class="no-underline text-xs font-bold tracking-[1px] flex items-center py-1.5 px-2 rounded-xl hover:bg-[#d1b88e]/15 hover:text-[#d1b88e] hover:translate-x-1 transition-all"
+                <div class="flex flex-col gap-1.5">
+                    <a routerLink="/cliente/perfil" (click)="menuPerfilAbierto = false" class="no-underline text-xs font-bold tracking-[1px] flex items-center py-2 px-2.5 rounded-xl hover:bg-[#d1b88e]/15 hover:text-[#d1b88e] transition-all"
                        [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
-                        <i class="fas fa-id-card w-7 text-center opacity-80"></i> MI PERFIL
+                        <i class="fas fa-id-card w-6 text-center opacity-80"></i> MI PERFIL
                     </a>
                 </div>
-                <div class="h-[1px] my-3" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
+                <div class="h-[1px] my-2.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
             } @else {
-                <div class="flex flex-col gap-2.5">
-                    <a routerLink="/login" (click)="menuPerfilAbierto = false" class="text-[#d1b88e] no-underline text-xs font-bold tracking-[1px] flex items-center py-1.5 px-2 rounded-xl hover:bg-[#d1b88e]/15 hover:translate-x-1 transition-all">
-                        <i class="fas fa-sign-in-alt w-7 text-center opacity-80"></i> INICIAR SESIÓN / REGISTRO
+                <div class="flex flex-col gap-1.5">
+                    <a routerLink="/login" (click)="menuPerfilAbierto = false" class="text-[#d1b88e] no-underline text-xs font-bold tracking-[1px] flex items-center py-2 px-2.5 rounded-xl hover:bg-[#d1b88e]/15 transition-all">
+                        <i class="fas fa-sign-in-alt w-6 text-center opacity-80"></i> INICIAR SESIÓN / REGISTRO
                     </a>
                 </div>
-                <div class="h-[1px] my-3" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
+                <div class="h-[1px] my-2.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
             }
 
-            <div class="flex flex-col gap-2.5">
-                <a href="#" (click)="lanzarRuleta($event)" class="no-underline text-xs font-bold tracking-[1px] flex items-center py-1.5 px-2 rounded-xl hover:bg-[#d1b88e]/15 hover:text-[#d1b88e] hover:translate-x-1 transition-all"
+            <div class="flex flex-col gap-1.5">
+                <a href="#" (click)="lanzarRuleta($event)" class="no-underline text-xs font-bold tracking-[1px] flex items-center py-2 px-2.5 rounded-xl hover:bg-[#d1b88e]/15 hover:text-[#d1b88e] transition-all"
                    [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
-                    <i class="fas fa-gift w-7 text-center opacity-80"></i> RULETA SEMANAL
+                    <i class="fas fa-gift w-6 text-center opacity-80"></i> RULETA SEMANAL
                 </a>
             </div>
 
-            <div class="h-[1px] my-3" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
+            <div class="h-[1px] my-2.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
 
-            <div class="flex justify-between items-center font-bold text-xs tracking-[1px] py-1 px-2"
-                 [ngClass]="themeService.isDarkMode() ? 'text-white/80' : 'text-[#374151]'">
-                <span class="flex items-center gap-2"><i class="fas fa-volume-up opacity-75"></i> VOZ DE MOKA</span>
-                <label class="relative inline-block w-[44px] h-[24px] cursor-pointer">
+            <!-- Switch de Modo Oscuro / Claro dentro de la tarjeta flotante -->
+            <div class="flex justify-between items-center font-bold text-xs tracking-[1px] py-1.5 px-2.5 rounded-xl"
+                 [ngClass]="themeService.isDarkMode() ? 'text-white/85' : 'text-[#374151]'">
+                <span class="flex items-center gap-2">
+                    <i class="fas w-4 text-center opacity-80" [ngClass]="themeService.isDarkMode() ? 'fa-moon text-[#d1b88e]' : 'fa-sun text-[#8c583a]'"></i>
+                    MODO OSCURO
+                </span>
+                <label class="relative inline-block w-[42px] h-[22px] cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" [checked]="themeService.isDarkMode()" (change)="themeService.toggleTheme()">
+                    <div class="w-full h-full bg-gray-500/35 rounded-full peer-checked:bg-[#d1b88e] transition-colors duration-300"></div>
+                    <div class="absolute w-3.5 h-3.5 bg-white rounded-full top-[3px] left-1 transition-transform duration-300 peer-checked:translate-x-[19px] shadow-sm"></div>
+                </label>
+            </div>
+
+            <!-- Switch de Voz de Moka -->
+            <div class="flex justify-between items-center font-bold text-xs tracking-[1px] py-1.5 px-2.5 rounded-xl mt-1"
+                 [ngClass]="themeService.isDarkMode() ? 'text-white/85' : 'text-[#374151]'">
+                <span class="flex items-center gap-2">
+                    <i class="fas fa-volume-up w-4 text-center opacity-80"></i>
+                    VOZ DE MOKA
+                </span>
+                <label class="relative inline-block w-[42px] h-[22px] cursor-pointer">
                     <input type="checkbox" id="toggle-moka-sound" class="sr-only peer" [checked]="!mokaSilenciada" (change)="toggleVozMoka($event)">
                     <div class="w-full h-full bg-gray-500/35 rounded-full peer-checked:bg-[#d1b88e] transition-colors duration-300"></div>
-                    <div class="absolute w-4 h-4 bg-white rounded-full top-1 left-1 transition-transform duration-300 peer-checked:translate-x-[20px] shadow-sm"></div>
+                    <div class="absolute w-3.5 h-3.5 bg-white rounded-full top-[3px] left-1 transition-transform duration-300 peer-checked:translate-x-[19px] shadow-sm"></div>
                 </label>
             </div>
 
             @if (isLoggedIn) {
-                <a href="#" (click)="cerrarSesion($event)" class="block text-center bg-[#ff4757]/15 text-[#ff4757] no-underline p-2.5 border border-[#ff4757]/30 rounded-xl text-xs font-extrabold tracking-[1px] transition-all hover:bg-[#ff4757] hover:text-white mt-4 shadow-sm">
+                <a href="#" (click)="cerrarSesion($event)" class="block text-center bg-[#ff4757]/12 text-[#ff4757] no-underline py-2 px-3 border border-[#ff4757]/25 rounded-xl text-[11px] font-bold tracking-[1px] transition-all hover:bg-[#ff4757] hover:text-white mt-3.5">
                     <i class="fas fa-sign-out-alt mr-1.5"></i> CERRAR SESIÓN
                 </a>
             }
         </div>
 
-        <!-- Botón de Perfil -->
+        <!-- Único Botón Flotante Superior Derecho: Perfil -->
         <button
             type="button"
-            class="w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-xl border text-base sm:text-lg rounded-full shadow-lg hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center relative cursor-pointer"
+            class="w-10 h-10 sm:w-11 sm:h-11 backdrop-blur-xl border text-base rounded-full shadow-lg hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center relative cursor-pointer"
             [ngClass]="themeService.isDarkMode()
                 ? 'bg-black/70 border-white/20 text-white'
                 : 'bg-[#f8f5ee]/95 border-[#8c583a]/30 text-[#4a2c18]'"
             (click)="toggleProfileMenu($event)"
-            title="Menú de usuario">
+            title="Menú de usuario y preferencias">
             <i class="fas fa-user-astronaut"></i>
         </button>
     </div>

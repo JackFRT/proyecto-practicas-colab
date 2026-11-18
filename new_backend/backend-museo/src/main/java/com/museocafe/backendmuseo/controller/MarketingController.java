@@ -101,8 +101,14 @@ public class MarketingController {
     @GetMapping("/cupones/listar")
     public ResponseEntity<?> listarCupones() {
         try {
-            List<Cupon> cupones = cuponRepository.findAll();
-            return ResponseEntity.ok(cupones);
+            List<Cupon> cuponesPublicos = cuponRepository.findAll().stream()
+                    .filter(c -> c.getUsuario() == null)
+                    .filter(c -> {
+                        String cod = c.getCodigo() != null ? c.getCodigo().trim().toUpperCase() : "";
+                        return !cod.startsWith("RUL-") && !cod.startsWith("MOKA-");
+                    })
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(cuponesPublicos);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Error al listar cupones"));
         }

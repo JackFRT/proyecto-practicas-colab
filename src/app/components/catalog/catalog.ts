@@ -461,6 +461,16 @@ export class Catalog implements OnInit {
     this.cdr.detectChanges();
   }
 
+  usuarioYaTieneDni(): boolean {
+    const dni = this.usuarioActual?.dni;
+    return !!(dni && String(dni).trim().length > 0);
+  }
+
+  usuarioYaTieneTelefono(): boolean {
+    const tel = this.usuarioActual?.telefono;
+    return !!(tel && String(tel).trim().length > 0);
+  }
+
   aplicarCupon() {
     if (!this.codigoCupon || !this.codigoCupon.trim()) return;
     const codigoLimpio = this.codigoCupon.trim().toUpperCase();

@@ -115,13 +115,11 @@ export class Hero implements AfterViewInit {
     this.cartService.abrirModal();
   }
 
-  irAMiClub(event: Event) {
+  abrirRuletaSemanal(event: Event) {
     event.preventDefault();
     this.menuMovilAbierto = false;
-    if (typeof localStorage !== 'undefined' && localStorage.getItem('usuario_cactus')) {
-      this.router.navigate(['/cliente/perfil']);
-    } else {
-      this.router.navigate(['/login']);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('abrir-ruleta-semanal'));
     }
   }
 }

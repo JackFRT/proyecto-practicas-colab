@@ -23,37 +23,40 @@
     </div>
   </div>
 
-  <!-- Barra de Navegación Superior Centrada con Botón Hamburguesa Responsivo -->
+  <!-- Barra de Navegación Superior Centrada con Botón Hamburguesa Responsivo (Sin cortarse al ocultar) -->
   @if (!cartService.modalAbierto && !mapaActivo) {
+    <!-- Controles Flotantes Izquierdos Fijos (Botón Hamburguesa + Carrito Móvil) -->
+    <div class="fixed top-3.5 left-4 sm:top-4 sm:left-6 z-[920] flex items-center gap-2 transition-opacity duration-500"
+         [ngClass]="(isLoggedIn || maskCompletado) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+      <button type="button"
+              (click)="toggleBarraNav()"
+              class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/75 backdrop-blur-xl border border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center text-base cursor-pointer shadow-lg"
+              [title]="(menuMovilAbierto || barraNavAbierta) ? 'Ocultar o alternar menú' : 'Mostrar menú'">
+        <i class="fas transition-transform duration-300"
+           [ngClass]="menuMovilAbierto ? 'fa-times rotate-90' : 'fa-bars'"></i>
+      </button>
+
+      <button type="button"
+              (click)="abrirCarrito($event)"
+              class="lg:hidden h-10 px-3.5 rounded-full bg-[#d1b88e] hover:bg-white text-[#1a1410] border-none font-black text-xs tracking-[1px] flex items-center gap-1.5 shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer">
+        <i class="fas fa-shopping-bag"></i>
+        <span>({{ cartService.getTotalPlantas() }})</span>
+      </button>
+    </div>
+
     <nav id="main-nav"
-         class="fixed top-0 left-0 w-full px-3 sm:px-6 py-3 flex items-center justify-center z-[900] transition-all duration-500"
+         class="fixed top-0 left-0 w-full min-h-[68px] px-3 sm:px-6 py-3 flex items-center justify-center z-[900] transition-all duration-500"
          [ngClass]="[
-           (isLoggedIn || maskCompletado) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
-           (barraNavAbierta || menuMovilAbierto) ? 'bg-black/70 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)]' : 'bg-transparent pointer-events-none'
+           (isLoggedIn || maskCompletado) ? 'opacity-100' : 'opacity-0 pointer-events-none',
+           (barraNavAbierta || menuMovilAbierto) ? 'bg-black/70 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.45)] pointer-events-auto' : 'bg-transparent pointer-events-none'
          ]">
 
-      <!-- Controles Izquierdos: Botón Hamburguesa (Móvil y Desktop) + Acceso Rápido Carrito Móvil -->
-      <div class="pointer-events-auto absolute left-3 sm:left-6 flex items-center gap-2">
-        <button type="button"
-                (click)="toggleBarraNav()"
-                class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 text-[#d1b88e] hover:bg-[#d1b88e] hover:text-black hover:border-[#d1b88e] hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center text-base cursor-pointer shadow-lg"
-                [title]="menuMovilAbierto || !barraNavAbierta ? 'Alternar menú de navegación' : 'Ocultar o desplegar menú'">
-          <i class="fas transition-transform duration-300"
-             [ngClass]="(menuMovilAbierto) ? 'fa-times rotate-90' : 'fa-bars'"></i>
-        </button>
-
-        <button type="button"
-                (click)="abrirCarrito($event)"
-                class="lg:hidden h-10 px-3.5 rounded-full bg-[#d1b88e] hover:bg-white text-[#1a1410] border-none font-black text-xs tracking-[1px] flex items-center gap-1.5 shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer">
-          <i class="fas fa-shopping-bag"></i>
-          <span>({{ cartService.getTotalPlantas() }})</span>
-        </button>
-      </div>
-
       <!-- Logo Móvil Centrado -->
-      <div class="lg:hidden flex items-center justify-center pointer-events-auto cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-        <img src="/assets/images/museo/logo-cafe.png" class="w-10 h-10 object-cover rounded-full border border-[#d1b88e]/60 shadow-md" alt="Museo"/>
-      </div>
+      @if (barraNavAbierta) {
+        <div class="lg:hidden flex items-center justify-center pointer-events-auto cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+          <img src="/assets/images/museo/logo-cafe.png" class="w-10 h-10 object-cover rounded-full border border-[#d1b88e]/60 shadow-md" alt="Museo"/>
+        </div>
+      }
 
       <!-- Menú Superior Centrado (Desktop) -->
       @if (barraNavAbierta) {
@@ -74,8 +77,11 @@
           <!-- Links Derecha (Desktop) -->
           <div class="flex items-center gap-6 xl:gap-8 text-white/95 font-extrabold text-[0.72rem] tracking-[2px] uppercase drop-shadow-md">
             <button type="button" (click)="toggleMapa()" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 uppercase cursor-pointer bg-transparent border-none text-white/95 font-extrabold text-[0.72rem] tracking-[2px] py-1">Ubicación</button>
-            <a href="/login" (click)="irAMiClub($event)" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 no-underline text-white/95 py-1">Mi Club</a>
-            <button type="button" (click)="abrirCarrito($event)" class="border border-[#d1b88e]/70 hover:border-[#d1b88e] bg-[#d1b88e]/15 hover:bg-[#d1b88e] text-[#d1b88e] hover:text-black rounded-full px-4 py-2 transition-all duration-300 flex items-center gap-2 cursor-pointer font-extrabold text-[0.72rem] tracking-[1.5px] shadow-md hover:scale-105 active:scale-95">
+            <button type="button" (click)="abrirRuletaSemanal($event)" class="hover:text-[#d1b88e] hover:-translate-y-0.5 transition-all duration-300 uppercase cursor-pointer bg-transparent border-none text-white/95 font-extrabold text-[0.72rem] tracking-[2px] py-1 flex items-center gap-1.5">
+              <i class="fas fa-dharmachakra text-[#d1b88e]"></i>
+              <span>Ruleta Semanal</span>
+            </button>
+            <button type="button" (click)="abrirCarrito($event)" class="border border-[#d1b88e]/70 hover:border-[#d1b88e] bg-[#d1b88e]/15 hover:bg-[#d1b88e] text-[#d1b88e] hover:text-black rounded-full px-4 py-1.5 transition-all duration-300 flex items-center gap-2 cursor-pointer font-extrabold text-[0.72rem] tracking-[1.5px] shadow-md hover:scale-105 active:scale-95">
               <i class="fas fa-shopping-bag"></i>
               <span>Carrito ({{ cartService.getTotalPlantas() }})</span>
             </button>
@@ -126,12 +132,12 @@
               <span>Ubicación</span>
             </button>
 
-            <a href="/login" (click)="irAMiClub($event)"
-               class="no-underline flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all hover:bg-[#d1b88e]/20 hover:text-[#d1b88e]"
-               [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
-              <i class="fas fa-crown w-5 text-center text-[#d1b88e]"></i>
-              <span>Mi Club</span>
-            </a>
+            <button type="button" (click)="abrirRuletaSemanal($event)"
+                    class="w-full text-left bg-transparent border-none flex items-center gap-3 px-3.5 py-3 rounded-2xl font-extrabold text-xs tracking-[1.5px] uppercase cursor-pointer transition-all hover:bg-[#d1b88e]/20 hover:text-[#d1b88e]"
+                    [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
+              <i class="fas fa-dharmachakra w-5 text-center text-[#d1b88e]"></i>
+              <span>Ruleta Semanal</span>
+            </button>
 
             <div class="h-[1px] my-1.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
 
@@ -195,14 +201,25 @@
         &times;
       </button>
 
-      <h3 class="text-[#d1b88e] font-black text-lg mb-4 m-0 uppercase tracking-[1px] text-center">NUESTRA UBICACIÓN</h3>
+      <h3 class="text-[#d1b88e] font-black text-lg mb-3 m-0 uppercase tracking-[1px] text-center">NUESTRA UBICACIÓN OFICIAL</h3>
 
-      <a href="https://www.google.com/maps/place/Cactus+Museo+Ayacucho/@-13.1564479,-74.2018571,20.75z" target="_blank" class="block relative w-full h-[220px] overflow-hidden rounded-xl border border-white/10">
+      <a href="https://maps.app.goo.gl/JSJCbbUuHKqSc34X7" target="_blank" rel="noopener noreferrer" class="block relative w-full h-[210px] overflow-hidden rounded-xl border border-white/10">
         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31061.04285149372!2d-74.23862214482729!3d-13.15414002766023!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91127d75df0709b1%3A0xcb065ec016b8d41a!2sAyacucho!5e0!3m2!1ses!2spe!4v1713835000000!5m2!1ses!2spe" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
       </a>
 
-      <div class="text-center mt-4 text-xs font-bold tracking-[2px] uppercase opacity-80">
+      <div class="text-center mt-3.5 text-xs font-bold tracking-[1.5px] uppercase opacity-85">
         Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho
+      </div>
+
+      <div class="mt-3 p-3 rounded-xl bg-[#d1b88e]/15 border border-[#d1b88e]/40 text-center">
+        <p class="m-0 text-[11px] font-bold leading-snug opacity-90">
+          <i class="fas fa-store text-[#d1b88e] mr-1"></i>
+          Todas las compras y recojos web son exclusivos para este local hasta que se habilite soporte para demás sedes.
+        </p>
+        <a href="https://maps.app.goo.gl/JSJCbbUuHKqSc34X7" target="_blank" rel="noopener noreferrer"
+           class="mt-2 inline-flex items-center gap-1.5 bg-[#d1b88e] text-black hover:bg-white font-black text-[11px] px-4 py-1.5 rounded-full no-underline transition-all">
+          <i class="fas fa-external-link-alt"></i> Abrir en Google Maps
+        </a>
       </div>
     </div>
   </div>

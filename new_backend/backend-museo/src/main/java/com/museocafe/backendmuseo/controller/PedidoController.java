@@ -81,30 +81,74 @@ public class PedidoController {
         return ResponseEntity.ok(ticket);
     }
 
+    private String censurarNumero(String valor) {
+        if (valor == null) return "";
+        String limpio = valor.replaceAll("(?i)cel/wsp:?", "").trim();
+        if (limpio.isEmpty() || "sin notas".equalsIgnoreCase(limpio) || "no especificado".equalsIgnoreCase(limpio)) {
+            return "";
+        }
+        if (limpio.length() <= 3) {
+            return "••••" + limpio;
+        }
+        return "••••••" + limpio.substring(limpio.length() - 3);
+    }
+
+    private String censurarCorreo(String email) {
+        if (email == null || !email.contains("@")) return "";
+        String[] partes = email.trim().split("@", 2);
+        String user = partes[0];
+        String dom = partes[1];
+        String pref = user.length() <= 2 ? user.substring(0, 1) : user.substring(0, 2);
+        return pref + "••••@" + dom;
+    }
+
+    private boolean usuarioYaUsoCupon(Long idUsuario, String codigoCupon) {
+        if (idUsuario == null || codigoCupon == null || codigoCupon.trim().isEmpty()) {
+            return false;
+        }
+        String codLimpio = codigoCupon.trim();
+        List<Pedido> pedidosUsuario = pedidoRepository.findByUsuarioIdUsuarioOrderByFechaPedidoDesc(idUsuario);
+        return pedidosUsuario.stream()
+                .filter(ped -> ped.getEstado() == null || !"cancelado".equalsIgnoreCase(ped.getEstado()))
+                .anyMatch(ped -> ped.getCodigoCupon() != null && ped.getCodigoCupon().trim().equalsIgnoreCase(codLimpio));
+    }
+
     @GetMapping(value = {"/ticket/{idOrCodigo}", "/comprobante/{idOrCodigo}"}, produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
     public ResponseEntity<String> generarComprobanteHtml(@PathVariable String idOrCodigo) {
         Optional<Pedido> pedidoOpt = buscarPedidoPorIdOCodigo(idOrCodigo);
         if (pedidoOpt.isEmpty()) {
-            return ResponseEntity.status(404).body("<html><body style='font-family:sans-serif;text-align:center;padding:40px;'><h2>Comprobante no encontrado</h2></body></html>");
+            return ResponseEntity.status(404).body("<html><body style='font-family:sans-serif;text-align:center;padding:40px;'><h2>Ticket no encontrado</h2></body></html>");
         }
 
         Pedido p = pedidoOpt.get();
         List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdPedido(p.getIdPedido());
 
-        String tipoDoc = "factura".equalsIgnoreCase(p.getTipoComprobante()) ? "FACTURA ELECTRÓNICA" : "BOLETA DE VENTA ELECTRÓNICA";
-        String labelDoc = "factura".equalsIgnoreCase(p.getTipoComprobante()) ? "RUC" : "DNI";
-        String numOrden = String.format("%06d", p.getIdPedido());
+        String numOrden = String.valueOf(p.getIdPedido());
         String fecha = p.getFechaPedido() != null
                 ? p.getFechaPedido().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                 : LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        String clienteNombre = p.getUsuario() != null ? p.getUsuario().getNombre() : "Cliente General";
-        String clienteEmail = p.getUsuario() != null ? p.getUsuario().getEmail() : "-";
-        String docCliente = (p.getDniOpcional() != null && !p.getDniOpcional().isBlank())
-                ? p.getDniOpcional()
-                : (p.getUsuario() != null && p.getUsuario().getDni() != null ? p.getUsuario().getDni() : "No especificado");
-        String cajero = p.getEmpleadoAtencion() != null ? p.getEmpleadoAtencion().getNombre() : "Validado por Sistema";
+        String clienteNombre = p.getUsuario() != null ? p.getUsuario().getNombre() : "Cliente";
 
-        StringBuilder filasHtml = new StringBuilder();
+        String rawDni = p.getDniOpcionalSnake();
+        String dniCensurado = censurarNumero(rawDni);
+
+        String rawTel = p.getTelefonoClienteSnake();
+        String telCensurado = censurarNumero(rawTel);
+
+        StringBuilder datosClienteHtml = new StringBuilder();
+        datosClienteHtml.append("<div class='row'><span>Cliente:</span><strong>").append(clienteNombre).append("</strong></div>");
+        if (!dniCensurado.isEmpty()) {
+            datosClienteHtml.append("<div class='row'><span>DNI (Protegido):</span><strong>").append(dniCensurado).append("</strong></div>");
+        }
+        if (!telCensurado.isEmpty()) {
+            datosClienteHtml.append("<div class='row'><span>Teléfono (Protegido):</span><strong>").append(telCensurado).append("</strong></div>");
+        }
+        datosClienteHtml.append("<div class='row'><span>Fecha:</span><strong>").append(fecha).append("</strong></div>");
+        datosClienteHtml.append("<div class='row'><span>Estado:</span><strong class='badge'>")
+                .append(p.getEstado() != null ? p.getEstado().replace("_", " ").toUpperCase() : "PENDIENTE")
+                .append("</strong></div>");
+
+        StringBuilder itemsHtml = new StringBuilder();
         BigDecimal subtotalBruto = BigDecimal.ZERO;
 
         for (DetallePedido d : detalles) {
@@ -114,16 +158,14 @@ public class PedidoController {
             subtotalBruto = subtotalBruto.add(sub);
 
             String nombreProd = d.getProducto() != null ? d.getProducto().getNombre() : "Producto";
-            String estilo = (d.getEstiloSeleccionado() != null && !"Estándar".equalsIgnoreCase(d.getEstiloSeleccionado()))
-                    ? " <small style='color:#666;'>(" + d.getEstiloSeleccionado() + ")</small>"
+            String estilo = (d.getEstiloSeleccionado() != null && !"Estándar".equalsIgnoreCase(d.getEstiloSeleccionado()) && !"Principal".equalsIgnoreCase(d.getEstiloSeleccionado()))
+                    ? " <span style='color:#7c6f64;font-size:12px;'>(" + d.getEstiloSeleccionado() + ")</span>"
                     : "";
 
-            filasHtml.append("<tr>")
-                    .append("<td>").append(cant).append("</td>")
-                    .append("<td>").append(nombreProd).append(estilo).append("</td>")
-                    .append("<td style='text-align:right;'>S/ ").append(unit.setScale(2, RoundingMode.HALF_UP)).append("</td>")
-                    .append("<td style='text-align:right;'>S/ ").append(sub).append("</td>")
-                    .append("</tr>");
+            itemsHtml.append("<div class='item-row'>")
+                    .append("<div class='item-name'><strong>").append(cant).append("x</strong> ").append(nombreProd).append(estilo).append("</div>")
+                    .append("<div class='item-price'>S/ ").append(sub).append("</div>")
+                    .append("</div>");
         }
 
         BigDecimal totalPagado = p.getTotalPagado() != null ? p.getTotalPagado().setScale(2, RoundingMode.HALF_UP) : subtotalBruto;
@@ -132,8 +174,8 @@ public class PedidoController {
         StringBuilder descuentoHtml = new StringBuilder();
         if (ahorro.compareTo(new BigDecimal("0.05")) > 0) {
             String cuponLabel = (p.getCodigoCupon() != null && !p.getCodigoCupon().isBlank()) ? " (" + p.getCodigoCupon() + ")" : "";
-            descuentoHtml.append("<p style='margin:5px 0;font-size:13px;color:#555;'>SUBTOTAL: S/ ").append(subtotalBruto.setScale(2, RoundingMode.HALF_UP)).append("</p>");
-            descuentoHtml.append("<p style='margin:5px 0;font-size:13px;color:#27ae60;font-weight:bold;'>DESCUENTO").append(cuponLabel).append(": - S/ ").append(ahorro.setScale(2, RoundingMode.HALF_UP)).append("</p>");
+            descuentoHtml.append("<div class='row sub'><span>Subtotal:</span><span>S/ ").append(subtotalBruto.setScale(2, RoundingMode.HALF_UP)).append("</span></div>");
+            descuentoHtml.append("<div class='row discount'><span>Descuento").append(cuponLabel).append(":</span><span>- S/ ").append(ahorro.setScale(2, RoundingMode.HALF_UP)).append("</span></div>");
         }
 
         String html = """
@@ -141,68 +183,75 @@ public class PedidoController {
                 <html lang="es">
                 <head>
                     <meta charset="UTF-8">
-                    <title>Comprobante #%s - Café Ayacuchano & Cactus Museum</title>
+                    <title>Ticket de Compra #%s - Café Ayacuchano</title>
                     <style>
-                        body { font-family: 'Courier New', Courier, monospace; background: #f4f4f4; padding: 20px; display: flex; justify-content: center; }
-                        .ticket { background: #fff; width: 380px; padding: 25px; border-radius: 6px; box-shadow: 0 5px 20px rgba(0,0,0,0.12); border-top: 6px solid #2e7d32; }
-                        .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 15px; margin-bottom: 15px; }
-                        .header h2 { margin: 0; color: #1b5e20; font-size: 20px; }
-                        .header p { margin: 4px 0; font-size: 12px; color: #555; }
-                        .tipo-doc { font-weight: bold; font-size: 15px; background: #eee; padding: 6px; margin-top: 10px; border-radius: 4px; }
-                        .info { font-size: 12px; line-height: 1.6; margin-bottom: 15px; border-bottom: 2px dashed #ccc; padding-bottom: 15px; }
-                        .table { width: 100%%; font-size: 12px; border-collapse: collapse; margin-bottom: 15px; }
-                        .table th { border-bottom: 1px solid #000; padding-bottom: 5px; text-align: left; }
-                        .table td { padding: 6px 0; border-bottom: 1px dotted #eee; }
-                        .totales { border-top: 2px solid #000; padding-top: 10px; text-align: right; }
-                        .totales .final { font-size: 18px; font-weight: bold; color: #1b5e20; margin: 6px 0; }
-                        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
-                        .btn-print { display: block; width: 100%%; background: #2e7d32; color: #fff; text-align: center; padding: 12px; border: none; border-radius: 5px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 15px; }
+                        * { box-sizing: border-box; }
+                        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #efeae1; padding: 24px 14px; display: flex; justify-content: center; margin: 0; color: #2b2118; }
+                        .wrapper { width: 100%%; max-width: 370px; }
+                        .btn-print { display: block; width: 100%%; background: #2d4234; color: #fff; text-align: center; padding: 11px 16px; border: none; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+                        .btn-print:hover { background: #1e2d23; }
+                        .card { background: #fffdf9; padding: 24px 22px; border-radius: 20px; box-shadow: 0 12px 32px rgba(43,33,24,0.1); border: 1px solid #e2d9c8; }
+                        .brand { text-align: center; padding-bottom: 16px; border-bottom: 1px dashed #d5c8b4; margin-bottom: 14px; }
+                        .brand-tag { display: inline-block; background: #f2eadc; color: #6e472b; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 999px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+                        .brand h1 { margin: 0; font-size: 19px; font-weight: 900; color: #1a281f; letter-spacing: -0.3px; }
+                        .brand p { margin: 4px 0 0 0; font-size: 12px; color: #6e5a49; }
+                        .order-number { text-align: center; background: #2d4234; color: #fff; padding: 8px 12px; border-radius: 12px; font-weight: 800; font-size: 14px; letter-spacing: 1px; margin-bottom: 14px; }
+                        .section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #8c583a; margin-bottom: 8px; }
+                        .info-box { background: #f8f4ec; padding: 12px 14px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; }
+                        .row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; gap: 8px; }
+                        .row span { color: #6e5a49; }
+                        .badge { background: #e3eed8; color: #2d4234; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
+                        .items-box { border-top: 1px dashed #d5c8b4; border-bottom: 1px dashed #d5c8b4; padding: 12px 0; margin-bottom: 14px; }
+                        .item-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; font-size: 13px; gap: 10px; }
+                        .item-name { color: #2b2118; line-height: 1.35; }
+                        .item-price { font-weight: 700; color: #1a281f; white-space: nowrap; }
+                        .totals-box { font-size: 13px; margin-bottom: 16px; }
+                        .row.sub { color: #6e5a49; }
+                        .row.discount { color: #27ae60; font-weight: 700; }
+                        .total-final { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 900; color: #1a281f; padding-top: 8px; margin-top: 6px; border-top: 2px solid #2d4234; }
+                        .footer { text-align: center; font-size: 11.5px; color: #6e5a49; line-height: 1.5; background: #f8f4ec; padding: 12px; border-radius: 12px; }
+                        .footer a { color: #2d4234; font-weight: 700; }
                         @media print {
                             body { background: #fff; padding: 0; }
-                            .ticket { box-shadow: none; width: 100%%; border: none; }
                             .btn-print { display: none; }
+                            .card { box-shadow: none; border: 1px solid #ccc; }
                         }
                     </style>
                 </head>
                 <body>
-                    <div>
-                        <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
-                        <div class="ticket">
-                            <div class="header">
-                                <h2>☕🌵 CAFÉ AYACUCHANO & CACTUS MUSEUM</h2>
-                                <p>Jr. Asamblea 245 - Ayacucho, Perú</p>
-                                <p>RUC: 20601234567</p>
-                                <div class="tipo-doc">%s<br>N° B001-%s</div>
+                    <div class="wrapper">
+                        <button class="btn-print" onclick="window.print()">Imprimir / Guardar Ticket Simple</button>
+                        <div class="card">
+                            <div class="brand">
+                                <span class="brand-tag">Ticket Simple de Compra</span>
+                                <h1>CAFÉ AYACUCHANO &amp; CACTUS MUSEUM</h1>
+                                <p>Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho</p>
                             </div>
-                            <div class="info">
-                                <strong>FECHA DE EMISIÓN:</strong> %s<br>
-                                <strong>CLIENTE:</strong> %s<br>
-                                <strong>%s:</strong> %s<br>
-                                <strong>CORREO:</strong> %s<br>
-                                <strong>ATENDIDO POR:</strong> %s<br>
-                                <strong>ESTADO:</strong> %s
-                            </div>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>CANT</th>
-                                        <th>DESCRIPCIÓN</th>
-                                        <th style="text-align: right;">P.UNIT</th>
-                                        <th style="text-align: right;">TOTAL</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    %s
-                                </tbody>
-                            </table>
-                            <div class="totales">
+
+                            <div class="order-number">PEDIDO #%s</div>
+
+                            <div class="section-label">Datos del Pedido</div>
+                            <div class="info-box">
                                 %s
-                                <p class="final">TOTAL PAGADO: S/ %s</p>
-                                <p style="font-size:10px; color:#888; margin:4px 0;">(Incluye IGV 18%%)</p>
                             </div>
+
+                            <div class="section-label">Detalle de Productos</div>
+                            <div class="items-box">
+                                %s
+                            </div>
+
+                            <div class="totals-box">
+                                %s
+                                <div class="total-final">
+                                    <span>TOTAL PAGADO</span>
+                                    <span>S/ %s</span>
+                                </div>
+                            </div>
+
                             <div class="footer">
-                                <p>¡Gracias por tu compra!</p>
-                                <p>Conserva este comprobante para el recojo en tienda.</p>
+                                <strong>¡Gracias por tu preferencia!</strong><br>
+                                Presenta este ticket simple para recoger tu pedido en nuestro local principal
+                                (<a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank">Ver ubicación en Google Maps</a>).
                             </div>
                         </div>
                     </div>
@@ -210,16 +259,9 @@ public class PedidoController {
                 </html>
                 """.formatted(
                 numOrden,
-                tipoDoc,
                 numOrden,
-                fecha,
-                clienteNombre,
-                labelDoc,
-                docCliente,
-                clienteEmail,
-                cajero,
-                p.getEstado() != null ? p.getEstado().toUpperCase() : "PENDIENTE",
-                filasHtml.toString(),
+                datosClienteHtml.toString(),
+                itemsHtml.toString(),
                 descuentoHtml.toString(),
                 totalPagado.toString()
         );
@@ -253,12 +295,25 @@ public class PedidoController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Este cupón ha expirado."));
         }
 
-        boolean solicitanteEsAdmin = idUsuario != null && usuarioRepository.findById(idUsuario)
-                .map(u -> "admin".equalsIgnoreCase(u.getRol()))
-                .orElse(false);
+        String codUpper = cupon.getCodigo() != null ? cupon.getCodigo().trim().toUpperCase() : "";
+        boolean esCuponPersonalORuleta = cupon.getUsuario() != null || codUpper.startsWith("RUL-") || codUpper.startsWith("MOKA-");
 
-        if (!solicitanteEsAdmin && cupon.getUsuario() != null && idUsuario != null && !cupon.getUsuario().getIdUsuario().equals(idUsuario)) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Este cupón pertenece a otro usuario."));
+        if (esCuponPersonalORuleta) {
+            // Los tickets ganados por la ruleta o premios personales están ligados estrictamente al ID del usuario que los ganó
+            if (cupon.getUsuario() == null || idUsuario == null || !cupon.getUsuario().getIdUsuario().equals(idUsuario)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "mensaje", "Este cupón de ruleta es personal y solo puede ser utilizado por la cuenta que lo ganó."
+                ));
+            }
+        } else {
+            // Cupón público: cualquier usuario puede usarlo, pero máximo 1 sola vez por usuario
+            if (idUsuario != null && usuarioYaUsoCupon(idUsuario, cupon.getCodigo())) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "mensaje", "Ya utilizaste este cupón promocional anteriormente. Solo se permite un uso por usuario."
+                ));
+            }
         }
 
         return ResponseEntity.ok(Map.of(
@@ -325,11 +380,28 @@ public class PedidoController {
             String nombreArchivo = guardarComprobante(archivoComprobante, idUsuario);
 
             if (codigoCupon != null && !codigoCupon.trim().isEmpty()) {
-                cuponRepository.findByCodigoIgnoreCase(codigoCupon.trim()).ifPresent(cupon -> {
+                Optional<Cupon> cupOpt = cuponRepository.findByCodigoIgnoreCase(codigoCupon.trim());
+                if (cupOpt.isPresent()) {
+                    Cupon cupon = cupOpt.get();
+                    String codUpper = cupon.getCodigo() != null ? cupon.getCodigo().trim().toUpperCase() : "";
+                    boolean esPersonalORuleta = cupon.getUsuario() != null || codUpper.startsWith("RUL-") || codUpper.startsWith("MOKA-");
+                    if (esPersonalORuleta) {
+                        if (cupon.getUsuario() == null || !cupon.getUsuario().getIdUsuario().equals(idUsuario)) {
+                            return ResponseEntity.badRequest().body(Map.of(
+                                    "success", false,
+                                    "mensaje", "El cupón de ruleta solo puede ser usado por la cuenta que lo ganó."
+                            ));
+                        }
+                    } else if (usuarioYaUsoCupon(idUsuario, cupon.getCodigo())) {
+                        return ResponseEntity.badRequest().body(Map.of(
+                                "success", false,
+                                "mensaje", "Ya utilizaste este cupón promocional anteriormente. Solo se permite un uso por usuario."
+                        ));
+                    }
                     int usos = cupon.getUsosActuales() != null ? cupon.getUsosActuales() : 0;
                     cupon.setUsosActuales(usos + 1);
                     cuponRepository.save(cupon);
-                });
+                }
             }
 
             Pedido nuevoPedido = new Pedido();

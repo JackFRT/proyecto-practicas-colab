@@ -27,14 +27,25 @@ export class AdminPanel implements OnInit {
   usuarios: any[] = [];
   ventas: any[] = [];
   ingresosTotales: number = 0;
+  totalPedidos: number = 0;
+  totalProductos: number = 0;
+  resumenEstados: { pendiente: number; esperando_recojo: number; recogido: number; cancelado: number } = {
+    pendiente: 0,
+    esperando_recojo: 0,
+    recogido: 0,
+    cancelado: 0
+  };
 
   usuariosFiltrados: any[] = [];
   terminoBusquedaUsuario: string = '';
+  filtroRolUsuario: string = 'todos';
 
   ventasFiltradas: any[] = [];
   filtroTiempoVentas: string = 'todos';
+  terminoBusquedaVenta: string = '';
   statsEmpleados: any[] = [];
   statsProductos: any[] = [];
+  distribucionNiveles: { etiqueta: string; cantidad: number; porcentaje: number; color: string }[] = [];
 
   modalSeguridadAbierto: boolean = false;
   passwordConfirmacion: string = '';
@@ -67,8 +78,22 @@ export class AdminPanel implements OnInit {
         if (res.success) {
           this.usuarios = res.usuarios || [];
           this.ventas = res.ventas || [];
-          this.ingresosTotales = res.ingresos_totales || 0;
+          this.ingresosTotales = parseFloat(res.ingresos_totales) || 0;
+          this.totalPedidos = res.total_pedidos ?? this.ventas.length;
+          this.totalProductos = res.total_productos ?? 0;
 
+          if (res.resumen_estados) {
+            this.resumenEstados = {
+              pendiente: Number(res.resumen_estados.pendiente) || 0,
+              esperando_recojo: Number(res.resumen_estados.esperando_recojo) || 0,
+              recogido: Number(res.resumen_estados.recogido) || this.ventas.length,
+              cancelado: Number(res.resumen_estados.cancelado) || 0
+            };
+          } else {
+            this.resumenEstados.recogido = this.ventas.length;
+          }
+
+          this.calcularDistribucionNiveles();
           this.filtrarUsuarios();
           this.aplicarFiltrosVentas();
         }
@@ -76,7 +101,7 @@ export class AdminPanel implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.mostrarToast('Error de conexión.');
+        this.mostrarToast('Error de conexión al cargar el panel.');
         this.cargando = false;
         this.cdr.detectChanges();
       }
@@ -87,23 +112,100 @@ export class AdminPanel implements OnInit {
     this.tabActivo = tab;
   }
 
+  get ticketPromedio(): number {
+    if (!this.ventas || this.ventas.length === 0) return 0;
+    return this.ingresosTotales / this.ventas.length;
+  }
+
+  get ticketPromedioFiltrado(): number {
+    if (!this.ventasFiltradas || this.ventasFiltradas.length === 0) return 0;
+    return this.getTotalVentasFiltradas() / this.ventasFiltradas.length;
+  }
+
+  get totalVisitasPresenciales(): number {
+    return this.usuarios.reduce((acc, u) => acc + (Number(u.visitas_presenciales ?? u.visitasPresenciales) || 0), 0);
+  }
+
+  get totalClientes(): number {
+    return this.usuarios.filter(u => (u.rol || 'cliente') === 'cliente').length;
+  }
+
+  get totalEmpleados(): number {
+    return this.usuarios.filter(u => u.rol === 'empleado').length;
+  }
+
+  get totalAdmins(): number {
+    return this.usuarios.filter(u => u.rol === 'admin').length;
+  }
+
+  get tasaEntrega(): number {
+    const total = this.totalPedidos || this.ventas.length;
+    if (total === 0) return 100;
+    return Math.round((this.resumenEstados.recogido / total) * 100);
+  }
+
+  getPorcentajeEstado(cantidad: number): number {
+    const total = (this.resumenEstados.pendiente + this.resumenEstados.esperando_recojo + this.resumenEstados.recogido + this.resumenEstados.cancelado) || 1;
+    return Math.round((cantidad / total) * 100);
+  }
+
+  calcularDistribucionNiveles() {
+    let n0 = 0, n1 = 0, n2 = 0, n3Plus = 0;
+    this.usuarios.forEach(u => {
+      const v = Number(u.visitas_presenciales ?? u.visitasPresenciales) || 0;
+      if (v >= 16) n3Plus++;
+      else if (v >= 8) n2++;
+      else if (v >= 3) n1++;
+      else n0++;
+    });
+    const total = Math.max(this.usuarios.length, 1);
+    this.distribucionNiveles = [
+      { etiqueta: 'Nivel 0 (Nuevos: 0-2 visitas)', cantidad: n0, porcentaje: Math.round((n0 / total) * 100), color: '#94a3b8' },
+      { etiqueta: 'Nivel 1 (Socios: 3-7 visitas)', cantidad: n1, porcentaje: Math.round((n1 / total) * 100), color: '#A3B18A' },
+      { etiqueta: 'Nivel 2 (Aficionados: 8-15 visitas)', cantidad: n2, porcentaje: Math.round((n2 / total) * 100), color: '#FFE066' },
+      { etiqueta: 'Nivel 3 al 5 (Expertos: 16+ visitas)', cantidad: n3Plus, porcentaje: Math.round((n3Plus / total) * 100), color: '#D65A31' }
+    ];
+  }
+
+  obtenerNivelUsuario(visitas: number): number {
+    const v = Number(visitas) || 0;
+    if (v >= 51) return 5;
+    if (v >= 31) return 4;
+    if (v >= 16) return 3;
+    if (v >= 8) return 2;
+    if (v >= 3) return 1;
+    return 0;
+  }
+
   ofuscarEmail(email: string): string {
-    if (!email || !email.includes('@')) return email;
+    if (!email || !email.includes('@')) return '•••@•••';
     const [nombre, dominio] = email.split('@');
-    if (nombre.length <= 2) return `${nombre}***@${dominio}`;
-    return `${nombre.substring(0, 2)}***@${dominio}`;
+    const prefijo = nombre.length <= 2 ? nombre.substring(0, 1) : nombre.substring(0, 2);
+    return `${prefijo}••••@${dominio}`;
+  }
+
+  ofuscarDni(dni: string): string {
+    if (!dni || dni.trim().length === 0) return 'Opcional';
+    const limpio = dni.trim();
+    if (limpio.length <= 2) return `••••••${limpio}`;
+    return `••••••${limpio.substring(limpio.length - 2)}`;
   }
 
   filtrarUsuarios() {
     const termino = this.terminoBusquedaUsuario.toLowerCase().trim();
-    if (!termino) {
-      this.usuariosFiltrados = this.usuarios;
-      return;
-    }
-    this.usuariosFiltrados = this.usuarios.filter(u =>
-      (u.nombre || '').toLowerCase().includes(termino) ||
-      (u.email || '').toLowerCase().includes(termino)
-    );
+    this.usuariosFiltrados = this.usuarios.filter(u => {
+      const matchRol = this.filtroRolUsuario === 'todos' || (u.rol || 'cliente') === this.filtroRolUsuario;
+      const matchTexto = !termino ||
+        (u.nombre || '').toLowerCase().includes(termino) ||
+        (u.email || '').toLowerCase().includes(termino) ||
+        (u.dni || '').toLowerCase().includes(termino);
+      return matchRol && matchTexto;
+    });
+  }
+
+  cambiarFiltroRol(rol: string) {
+    this.filtroRolUsuario = rol;
+    this.filtrarUsuarios();
   }
 
   ejecutarAccionSegura(accion: string, idUsuario: number, extraData: any = {}) {
@@ -166,6 +268,11 @@ export class AdminPanel implements OnInit {
     this.modalImagenAbierto = true;
   }
 
+  abrirTicketOrden(idOrden: number) {
+    if (!idOrden) return;
+    window.open(`http://localhost:8080/api/pedidos/comprobante/${idOrden}`, '_blank');
+  }
+
   cerrarModalImagen() {
     this.modalImagenAbierto = false;
     this.imagenSeleccionada = '';
@@ -182,33 +289,44 @@ export class AdminPanel implements OnInit {
 
   aplicarFiltrosVentas() {
     const ahora = new Date();
+    const q = this.terminoBusquedaVenta.toLowerCase().trim();
 
     this.ventasFiltradas = this.ventas.filter(v => {
-      if (this.filtroTiempoVentas === 'todos') return true;
+      let matchFecha = true;
+      if (this.filtroTiempoVentas !== 'todos') {
+        const fechaStr = v.fechaPedido || v.fecha_reserva;
+        if (fechaStr) {
+          const fechaVenta = new Date(fechaStr);
+          const diffTime = Math.abs(ahora.getTime() - fechaVenta.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          if (this.filtroTiempoVentas === 'dia') matchFecha = diffDays <= 1;
+          else if (this.filtroTiempoVentas === 'semana') matchFecha = diffDays <= 7;
+          else if (this.filtroTiempoVentas === 'mes') matchFecha = diffDays <= 30;
+        }
+      }
 
-      const fechaStr = v.fechaPedido || v.fecha_reserva;
-      if (!fechaStr) return true;
-      const fechaVenta = new Date(fechaStr);
-      const diffTime = Math.abs(ahora.getTime() - fechaVenta.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      let matchBusqueda = true;
+      if (q) {
+        const idStr = String(v.id_reserva || v.idPedido || '');
+        const clienteStr = (v.cliente || '').toLowerCase();
+        const empStr = (v.empleado_nombre || v.empleadoAtencion?.nombre || 'web').toLowerCase();
+        matchBusqueda = idStr.includes(q) || clienteStr.includes(q) || empStr.includes(q);
+      }
 
-      if (this.filtroTiempoVentas === 'dia') return diffDays <= 1;
-      if (this.filtroTiempoVentas === 'semana') return diffDays <= 7;
-      if (this.filtroTiempoVentas === 'mes') return diffDays <= 30;
-      return true;
+      return matchFecha && matchBusqueda;
     });
 
     this.calcularMetricasVentas();
   }
 
   calcularMetricasVentas() {
-    const mapEmpleados = new Map<string, { total_ventas: number, ingresos: number }>();
+    const mapEmpleados = new Map<string, { total_ventas: number; ingresos: number }>();
     const mapProductos = new Map<string, number>();
 
     this.ventasFiltradas.forEach(v => {
       const emp = (v.empleadoAtencion && v.empleadoAtencion.nombre)
         ? v.empleadoAtencion.nombre
-        : (v.empleado_nombre || 'Sistema Web');
+        : (v.empleado_nombre || 'Atención Web');
       const actual = mapEmpleados.get(emp) || { total_ventas: 0, ingresos: 0 };
       actual.total_ventas += 1;
       actual.ingresos += parseFloat(v.totalPagado ?? v.total_pagado ?? 0);
@@ -223,14 +341,25 @@ export class AdminPanel implements OnInit {
       }
     });
 
+    const maxIngresosEmp = Math.max(...Array.from(mapEmpleados.values()).map(e => e.ingresos), 1);
     this.statsEmpleados = Array.from(mapEmpleados.entries())
-      .map(([nombre, stats]) => ({ nombre, ...stats }))
+      .map(([nombre, stats]) => ({
+        nombre,
+        ...stats,
+        porcentaje: Math.round((stats.ingresos / maxIngresosEmp) * 100)
+      }))
       .sort((a, b) => b.ingresos - a.ingresos);
 
-    this.statsProductos = Array.from(mapProductos.entries())
+    const topProds = Array.from(mapProductos.entries())
       .map(([nombre, cantidad]) => ({ nombre, cantidad }))
       .sort((a, b) => b.cantidad - a.cantidad)
-      .slice(0, 5);
+      .slice(0, 6);
+
+    const maxCantProd = Math.max(...topProds.map(p => p.cantidad), 1);
+    this.statsProductos = topProds.map(p => ({
+      ...p,
+      porcentaje: Math.round((p.cantidad / maxCantProd) * 100)
+    }));
   }
 
   getTotalVentasFiltradas(): number {
@@ -274,7 +403,6 @@ export class AdminPanel implements OnInit {
       const fecha = this.formatearFechaReporte(v.fecha_reserva || v.fechaPedido);
       const cliente = v.cliente || 'Cliente';
       const empleado = v.empleado_nombre || v.empleadoAtencion?.nombre || 'Web';
-      const tipoComp = (v.tipo_comprobante || v.tipoComprobante || 'boleta').toUpperCase();
       const detalle = this.obtenerResumenProductosVenta(v);
       const monto = (parseFloat(v.total_pagado ?? v.totalPagado ?? 0) || 0).toFixed(2);
 
@@ -284,7 +412,7 @@ export class AdminPanel implements OnInit {
           <td>${fecha}</td>
           <td>${cliente}</td>
           <td>${empleado}</td>
-          <td style="text-align:center;">${tipoComp}</td>
+          <td style="text-align:center;">TICKET SIMPLE</td>
           <td>${detalle}</td>
           <td style="text-align:right; font-weight:bold;">S/ ${monto}</td>
         </tr>`;
@@ -325,6 +453,7 @@ export class AdminPanel implements OnInit {
       <body>
         <table>
           <tr><td colspan="7" class="titulo">REPORTE DE VENTAS - CAFÉ AYACUCHANO &amp; CACTUS MUSEUM</td></tr>
+          <tr><td colspan="2"><strong>Sede:</strong></td><td colspan="5">Local Único Principal Ayacucho (https://maps.app.goo.gl/j9zGEJaTW7UxszBk9)</td></tr>
           <tr><td colspan="2"><strong>Periodo:</strong></td><td colspan="5">${periodo}</td></tr>
           <tr><td colspan="2"><strong>Generado por:</strong></td><td colspan="5">${this.adminActual?.nombre || 'Administrador'} (${new Date().toLocaleString('es-PE')})</td></tr>
           <tr><td colspan="2"><strong>Órdenes en el periodo:</strong></td><td colspan="5">${this.ventasFiltradas.length}</td></tr>
@@ -341,7 +470,7 @@ export class AdminPanel implements OnInit {
         <br/>
         <table>
           <thead>
-            <tr><th colspan="2">TOP 5 PRODUCTOS MÁS VENDIDOS</th></tr>
+            <tr><th colspan="2">TOP PRODUCTOS MÁS VENDIDOS</th></tr>
             <tr><th>Producto</th><th>Unidades Vendidas</th></tr>
           </thead>
           <tbody>${filasProductos || '<tr><td colspan="2">Sin registros</td></tr>'}</tbody>
@@ -354,7 +483,7 @@ export class AdminPanel implements OnInit {
               <th>Fecha de Entrega</th>
               <th>Cliente</th>
               <th>Atendido por</th>
-              <th>Comprobante</th>
+              <th>Tipo Doc.</th>
               <th>Productos</th>
               <th>Monto Pagado</th>
             </tr>
@@ -393,7 +522,6 @@ export class AdminPanel implements OnInit {
       const fecha = this.formatearFechaReporte(v.fecha_reserva || v.fechaPedido);
       const cliente = v.cliente || 'Cliente';
       const empleado = v.empleado_nombre || v.empleadoAtencion?.nombre || 'Web';
-      const tipoComp = (v.tipo_comprobante || v.tipoComprobante || 'boleta').toUpperCase();
       const detalle = this.obtenerResumenProductosVenta(v);
       const monto = (parseFloat(v.total_pagado ?? v.totalPagado ?? 0) || 0).toFixed(2);
 
@@ -403,7 +531,7 @@ export class AdminPanel implements OnInit {
           <td>${fecha}</td>
           <td>${cliente}</td>
           <td>${empleado}</td>
-          <td>${tipoComp}</td>
+          <td>TICKET SIMPLE</td>
           <td>${detalle}</td>
           <td style="text-align:right; font-weight:bold;">S/ ${monto}</td>
         </tr>`;
@@ -469,8 +597,8 @@ export class AdminPanel implements OnInit {
         <div class="header">
           <div>
             <h1>Café Ayacuchano &amp; Cactus Museum</h1>
-            <p>Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho</p>
-            <p><strong>Reporte Ejecutivo de Ventas</strong></p>
+            <p>Sede Única Principal: Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho</p>
+            <p><strong>Reporte Ejecutivo de Ventas (Tickets Simples de Compra)</strong></p>
           </div>
           <div style="text-align:right;">
             <p><strong>Periodo:</strong> ${periodo}</p>
@@ -503,7 +631,7 @@ export class AdminPanel implements OnInit {
             </table>
           </div>
           <div>
-            <h3>Top 5 Productos Más Vendidos</h3>
+            <h3>Top Productos Más Vendidos</h3>
             <table>
               <thead><tr><th>Producto</th><th style="text-align:center;">Cantidad</th></tr></thead>
               <tbody>${filasProductos || '<tr><td colspan="2">Sin datos</td></tr>'}</tbody>

@@ -1,220 +1,493 @@
-<div class="admin-glass-wrapper">
-    <header class="admin-header">
-        <div class="logo-area" style="display: flex; align-items: center; gap: 14px;">
+<div class="admin-dashboard-shell">
+    <!-- Encabezado Superior Ejecutivo con Botones Discretos -->
+    <header class="admin-topbar">
+        <div class="topbar-left">
             <button type="button"
-                    class="btn-action-glass text-gold"
-                    style="border-radius: 9999px; padding: 8px 16px;"
+                    class="btn-discreet"
                     (click)="menuLateralAbierto = !menuLateralAbierto"
-                    [title]="menuLateralAbierto ? 'Ocultar menú lateral' : 'Desplegar menú lateral'">
-                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-times' : 'fa-bars'"></i>
-                <span style="margin-left: 6px;">{{ menuLateralAbierto ? 'Ocultar Menú' : 'Menú' }}</span>
+                    [title]="menuLateralAbierto ? 'Ocultar menú lateral' : 'Mostrar menú lateral'">
+                <i class="fas" [ngClass]="menuLateralAbierto ? 'fa-bars-staggered' : 'fa-bars'"></i>
+                <span class="hide-xs">{{ menuLateralAbierto ? 'Ocultar menú' : 'Menú' }}</span>
             </button>
-            <h1><i class="fas fa-chess-king text-gold"></i> Panel Supremo</h1>
+
+            <div class="brand-title">
+                <span class="brand-icon"><i class="fas fa-chess-king"></i></span>
+                <div>
+                    <h1>Centro de Control Administrativo</h1>
+                    <small>Café Ayacuchano &amp; Cactus Museum • Sede Única Principal</small>
+                </div>
+            </div>
         </div>
-        <div class="header-right">
-            <span>Admin: <strong>{{ adminActual?.nombre }}</strong></span>
-            <button type="button" class="btn-action-glass text-gold" (click)="ir('/')">
-                <i class="fas fa-store"></i> Inicio
+
+        <div class="topbar-right">
+            <span class="admin-badge">
+                <i class="fas fa-shield-alt text-emerald"></i>
+                <span>{{ adminActual?.nombre || 'Administrador' }}</span>
+            </span>
+
+            <button type="button" class="btn-discreet" (click)="cargarDatos()" title="Actualizar métricas">
+                <i class="fas fa-sync-alt" [class.fa-spin]="cargando"></i>
+                <span class="hide-sm">Actualizar</span>
             </button>
-            <button type="button" class="btn-glass-danger" (click)="cerrarSesion()">Salir</button>
+
+            <button type="button" class="btn-discreet" (click)="ir('/empleado/dashboard')">
+                <i class="fas fa-clipboard-list"></i>
+                <span class="hide-sm">Panel Empleado</span>
+            </button>
+
+            <button type="button" class="btn-discreet" (click)="ir('/')">
+                <i class="fas fa-store"></i>
+                <span class="hide-sm">Tienda</span>
+            </button>
+
+            <button type="button" class="btn-discreet-danger" (click)="cerrarSesion()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Salir</span>
+            </button>
         </div>
     </header>
 
-    <div class="admin-grid">
+    <div class="admin-body">
+        <!-- Menú Lateral Compacto y Cómodo -->
         @if (menuLateralAbierto) {
-            <aside class="glass-sidebar-admin">
-                <nav class="admin-nav">
-                    <button type="button" [class.active]="tabActivo === 'dashboard'" (click)="cambiarTab('dashboard')"><i class="fas fa-tachometer-alt"></i> Simulador &amp; Vista General</button>
-                    <button type="button" [class.active]="tabActivo === 'usuarios'" (click)="cambiarTab('usuarios')"><i class="fas fa-users"></i> Gestión de Usuarios</button>
-                    <button type="button" [class.active]="tabActivo === 'ventas'" (click)="cambiarTab('ventas')"><i class="fas fa-chart-line"></i> Reporte de Ventas</button>
+            <aside class="admin-sidebar">
+                <div class="sidebar-group-title">Módulos de Gestión</div>
+                <nav class="sidebar-menu">
+                    <button type="button" [class.active]="tabActivo === 'dashboard'" (click)="cambiarTab('dashboard')">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Resumen &amp; Gráficos</span>
+                    </button>
+                    <button type="button" [class.active]="tabActivo === 'usuarios'" (click)="cambiarTab('usuarios')">
+                        <i class="fas fa-users"></i>
+                        <span>Cuentas &amp; Roles</span>
+                        <span class="nav-pill">{{ usuarios.length }}</span>
+                    </button>
+                    <button type="button" [class.active]="tabActivo === 'ventas'" (click)="cambiarTab('ventas')">
+                        <i class="fas fa-receipt"></i>
+                        <span>Ventas &amp; Reportes</span>
+                        <span class="nav-pill">{{ ventas.length }}</span>
+                    </button>
                 </nav>
+
+                <div class="sidebar-group-title mt-18">Accesos Rápidos</div>
+                <div class="sidebar-quick-links">
+                    <button type="button" class="quick-link-btn" (click)="ir('/')">
+                        <i class="fas fa-mug-hot text-amber"></i>
+                        <div>
+                            <strong>Tienda &amp; Ruleta</strong>
+                            <small>Compras sin descontar stock</small>
+                        </div>
+                    </button>
+                    <button type="button" class="quick-link-btn" (click)="ir('/empleado/dashboard')">
+                        <i class="fas fa-boxes text-emerald"></i>
+                        <div>
+                            <strong>Operaciones</strong>
+                            <small>Inventario, órdenes y visitas</small>
+                        </div>
+                    </button>
+                    <button type="button" class="quick-link-btn" (click)="ir('/cliente/perfil')">
+                        <i class="fas fa-id-badge text-sky"></i>
+                        <div>
+                            <strong>Mi Perfil Socio</strong>
+                            <small>Cupones y configuración</small>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="sidebar-location-box">
+                    <div class="loc-header"><i class="fas fa-map-marker-alt"></i> Sede Habilitada</div>
+                    <p>Todas las compras y tickets corresponden al local único de Ayacucho.</p>
+                    <a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank" rel="noopener noreferrer">
+                        Ver ubicación en Maps <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>
             </aside>
         }
 
-        <main class="glass-main-content">
+        <!-- Contenido Principal -->
+        <main class="admin-content">
+
+            <!-- ================= PESTAÑA 1: RESUMEN EJECUTIVO & GRÁFICOS ================= -->
             @if (tabActivo === 'dashboard') {
                 <section class="fade-in">
-                    <h2 class="section-title"><i class="fas fa-random"></i> Simulador de Vistas</h2>
-                    <div class="god-mode-grid">
-                        <div class="nav-card glass-card clickable" (click)="ir('/')">
-                            <i class="fas fa-store icon-large text-verde"></i>
-                            <h3>Tienda Pública</h3>
-                            <p>Ver catálogo y hablar con Moka</p>
+                    <!-- Tarjetas KPI Superiores (4 Indicadores Clave) -->
+                    <div class="kpi-row">
+                        <div class="kpi-card">
+                            <div class="kpi-icon bg-emerald-soft"><i class="fas fa-coins"></i></div>
+                            <div class="kpi-info">
+                                <span class="kpi-label">Ingresos Confirmados</span>
+                                <h2 class="kpi-value">S/ {{ ingresosTotales | number:'1.2-2' }}</h2>
+                                <small class="kpi-sub">Ticket promedio: <strong>S/ {{ ticketPromedio | number:'1.2-2' }}</strong></small>
+                            </div>
                         </div>
-                        <div class="nav-card glass-card clickable" (click)="ir('/empleado/dashboard')">
-                            <i class="fas fa-boxes icon-large text-terracota"></i>
-                            <h3>Panel de Empleado</h3>
-                            <p>Aprobar órdenes y stock</p>
+
+                        <div class="kpi-card">
+                            <div class="kpi-icon bg-amber-soft"><i class="fas fa-check-double"></i></div>
+                            <div class="kpi-info">
+                                <span class="kpi-label">Órdenes Entregadas</span>
+                                <h2 class="kpi-value">{{ ventas.length }} <span class="kpi-total-ref">/ {{ totalPedidos }}</span></h2>
+                                <small class="kpi-sub">Tasa de entrega completada: <strong>{{ tasaEntrega }}%</strong></small>
+                            </div>
                         </div>
-                        <div class="nav-card glass-card clickable" (click)="ir('/cliente/perfil')">
-                            <i class="fas fa-user-circle icon-large text-gold"></i>
-                            <h3>Mi Perfil Cliente</h3>
-                            <p>Ver mi propia fidelidad</p>
+
+                        <div class="kpi-card">
+                            <div class="kpi-icon bg-sky-soft"><i class="fas fa-user-friends"></i></div>
+                            <div class="kpi-info">
+                                <span class="kpi-label">Comunidad Registrada</span>
+                                <h2 class="kpi-value">{{ usuarios.length }}</h2>
+                                <small class="kpi-sub">{{ totalClientes }} clientes • {{ totalEmpleados }} empleados • {{ totalAdmins }} admin</small>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-icon bg-terracota-soft"><i class="fas fa-seedling"></i></div>
+                            <div class="kpi-info">
+                                <span class="kpi-label">Visitas &amp; Catálogo</span>
+                                <h2 class="kpi-value">{{ totalVisitasPresenciales }} <span class="kpi-total-ref">visitas</span></h2>
+                                <small class="kpi-sub"><strong>{{ totalProductos }}</strong> productos registrados en tienda</small>
+                            </div>
                         </div>
                     </div>
 
-                    <h2 class="section-title mt-40"><i class="fas fa-chart-pie"></i> Resumen Rápido</h2>
-                    <div class="stats-grid">
-                        <div class="glass-card stat-box">
-                            <p>Ingresos Netos</p>
-                            <h2>S/ {{ ingresosTotales | number:'1.2-2' }}</h2>
+                    <!-- Gráficos Principales (Fila 1) -->
+                    <div class="charts-grid">
+                        <!-- Gráfico 1: Distribución de Estados de Pedidos -->
+                        <div class="panel-card">
+                            <div class="panel-card-header">
+                                <div>
+                                    <h3><i class="fas fa-tasks text-amber"></i> Flujo y Estado de Órdenes</h3>
+                                    <p>Proporción actual de pedidos recibidos en el local</p>
+                                </div>
+                                <span class="chip-neutral">{{ totalPedidos }} órdenes totales</span>
+                            </div>
+
+                            <!-- Barra de Progreso Segmentada -->
+                            <div class="stacked-bar">
+                                <div class="stacked-segment seg-emerald" [style.width.%]="getPorcentajeEstado(resumenEstados.recogido)" title="Entregados"></div>
+                                <div class="stacked-segment seg-amber" [style.width.%]="getPorcentajeEstado(resumenEstados.esperando_recojo)" title="Listos para recojo"></div>
+                                <div class="stacked-segment seg-sky" [style.width.%]="getPorcentajeEstado(resumenEstados.pendiente)" title="Pendientes"></div>
+                                <div class="stacked-segment seg-rose" [style.width.%]="getPorcentajeEstado(resumenEstados.cancelado)" title="Cancelados"></div>
+                            </div>
+
+                            <div class="status-breakdown-list">
+                                <div class="status-row">
+                                    <div class="status-label"><span class="dot seg-emerald"></span> Entregadas / Completadas</div>
+                                    <div class="status-bar-wrap">
+                                        <div class="status-bar-fill seg-emerald" [style.width.%]="getPorcentajeEstado(resumenEstados.recogido)"></div>
+                                    </div>
+                                    <div class="status-val">{{ resumenEstados.recogido }} <small>({{ getPorcentajeEstado(resumenEstados.recogido) }}%)</small></div>
+                                </div>
+
+                                <div class="status-row">
+                                    <div class="status-label"><span class="dot seg-amber"></span> Listas para Recojo en Local</div>
+                                    <div class="status-bar-wrap">
+                                        <div class="status-bar-fill seg-amber" [style.width.%]="getPorcentajeEstado(resumenEstados.esperando_recojo)"></div>
+                                    </div>
+                                    <div class="status-val">{{ resumenEstados.esperando_recojo }} <small>({{ getPorcentajeEstado(resumenEstados.esperando_recojo) }}%)</small></div>
+                                </div>
+
+                                <div class="status-row">
+                                    <div class="status-label"><span class="dot seg-sky"></span> Pendientes de Revisión</div>
+                                    <div class="status-bar-wrap">
+                                        <div class="status-bar-fill seg-sky" [style.width.%]="getPorcentajeEstado(resumenEstados.pendiente)"></div>
+                                    </div>
+                                    <div class="status-val">{{ resumenEstados.pendiente }} <small>({{ getPorcentajeEstado(resumenEstados.pendiente) }}%)</small></div>
+                                </div>
+
+                                <div class="status-row">
+                                    <div class="status-label"><span class="dot seg-rose"></span> Canceladas / Rechazadas</div>
+                                    <div class="status-bar-wrap">
+                                        <div class="status-bar-fill seg-rose" [style.width.%]="getPorcentajeEstado(resumenEstados.cancelado)"></div>
+                                    </div>
+                                    <div class="status-val">{{ resumenEstados.cancelado }} <small>({{ getPorcentajeEstado(resumenEstados.cancelado) }}%)</small></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="glass-card stat-box">
-                            <p>Órdenes Completadas</p>
-                            <h2>{{ ventas.length }}</h2>
+
+                        <!-- Gráfico 2: Top Productos Más Vendidos -->
+                        <div class="panel-card">
+                            <div class="panel-card-header">
+                                <div>
+                                    <h3><i class="fas fa-award text-emerald"></i> Productos Más Demandados</h3>
+                                    <p>Ranking de unidades vendidas en órdenes completadas</p>
+                                </div>
+                                <button type="button" class="btn-discreet-xs" (click)="cambiarTab('ventas')">Ver detalle</button>
+                            </div>
+
+                            @if (statsProductos.length > 0) {
+                                <div class="bar-chart-list">
+                                    @for (prod of statsProductos; track prod.nombre; let idx = $index) {
+                                        <div class="bar-chart-item">
+                                            <div class="bar-chart-top">
+                                                <span class="bar-rank">#{{ idx + 1 }}</span>
+                                                <span class="bar-name">{{ prod.nombre }}</span>
+                                                <span class="bar-metric">{{ prod.cantidad }} unds.</span>
+                                            </div>
+                                            <div class="bar-track">
+                                                <div class="bar-fill-emerald" [style.width.%]="prod.porcentaje"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            } @else {
+                                <div class="empty-chart-box">
+                                    <i class="fas fa-mug-hot"></i>
+                                    <p>Aún no hay productos registrados en órdenes entregadas.</p>
+                                </div>
+                            }
                         </div>
-                        <div class="glass-card stat-box">
-                            <p>Usuarios Registrados</p>
-                            <h2>{{ usuarios.length }}</h2>
+                    </div>
+
+                    <!-- Gráficos Secundarios (Fila 2) -->
+                    <div class="charts-grid mt-18">
+                        <!-- Gráfico 3: Rendimiento por Empleado / Canal -->
+                        <div class="panel-card">
+                            <div class="panel-card-header">
+                                <div>
+                                    <h3><i class="fas fa-user-check text-sky"></i> Rendimiento de Atención por Personal</h3>
+                                    <p>Ingresos procesados y órdenes atendidas por cada miembro</p>
+                                </div>
+                            </div>
+
+                            @if (statsEmpleados.length > 0) {
+                                <div class="bar-chart-list">
+                                    @for (emp of statsEmpleados; track emp.nombre) {
+                                        <div class="bar-chart-item">
+                                            <div class="bar-chart-top">
+                                                <span class="bar-name"><i class="fas fa-user-tie mr-1 opacity-70"></i> {{ emp.nombre }}</span>
+                                                <span class="bar-metric">S/ {{ emp.ingresos | number:'1.2-2' }} <small>({{ emp.total_ventas }} órds.)</small></span>
+                                            </div>
+                                            <div class="bar-track">
+                                                <div class="bar-fill-amber" [style.width.%]="emp.porcentaje"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            } @else {
+                                <div class="empty-chart-box">
+                                    <i class="fas fa-headset"></i>
+                                    <p>Sin registros de atención en el periodo actual.</p>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Gráfico 4: Pirámide de Fidelidad de Socios -->
+                        <div class="panel-card">
+                            <div class="panel-card-header">
+                                <div>
+                                    <h3><i class="fas fa-crown text-amber"></i> Niveles de Fidelidad de Usuarios</h3>
+                                    <p>Segmentación de clientes según sus visitas presenciales al museo</p>
+                                </div>
+                            </div>
+
+                            <div class="bar-chart-list">
+                                @for (niv of distribucionNiveles; track niv.etiqueta) {
+                                    <div class="bar-chart-item">
+                                        <div class="bar-chart-top">
+                                            <span class="bar-name">{{ niv.etiqueta }}</span>
+                                            <span class="bar-metric">{{ niv.cantidad }} usuarios <small>({{ niv.porcentaje }}%)</small></span>
+                                        </div>
+                                        <div class="bar-track">
+                                            <div class="bar-fill-custom" [style.width.%]="niv.porcentaje" [style.background]="niv.color"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
                 </section>
             }
 
+            <!-- ================= PESTAÑA 2: GESTIÓN DE USUARIOS ================= -->
             @if (tabActivo === 'usuarios') {
                 <section class="fade-in">
-                    <div class="flex-between mb-20">
-                        <h2 class="section-title m-0"><i class="fas fa-users-cog"></i> Control de Cuentas</h2>
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Buscar por nombre o correo..." class="glass-input"
-                                   [(ngModel)]="terminoBusquedaUsuario" (input)="filtrarUsuarios()" style="margin:0;">
-                        </div>
-                    </div>
+                    <div class="panel-card">
+                        <div class="toolbar-header">
+                            <div>
+                                <h2><i class="fas fa-users-cog text-emerald"></i> Directorio y Control de Usuarios</h2>
+                                <p>Gestiona permisos de acceso y otorga giros extra de ruleta con autorización segura</p>
+                            </div>
 
-                    <div class="glass-table-wrapper">
-                        <table class="glass-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Cliente</th>
-                                    <th>Rol</th>
-                                    <th>Visitas</th>
-                                    <th style="text-align: right;">Acciones Protegidas</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (user of usuariosFiltrados; track user.id_usuario) {
+                            <div class="toolbar-controls">
+                                <div class="role-filter-pills">
+                                    <button type="button" [class.active]="filtroRolUsuario === 'todos'" (click)="cambiarFiltroRol('todos')">Todos ({{ usuarios.length }})</button>
+                                    <button type="button" [class.active]="filtroRolUsuario === 'cliente'" (click)="cambiarFiltroRol('cliente')">Clientes ({{ totalClientes }})</button>
+                                    <button type="button" [class.active]="filtroRolUsuario === 'empleado'" (click)="cambiarFiltroRol('empleado')">Empleados ({{ totalEmpleados }})</button>
+                                    <button type="button" [class.active]="filtroRolUsuario === 'admin'" (click)="cambiarFiltroRol('admin')">Admins ({{ totalAdmins }})</button>
+                                </div>
+
+                                <div class="compact-search">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text"
+                                           placeholder="Buscar por nombre, correo o DNI..."
+                                           [(ngModel)]="terminoBusquedaUsuario"
+                                           (input)="filtrarUsuarios()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="clean-table-container">
+                            <table class="clean-table">
+                                <thead>
                                     <tr>
-                                        <td><strong>#{{ user.id_usuario }}</strong></td>
-                                        <td>
-                                            <div style="font-weight: bold;">{{ user.nombre }}</div>
-                                            <small style="color: rgba(255,255,255,0.5);">{{ ofuscarEmail(user.email) }}</small>
-                                        </td>
-                                        <td>
-                                            <select class="glass-select-small" [value]="user.rol" (change)="cambiarRol(user.id_usuario, $event)">
-                                                <option value="cliente" style="color: black;">Cliente</option>
-                                                <option value="empleado" style="color: black;">Empleado</option>
-                                                <option value="admin" style="color: black;">Admin</option>
-                                            </select>
-                                        </td>
-                                        <td><span class="badge-visitas">{{ user.visitas_presenciales || 0 }}</span></td>
-                                        <td style="text-align: right;">
-                                            <button type="button" class="btn-action-glass text-gold" (click)="resetearRuleta(user.id_usuario)" title="Requiere Contraseña">
-                                                <i class="fas fa-dharmachakra"></i> Reset Ruleta
-                                            </button>
-                                        </td>
+                                        <th>ID</th>
+                                        <th>Usuario &amp; Contacto Protegido</th>
+                                        <th>DNI (Opcional)</th>
+                                        <th>Fidelidad</th>
+                                        <th>Rol del Sistema</th>
+                                        <th class="text-right">Acciones</th>
                                     </tr>
-                                }
-                                @if (usuariosFiltrados.length === 0) {
-                                    <tr><td colspan="5" style="text-align: center; padding: 20px;">No se encontraron usuarios.</td></tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @for (user of usuariosFiltrados; track user.id_usuario) {
+                                        <tr>
+                                            <td class="col-id">#{{ user.id_usuario }}</td>
+                                            <td>
+                                                <div class="user-cell-name">{{ user.nombre }}</div>
+                                                <div class="user-cell-sub"><i class="fas fa-envelope"></i> {{ ofuscarEmail(user.email) }}</div>
+                                            </td>
+                                            <td>
+                                                <span class="chip-neutral">{{ ofuscarDni(user.dni) }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="loyalty-badges">
+                                                    <span class="chip-emerald">Nivel {{ obtenerNivelUsuario(user.visitas_presenciales) }}</span>
+                                                    <span class="chip-subtle">{{ user.visitas_presenciales || 0 }} visitas</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <select class="compact-select" [value]="user.rol" (change)="cambiarRol(user.id_usuario, $event)">
+                                                    <option value="cliente">Cliente</option>
+                                                    <option value="empleado">Empleado</option>
+                                                    <option value="admin">Administrador</option>
+                                                </select>
+                                            </td>
+                                            <td class="text-right">
+                                                <button type="button"
+                                                        class="btn-discreet-xs"
+                                                        (click)="resetearRuleta(user.id_usuario)"
+                                                        title="Otorgar +1 giro extra y habilitar ruleta">
+                                                    <i class="fas fa-dharmachakra text-amber"></i> Reset Ruleta
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                    @if (usuariosFiltrados.length === 0) {
+                                        <tr>
+                                            <td colspan="6" class="empty-table-cell">No se encontraron usuarios con los filtros seleccionados.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
             }
 
+            <!-- ================= PESTAÑA 3: REPORTE DE VENTAS & EXPORTACIÓN ================= -->
             @if (tabActivo === 'ventas') {
                 <section class="fade-in">
-                    <div class="flex-between mb-20">
-                        <h2 class="section-title m-0"><i class="fas fa-receipt"></i> Historial de Ventas Completadas</h2>
-
-                        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
-                            <button type="button"
-                                    class="btn-action-glass"
-                                    style="color: #ff6b6b; border-color: rgba(255, 107, 107, 0.35); padding: 9px 14px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 7px;"
-                                    (click)="exportarReportePDF()">
-                                <i class="fas fa-file-pdf"></i> Exportar PDF
-                            </button>
-
-                            <button type="button"
-                                    class="btn-action-glass"
-                                    style="color: #2ecc71; border-color: rgba(46, 204, 113, 0.35); padding: 9px 14px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 7px;"
-                                    (click)="exportarReporteExcel()">
-                                <i class="fas fa-file-excel"></i> Exportar Excel
-                            </button>
-
-                            <select class="glass-input filter-select" [(ngModel)]="filtroTiempoVentas" (change)="aplicarFiltrosVentas()">
-                                <option value="todos" style="color: black;">Histórico Total</option>
-                                <option value="mes" style="color: black;">Últimos 30 días</option>
-                                <option value="semana" style="color: black;">Últimos 7 días</option>
-                                <option value="dia" style="color: black;">Hoy</option>
-                            </select>
+                    <!-- Mini KPIs del Periodo Seleccionado -->
+                    <div class="period-summary-bar">
+                        <div class="period-stat">
+                            <span>Periodo Seleccionado</span>
+                            <strong>{{ getEtiquetaPeriodo() }}</strong>
+                        </div>
+                        <div class="period-stat">
+                            <span>Órdenes en el Periodo</span>
+                            <strong>{{ ventasFiltradas.length }} órdenes</strong>
+                        </div>
+                        <div class="period-stat">
+                            <span>Ticket Promedio</span>
+                            <strong>S/ {{ ticketPromedioFiltrado | number:'1.2-2' }}</strong>
+                        </div>
+                        <div class="period-stat highlight">
+                            <span>Ingresos del Periodo</span>
+                            <strong>S/ {{ getTotalVentasFiltradas() | number:'1.2-2' }}</strong>
                         </div>
                     </div>
 
-                    <div class="grid-2 mb-20">
-                        <div class="glass-card">
-                            <h3><i class="fas fa-user-tie text-gold"></i> Desempeño de Empleados</h3>
-                            <hr style="border-color: rgba(255,255,255,0.1);">
-                            @for (emp of statsEmpleados; track emp.nombre) {
-                                <div class="flex-between mb-10">
-                                    <span>{{ emp.nombre }}</span>
-                                    <strong>{{ emp.total_ventas }} órdenes (S/ {{ emp.ingresos | number:'1.2-2' }})</strong>
+                    <div class="panel-card">
+                        <div class="toolbar-header">
+                            <div>
+                                <h2><i class="fas fa-file-invoice-dollar text-amber"></i> Historial de Ventas &amp; Tickets Simples</h2>
+                                <p>Todas las órdenes corresponden a la sede principal (<a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank" class="link-gold">Google Maps</a>)</p>
+                            </div>
+
+                            <div class="toolbar-controls">
+                                <div class="compact-search">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text"
+                                           placeholder="Buscar N° orden, cliente o personal..."
+                                           [(ngModel)]="terminoBusquedaVenta"
+                                           (input)="aplicarFiltrosVentas()">
                                 </div>
-                            }
-                            @if (statsEmpleados.length === 0) { <p class="text-muted">No hay datos en este periodo.</p> }
+
+                                <select class="compact-select" [(ngModel)]="filtroTiempoVentas" (change)="aplicarFiltrosVentas()">
+                                    <option value="todos">Histórico Total</option>
+                                    <option value="mes">Últimos 30 días</option>
+                                    <option value="semana">Últimos 7 días</option>
+                                    <option value="dia">Hoy (24h)</option>
+                                </select>
+
+                                <button type="button" class="btn-discreet-pdf" (click)="exportarReportePDF()">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+
+                                <button type="button" class="btn-discreet-excel" (click)="exportarReporteExcel()">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="glass-card">
-                            <h3><i class="fas fa-leaf text-verde"></i> Top 5 Productos</h3>
-                            <hr style="border-color: rgba(255,255,255,0.1);">
-                            @for (prod of statsProductos; track prod.nombre) {
-                                <div class="flex-between mb-10">
-                                    <span>{{ prod.nombre }}</span>
-                                    <span class="badge-comprobante" style="background: rgba(163, 177, 138, 0.2);">{{ prod.cantidad }} unds</span>
-                                </div>
-                            }
-                            @if (statsProductos.length === 0) { <p class="text-muted">No hay datos en este periodo.</p> }
-                        </div>
-                    </div>
-
-                    <div class="glass-table-wrapper">
-                        <table class="glass-table">
-                            <thead>
-                                <tr>
-                                    <th>Orden</th>
-                                    <th>Fecha de Entrega</th>
-                                    <th>Cliente</th>
-                                    <th>Atendido por</th>
-                                    <th style="text-align: center;">Comprobante</th>
-                                    <th style="text-align: right;">Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (venta of ventasFiltradas; track venta.id_reserva) {
+                        <div class="clean-table-container">
+                            <table class="clean-table">
+                                <thead>
                                     <tr>
-                                        <td><strong>#{{ venta.id_reserva }}</strong></td>
-                                        <td>{{ venta.fecha_reserva | date:'short' }}</td>
-                                        <td>{{ venta.cliente || 'Usuario Eliminado' }}</td>
-                                        <td><span style="font-size: 0.85rem; color: #ccc;"><i class="fas fa-headset"></i> {{ venta.empleado_nombre || 'Web' }}</span></td>
-
-                                        <td style="text-align: center;">
-                                            @if (venta.comprobante_pago || venta.comprobante) {
-                                                <button type="button" class="btn-action-glass text-gold" style="font-size: 0.8rem; padding: 5px 10px;" (click)="verComprobante(venta.comprobante_pago || venta.comprobante)">
-                                                    <i class="fas fa-image"></i> Ver Pago
-                                                </button>
-                                            } @else {
-                                                <span style="color: rgba(255,255,255,0.3); font-size: 0.8rem;">Sin captura</span>
-                                            }
-                                        </td>
-
-                                        <td style="text-align: right; font-weight: bold; color: #A3B18A;">S/ {{ venta.total_pagado | number:'1.2-2' }}</td>
+                                        <th>Orden</th>
+                                        <th>Fecha y Hora</th>
+                                        <th>Cliente</th>
+                                        <th>Atendido por</th>
+                                        <th class="text-center">Pago &amp; Ticket</th>
+                                        <th class="text-right">Total Pagado</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @for (venta of ventasFiltradas; track venta.id_reserva) {
+                                        <tr>
+                                            <td class="col-id">#{{ venta.id_reserva }}</td>
+                                            <td>{{ venta.fecha_reserva | date:'dd/MM/yyyy HH:mm' }}</td>
+                                            <td>
+                                                <div class="user-cell-name">{{ venta.cliente || 'Cliente Registrado' }}</div>
+                                            </td>
+                                            <td>
+                                                <span class="chip-subtle"><i class="fas fa-headset"></i> {{ venta.empleado_nombre || 'Atención Web' }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="table-actions-center">
+                                                    @if (venta.comprobante_pago || venta.comprobante) {
+                                                        <button type="button" class="btn-discreet-xs" (click)="verComprobante(venta.comprobante_pago || venta.comprobante)">
+                                                            <i class="fas fa-image text-amber"></i> Captura
+                                                        </button>
+                                                    } @else {
+                                                        <span class="text-dim">Sin captura</span>
+                                                    }
+                                                    <button type="button" class="btn-discreet-xs" (click)="abrirTicketOrden(venta.id_reserva)">
+                                                        <i class="fas fa-receipt text-emerald"></i> Ticket
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td class="text-right amount-cell">S/ {{ venta.total_pagado | number:'1.2-2' }}</td>
+                                        </tr>
+                                    }
+                                    @if (ventasFiltradas.length === 0) {
+                                        <tr>
+                                            <td colspan="6" class="empty-table-cell">No hay ventas registradas para los filtros seleccionados.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
             }
@@ -222,17 +495,23 @@
     </div>
 </div>
 
+<!-- Modal de Autorización con Contraseña -->
 @if (modalSeguridadAbierto) {
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 15px;" (click)="cerrarModalSeguridad()">
-        <div class="glass-card" style="width: 100%; max-width: 400px; text-align: center; padding: 30px;" (click)="$event.stopPropagation()">
-            <h2 style="color: #FFE066; margin-top: 0; margin-bottom: 10px;"><i class="fas fa-shield-alt"></i> Seguridad</h2>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 25px; font-size: 0.95rem;">Ingresa tu contraseña de administrador para autorizar esta acción:</p>
+    <div class="modal-backdrop-clean" (click)="cerrarModalSeguridad()">
+        <div class="modal-box-clean" (click)="$event.stopPropagation()">
+            <div class="modal-icon-badge"><i class="fas fa-lock"></i></div>
+            <h3>Confirmación de Seguridad</h3>
+            <p>Ingresa tu contraseña de administrador para autorizar este cambio:</p>
 
-            <input type="password" class="glass-input" placeholder="Tu contraseña oculta..." style="text-align: center; font-size: 1.2rem; letter-spacing: 3px;" [(ngModel)]="passwordConfirmacion" (keyup.enter)="confirmarAccionSegura()">
+            <input type="password"
+                   class="modal-clean-input"
+                   placeholder="Contraseña de administrador..."
+                   [(ngModel)]="passwordConfirmacion"
+                   (keyup.enter)="confirmarAccionSegura()">
 
-            <div style="display: flex; gap: 15px; margin-top: 25px;">
-                <button type="button" class="btn-glass-danger" style="flex: 1; padding: 12px; border-radius: 8px;" (click)="cerrarModalSeguridad()">Cancelar</button>
-                <button type="button" class="btn-action-glass text-gold" style="flex: 1; padding: 12px; border-radius: 8px; justify-content: center;" (click)="confirmarAccionSegura()">
+            <div class="modal-clean-actions">
+                <button type="button" class="btn-discreet" (click)="cerrarModalSeguridad()">Cancelar</button>
+                <button type="button" class="btn-discreet-primary" (click)="confirmarAccionSegura()">
                     <i class="fas fa-check"></i> Autorizar
                 </button>
             </div>
@@ -240,15 +519,19 @@
     </div>
 }
 
+<!-- Modal de Captura de Pago -->
 @if (modalImagenAbierto) {
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 15px;" (click)="cerrarModalImagen()">
-        <div class="glass-card" style="position: relative; max-width: 600px; width: 100%; text-align: center; padding: 20px;" (click)="$event.stopPropagation()">
-            <button type="button" style="position: absolute; top: -15px; right: -15px; width: 40px; height: 40px; border-radius: 50%; background: #ff6b6b; color: white; border: none; font-size: 1.5rem; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5);" (click)="cerrarModalImagen()">&times;</button>
-
-            <h3 style="color: #A3B18A; margin-top: 0; margin-bottom: 15px;"><i class="fas fa-file-invoice-dollar"></i> Captura del Cliente</h3>
-            <img [src]="imagenSeleccionada" alt="Comprobante" style="max-width: 100%; max-height: 75vh; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <div class="modal-backdrop-clean" (click)="cerrarModalImagen()">
+        <div class="modal-box-clean modal-img-box" (click)="$event.stopPropagation()">
+            <div class="flex-between mb-12">
+                <h3 class="m-0"><i class="fas fa-image text-amber"></i> Captura de Pago</h3>
+                <button type="button" class="btn-discreet-xs" (click)="cerrarModalImagen()">Cerrar &times;</button>
+            </div>
+            <img [src]="imagenSeleccionada" alt="Comprobante" class="modal-preview-img">
         </div>
     </div>
 }
 
-@if (toastMsg) { <div class="toast-notification">{{ toastMsg }}</div>}
+@if (toastMsg) {
+    <div class="toast-clean"><i class="fas fa-check-circle"></i> {{ toastMsg }}</div>
+}
