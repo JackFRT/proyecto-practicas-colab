@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Moka } from '../../services/moka'; 
+import { CartService } from '../../services/cart';
 
 @Component({
   selector: 'app-auth',
@@ -17,6 +18,7 @@ export class Auth implements OnInit, OnDestroy {
   router = inject(Router);
   cdr = inject(ChangeDetectorRef);
   mokaService = inject(Moka);
+  cartService = inject(CartService);
 
   isLoginMode: boolean = true;
   isRecuperarMode: boolean = false; 
@@ -24,6 +26,7 @@ export class Auth implements OnInit, OnDestroy {
   
   nombre: string = '';
   email: string = '';
+  emailRecuperacion: string = '';
   password: string = '';
   dni: string = '';
   telefono: string = '';
@@ -192,10 +195,8 @@ export class Auth implements OnInit, OnDestroy {
           if (res.success) {
             // Guardamos los datos del usuario
             localStorage.setItem('usuario_cactus', JSON.stringify(res.usuario));
-            
-            // === ¡NUEVO! Guardamos el Token JWT ===
-            localStorage.setItem('token_cactus', res.token); 
-            // ======================================
+            localStorage.setItem('token_cactus', res.token);
+            this.cartService.sincronizarConSesion();
             
             if (res.usuario.rol === 'admin') {
               this.router.navigate(['/admin/panel']);
@@ -222,6 +223,7 @@ export class Auth implements OnInit, OnDestroy {
       const payload = { 
         nombre: this.nombre, 
         email: this.email, 
+        email_recuperacion: this.emailRecuperacion,
         password: this.password, 
         dni: this.dni, 
         telefono: this.telefono,

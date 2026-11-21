@@ -72,6 +72,88 @@ export class Catalog implements OnInit {
   descuentoSocio: number = 0;
   nivelSocio: number = 0;
 
+  modalidadCafeteria: 'en_mesa' | 'para_llevar' = 'para_llevar';
+  mensajeCafeteria: string = '';
+  tiempoLlegada: string = '30 minutos';
+
+  numeroPagoCopiado: boolean = false;
+  qrExpandido: boolean = false;
+
+  actividadActualIndex: number = 0;
+  actividadesLocal = [
+    {
+      etiqueta: 'Fomento a la Cultura • Beneficio Especial',
+      icono: 'fa-book-open',
+      titulo: 'SE PREMIA LA LECTURA EN NUESTRA BIBLIOTECA',
+      descripcion: 'Al leer un libro de la biblioteca de nuestro local, recibes un Café Americano totalmente gratis para acompañar tu lectura. Incentivamos el hábito lector en un ambiente tranquilo rodeado de naturaleza.',
+      destacado: '☕ Café Americano Gratis • Aplica 1 por persona',
+      imagen: '/assets/images/decoracion/artesanias.jpg'
+    },
+    {
+      etiqueta: 'Experiencia Educativa • Museo Vivo',
+      icono: 'fa-seedling',
+      titulo: 'VISITAS GUIADAS Y CHARLAS EN EL MUSEO DEL CACTUS',
+      descripcion: 'Participa en nuestros recorridos guiados por el Museo del Cactus y charlas especializadas realizadas directamente por el fundador, donde conocerás la historia, conservación y secretos de nuestra colección de cactáceas.',
+      destacado: '🌵 Charlas y recorrido guiado por el fundador',
+      imagen: '/assets/images/decoracion/henryAy.jpg'
+    },
+    {
+      etiqueta: 'Tradición Ayacuchana • Café de Especialidad',
+      icono: 'fa-mug-hot',
+      titulo: 'EL ARTE DEL TUESTE Y CULTIVO',
+      descripcion: 'Descubre el proceso detrás de nuestra selección de granos de especialidad del VRAEM y nuestra colección viva de cactáceas en el corazón de Ayacucho.',
+      destacado: '✨ Granos selectos del VRAEM & Cactáceas nativas',
+      imagen: '/assets/images/decoracion/cactusWaris.jpg'
+    }
+  ];
+
+  moverActividad(direccion: number) {
+    const total = this.actividadesLocal.length;
+    this.actividadActualIndex = (this.actividadActualIndex + direccion + total) % total;
+    this.cdr.detectChanges();
+  }
+
+  cambiarActividad(index: number) {
+    this.actividadActualIndex = index;
+    this.cdr.detectChanges();
+  }
+
+  copiarNumeroPago(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const numero = '981851430';
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(numero).catch(() => {});
+    }
+    this.numeroPagoCopiado = true;
+    this.mostrarToast('¡Número 981 851 430 copiado al portapapeles!');
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.numeroPagoCopiado = false;
+      this.cdr.detectChanges();
+    }, 2500);
+  }
+
+  abrirQrExpandido(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.qrExpandido = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarQrExpandido(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.qrExpandido = false;
+    this.cdr.detectChanges();
+  }
+
   get userRole(): string {
     if (typeof localStorage === 'undefined') return 'cliente';
     const user = localStorage.getItem('usuario_cactus');
@@ -80,6 +162,7 @@ export class Catalog implements OnInit {
 
   ngOnInit() {
     document.documentElement.style.setProperty('--color-catalogo', '#A3B18A');
+    this.cartService.sincronizarConSesion();
     const userGuardado = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario_cactus') : null;
 
     if (userGuardado) {
@@ -355,13 +438,27 @@ export class Catalog implements OnInit {
     this.ejecutarCompraDirecta();
   }
 
+  private verificarSesionParaCarrito(): boolean {
+    const userGuardado = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario_cactus') : null;
+    if (!userGuardado) {
+      this.mostrarToast('Inicia sesión primero para guardar productos en tu carrito.');
+      this.cerrarModalTienda();
+      setTimeout(() => this.router.navigate(['/login']), 900);
+      return false;
+    }
+    this.usuarioActual = JSON.parse(userGuardado);
+    return true;
+  }
+
   private ejecutarCompraDirecta() {
+    if (!this.verificarSesionParaCarrito()) return;
     this.cartService.agregarItem(this.obtenerItemPreparado());
     this.irACheckout();
   }
 
   agregarAlCarrito(event?: Event) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
+    if (!this.verificarSesionParaCarrito()) return;
     if (this.esProductoConAlcohol(this.productoSeleccionado) && !this.edadVerificada) {
       this.accionEdadPendiente = 'carrito';
       this.modalEdadAbierto = true;
@@ -372,6 +469,7 @@ export class Catalog implements OnInit {
   }
 
   private ejecutarAgregarAlCarrito() {
+    if (!this.verificarSesionParaCarrito()) return;
     this.cartService.agregarItem(this.obtenerItemPreparado());
     this.mostrarToast('¡Añadido a tu canasta!');
   }
@@ -471,6 +569,13 @@ export class Catalog implements OnInit {
     return !!(tel && String(tel).trim().length > 0);
   }
 
+  tieneProductosCafeteriaEnCarrito(): boolean {
+    return this.cartService.items.some(item => {
+      const t = String(item?.tipo || item?.tipoProducto || item?.tipo_producto || '').toLowerCase();
+      return t === 'cafe' || t === 'café' || t === 'cafeteria';
+    });
+  }
+
   aplicarCupon() {
     if (!this.codigoCupon || !this.codigoCupon.trim()) return;
     const codigoLimpio = this.codigoCupon.trim().toUpperCase();
@@ -528,14 +633,20 @@ export class Catalog implements OnInit {
     const idValidado = this.usuarioActual.idUsuario || this.usuarioActual.id_usuario;
     const tipoComp = this.tipoComprobante === 'Factura' ? 'factura' : 'boleta';
 
+    const hayCafe = this.tieneProductosCafeteriaEnCarrito();
+    const tipoConsumoFinal = hayCafe ? this.modalidadCafeteria : 'para_llevar';
+    const msgCafeFinal = hayCafe && this.mensajeCafeteria ? this.mensajeCafeteria.trim() : '';
+
     formData.append('id_usuario', idValidado.toString());
     formData.append('total_pagado', this.calcularTotalFinal().toFixed(2));
     formData.append('codigo_cupon', this.descuentoAplicado > 0 ? this.codigoCupon : '');
-    formData.append('tipo_consumo', 'para_llevar');
+    formData.append('tipo_consumo', tipoConsumoFinal);
     formData.append('tipo_comprobante', tipoComp);
     formData.append('dni_opcional', this.documentoCliente || this.usuarioActual?.dni || '');
     formData.append('telefono_cliente', finalTel);
     formData.append('notas_cliente', finalTel ? `Cel/Wsp: ${finalTel}` : 'Sin notas');
+    formData.append('tiempo_llegada', this.tiempoLlegada || '30 minutos');
+    formData.append('mensaje_cafeteria', msgCafeFinal);
     formData.append('carrito', JSON.stringify(this.cartService.items));
     if (this.archivoComprobante) {
       formData.append('comprobante', this.archivoComprobante);

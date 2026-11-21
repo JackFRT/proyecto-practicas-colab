@@ -56,6 +56,12 @@ public class Pedido {
     @Column(name = "notas_cliente", columnDefinition = "TEXT")
     private String notasCliente;
 
+    @Column(name = "tiempo_llegada", length = 40)
+    private String tiempoLlegada;
+
+    @Column(name = "mensaje_cafeteria", length = 300)
+    private String mensajeCafeteria;
+
     @Column(name = "comprobante_pago", length = 255)
     private String comprobantePago;
 
@@ -134,5 +140,20 @@ public class Pedido {
     @JsonProperty("empleado_nombre")
     public String getNombreEmpleado() {
         return empleadoAtencion != null ? empleadoAtencion.getNombre() : "Sistema Web";
+    }
+
+    @JsonProperty("tipo_consumo")
+    public String getTipoConsumoSnake() {
+        return tipoConsumo != null ? tipoConsumo : "para_llevar";
+    }
+
+    @JsonProperty("tiempo_llegada")
+    public String getTiempoLlegadaSnake() {
+        return tiempoLlegada != null ? tiempoLlegada : "";
+    }
+
+    @JsonProperty("mensaje_cafeteria")
+    public String getMensajeCafeteriaSnake() {
+        return mensajeCafeteria != null ? mensajeCafeteria : "";
     }
 }

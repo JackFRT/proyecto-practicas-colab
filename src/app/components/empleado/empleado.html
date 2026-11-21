@@ -1,6 +1,7 @@
-<div class="min-h-screen lg:h-screen flex flex-col bg-[var(--bg-main)] text-[var(--cafe-oscuro)] font-['Outfit'] lg:overflow-hidden">
+<div class="min-h-screen lg:h-screen flex flex-col bg-[var(--bg-main)] text-[var(--cafe-oscuro)] font-['Outfit'] lg:overflow-hidden transition-colors duration-300"
+     [class.dark-theme-empleado]="themeService.isDarkMode()">
     <!-- Header -->
-    <header class="bg-[var(--verde-pino)] px-4 sm:px-7 py-2.5 sm:py-3 flex justify-between items-center shadow-sm shrink-0 gap-3">
+    <header class="bg-[var(--bg-header)] px-4 sm:px-7 py-2.5 sm:py-3 flex justify-between items-center shadow-sm shrink-0 gap-3">
         <div class="flex items-center gap-3 min-w-0">
             <button type="button"
                     (click)="menuLateralAbierto = !menuLateralAbierto"
@@ -13,7 +14,16 @@
                 Barra de atención | <strong class="font-bold text-white">HOLA, {{ nombreEmpleado }}</strong>
             </h1>
         </div>
-        <img src="/assets/images/mascota_cactus/mascota.jpg" alt="Mascota" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[var(--verde-oliva)] object-cover shrink-0">
+        <div class="flex items-center gap-2.5 shrink-0">
+            <button type="button"
+                    (click)="themeService.toggleTheme()"
+                    class="bg-white/10 hover:bg-white/20 text-white/95 px-3 py-1.5 rounded-full font-semibold text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer border border-white/20 whitespace-nowrap"
+                    [title]="themeService.isDarkMode() ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'">
+                <i class="fas" [ngClass]="themeService.isDarkMode() ? 'fa-sun text-amber-300' : 'fa-moon'"></i>
+                <span class="hidden sm:inline">{{ themeService.isDarkMode() ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+            </button>
+            <img src="/assets/images/mascota_cactus/mascota.jpg" alt="Mascota" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[var(--verde-oliva)] object-cover shrink-0">
+        </div>
     </header>
 
     <!-- Layout Principal -->
@@ -23,7 +33,7 @@
         @if (menuLateralAbierto) {
         <aside class="w-full lg:w-56 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto pb-2 lg:pb-0 lg:pr-1 shrink-0 animate-[fadeIn_0.2s]">
             <button type="button"
-                    [ngClass]="tabActivo === 'ordenes' ? 'bg-[var(--verde-pino)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    [ngClass]="tabActivo === 'ordenes' ? 'bg-[var(--verde-oscuro)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
                     class="whitespace-nowrap lg:w-full text-left font-bold px-3.5 py-2.5 rounded-xl transition-all duration-200 flex justify-between items-center gap-2 text-xs shrink-0 cursor-pointer border border-black/5"
                     (click)="cambiarTab('ordenes')">
                 <span class="flex items-center gap-2"><i class="fas fa-bell w-4 text-center opacity-75"></i> NOTIFICACIONES</span>
@@ -32,31 +42,31 @@
                 }
             </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'inventario' ? 'bg-[var(--verde-pino)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    [ngClass]="tabActivo === 'inventario' ? 'bg-[var(--verde-oscuro)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
                     class="whitespace-nowrap lg:w-full text-left font-bold px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs shrink-0 flex items-center gap-2 cursor-pointer border border-black/5"
                     (click)="cambiarTab('inventario')">
                 <i class="fas fa-boxes w-4 text-center opacity-75"></i> INVENTARIO
             </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'fidelidad' ? 'bg-[var(--verde-pino)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    [ngClass]="tabActivo === 'fidelidad' ? 'bg-[var(--verde-oscuro)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
                     class="whitespace-nowrap lg:w-full text-left font-bold px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs shrink-0 flex items-center gap-2 cursor-pointer border border-black/5"
                     (click)="cambiarTab('fidelidad')">
                 <i class="fas fa-medal w-4 text-center opacity-75"></i> FIDELIDAD
             </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'marketing' ? 'bg-[var(--verde-pino)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    [ngClass]="tabActivo === 'marketing' ? 'bg-[var(--verde-oscuro)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
                     class="whitespace-nowrap lg:w-full text-left font-bold px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs shrink-0 flex items-center gap-2 cursor-pointer border border-black/5"
                     (click)="cambiarTab('marketing')">
                 <i class="fas fa-bullhorn w-4 text-center opacity-75"></i> MARKETING
             </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'ruleta' ? 'bg-[var(--verde-pino)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    [ngClass]="tabActivo === 'ruleta' ? 'bg-[var(--verde-oscuro)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
                     class="whitespace-nowrap lg:w-full text-left font-bold px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs shrink-0 flex items-center gap-2 cursor-pointer border border-black/5"
                     (click)="cambiarTab('ruleta')">
                 <i class="fas fa-dharmachakra w-4 text-center opacity-75"></i> RULETA
             </button>
             <button type="button"
-                    [ngClass]="tabActivo === 'perfil' ? 'bg-[var(--verde-pino)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
+                    [ngClass]="tabActivo === 'perfil' ? 'bg-[var(--verde-oscuro)] text-white shadow-sm' : 'bg-[var(--bg-card)] text-gray-600 hover:text-[var(--verde-pino)] hover:bg-white'"
                     class="whitespace-nowrap lg:w-full text-left font-bold px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs shrink-0 flex items-center gap-2 cursor-pointer border border-black/5"
                     (click)="cambiarTab('perfil')">
                 <i class="fas fa-user-circle w-4 text-center opacity-75"></i> MI PERFIL
@@ -85,24 +95,36 @@
                                 }
                             </div>
 
-                            <div class="flex bg-[#dcd7cb]/70 p-1 rounded-xl gap-1">
+                            <div class="empleado-filter-bar flex flex-wrap bg-[#dcd7cb] p-1 rounded-xl gap-1 border border-black/5">
                                 <button type="button"
                                         (click)="filtroEstadoOrden = 'todos'"
                                         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border-none whitespace-nowrap"
-                                        [ngClass]="filtroEstadoOrden === 'todos' ? 'bg-[var(--verde-pino)] text-white shadow-xs' : 'bg-transparent text-gray-600 hover:text-[var(--verde-pino)]'">
+                                        [ngClass]="filtroEstadoOrden === 'todos' ? 'bg-[var(--verde-oscuro)] text-white shadow-xs' : 'bg-transparent text-gray-700 hover:text-[var(--verde-pino)]'">
                                     Todos ({{ reservas_activas.length }})
                                 </button>
                                 <button type="button"
                                         (click)="filtroEstadoOrden = 'pendiente'"
                                         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border-none whitespace-nowrap"
-                                        [ngClass]="filtroEstadoOrden === 'pendiente' ? 'bg-[var(--terracota)] text-white shadow-xs' : 'bg-transparent text-gray-600 hover:text-[var(--terracota)]'">
+                                        [ngClass]="filtroEstadoOrden === 'pendiente' ? 'bg-[var(--terracota)] text-white shadow-xs' : 'bg-transparent text-gray-700 hover:text-[var(--terracota)]'">
                                     Pago Pendiente
+                                </button>
+                                <button type="button"
+                                        (click)="filtroEstadoOrden = 'aceptado'"
+                                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border-none whitespace-nowrap"
+                                        [ngClass]="filtroEstadoOrden === 'aceptado' ? 'bg-sky-600 text-white shadow-xs' : 'bg-transparent text-gray-700 hover:text-sky-500'">
+                                    Aceptados
                                 </button>
                                 <button type="button"
                                         (click)="filtroEstadoOrden = 'esperando_recojo'"
                                         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border-none whitespace-nowrap"
-                                        [ngClass]="filtroEstadoOrden === 'esperando_recojo' ? 'bg-[var(--verde-oliva)] text-white shadow-xs' : 'bg-transparent text-gray-600 hover:text-[var(--verde-oliva)]'">
-                                    Listo Recojo
+                                        [ngClass]="filtroEstadoOrden === 'esperando_recojo' ? 'bg-[var(--verde-oliva)] text-white shadow-xs' : 'bg-transparent text-gray-700 hover:text-[var(--verde-oliva)]'">
+                                    Listo Recojo / Servir
+                                </button>
+                                <button type="button"
+                                        (click)="filtroEstadoOrden = 'desatendida'"
+                                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border-none whitespace-nowrap"
+                                        [ngClass]="filtroEstadoOrden === 'desatendida' ? 'bg-amber-600 text-white shadow-xs' : 'bg-transparent text-gray-700 hover:text-amber-500'">
+                                    Desatendidas (&gt;3h)
                                 </button>
                             </div>
                         </div>
@@ -120,7 +142,8 @@
                             </div>
                         } @else {
                             @for (reserva of ordenesActivasFiltradas; track reserva.id_reserva) {
-                                <div class="bg-white rounded-xl p-4 sm:p-5 border-l-4 shadow-sm transition-all" [ngClass]="reserva.estado === 'esperando_recojo' ? 'border-[var(--verde-oliva)] bg-[#fdfbf7]' : 'border-[var(--terracota)]'">
+                                <div class="bg-white rounded-xl p-4 sm:p-5 border-l-4 shadow-sm transition-all"
+                                     [ngClass]="reserva.estado === 'esperando_recojo' ? 'border-[var(--verde-oliva)] bg-[#fdfbf7]' : (reserva.estado === 'aceptado' ? 'border-sky-600' : (reserva.estado === 'desatendida' ? 'border-amber-600 bg-amber-50/40' : 'border-[var(--terracota)]'))">
                                     <div class="flex flex-wrap justify-between items-center gap-2 cursor-pointer" (click)="toggleOrden(reserva.id_reserva)">
                                         <h3 class="text-base sm:text-lg font-bold text-[var(--cafe-oscuro)] m-0 flex items-center gap-2">
                                             <i class="fas fa-chevron-right text-xs transition-transform duration-300" [class.rotate-90]="ordenesExpandidas.has(reserva.id_reserva)"></i>
@@ -128,8 +151,11 @@
                                             Orden #{{ reserva.id_reserva }}
                                             <span class="text-xs font-normal text-gray-500 ml-1">• {{ reserva.cliente }}</span>
                                         </h3>
-                                        <span class="text-white px-3 py-1 rounded-full text-[11px] font-bold" [ngClass]="reserva.estado === 'esperando_recojo' ? 'bg-[var(--verde-oliva)]' : 'bg-[var(--terracota)]'">
-                                            {{ reserva.estado === 'esperando_recojo' ? 'LISTO PARA RECOJO' : 'PAGO PENDIENTE' }}
+                                        <span class="text-white px-3 py-1 rounded-full text-[11px] font-bold"
+                                              [ngClass]="reserva.estado === 'esperando_recojo' ? 'bg-[var(--verde-oliva)]' : (reserva.estado === 'aceptado' ? 'bg-sky-600' : (reserva.estado === 'desatendida' ? 'bg-amber-600' : 'bg-[var(--terracota)]'))">
+                                            {{ reserva.estado === 'esperando_recojo'
+                                                ? ((reserva.tipo_consumo || reserva.tipoConsumo) === 'en_mesa' ? 'LISTO PARA SERVIR' : 'LISTO PARA RECOJO')
+                                                : (reserva.estado === 'aceptado' ? 'PEDIDO ACEPTADO (EN PREPARACIÓN)' : (reserva.estado === 'desatendida' ? 'DESATENDIDA (>3H - EN LOCAL)' : 'PAGO PENDIENTE')) }}
                                         </span>
                                     </div>
 
@@ -144,6 +170,24 @@
 
                                                 @if (obtenerTelefonoOrden(reserva)) {
                                                     <p class="my-1.5 text-gray-700 text-sm"><strong class="text-[var(--cafe-oscuro)]"><i class="fab fa-whatsapp text-green-600 w-5 text-center"></i> Teléfono:</strong> {{ obtenerTelefonoOrden(reserva) }}</p>
+                                                }
+
+                                                <p class="my-1.5 text-gray-700 text-sm">
+                                                    <strong class="text-[var(--cafe-oscuro)]"><i class="fas fa-utensils w-5 text-center"></i> Modalidad:</strong>
+                                                    {{ (reserva.tipo_consumo || reserva.tipoConsumo) === 'en_mesa' ? 'Para Mesa (En el local)' : 'Para Llevar / Recojo' }}
+                                                </p>
+
+                                                @if (reserva.tiempo_llegada || reserva.tiempoLlegada) {
+                                                    <p class="my-1.5 text-gray-700 text-sm">
+                                                        <strong class="text-[var(--cafe-oscuro)]"><i class="fas fa-clock w-5 text-center"></i> Plazo estimado:</strong>
+                                                        {{ reserva.tiempo_llegada || reserva.tiempoLlegada }}
+                                                    </p>
+                                                }
+
+                                                @if (reserva.mensaje_cafeteria || reserva.mensajeCafeteria) {
+                                                    <p class="my-1.5 text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold">
+                                                        <i class="fas fa-mug-hot mr-1"></i> <strong>Nota Cafetería:</strong> {{ reserva.mensaje_cafeteria || reserva.mensajeCafeteria }}
+                                                    </p>
                                                 }
 
                                                 @if (reserva.comprobante_pago) {
@@ -169,9 +213,15 @@
 
                                         <div class="flex flex-col sm:flex-row gap-2.5 border-t border-gray-100 pt-3.5 mt-3.5">
                                             @if (reserva.estado === 'pendiente') {
-                                                <button type="button" class="flex-1 bg-[var(--verde-oliva)] text-white py-2 rounded-lg font-bold hover:brightness-110 transition-all flex justify-center items-center gap-1.5 text-xs sm:text-sm cursor-pointer border-none" (click)="ejecutarAccionOrden(reserva.id_reserva, 'aprobar')"><i class="fas fa-check"></i> Aprobar</button>
+                                                <button type="button" class="flex-1 bg-[var(--verde-oscuro)] text-white py-2 rounded-lg font-bold hover:brightness-110 transition-all flex justify-center items-center gap-1.5 text-xs sm:text-sm cursor-pointer border-none" (click)="ejecutarAccionOrden(reserva.id_reserva, 'aprobar')"><i class="fas fa-check"></i> Aceptar Pedido</button>
                                                 <button type="button" class="flex-1 bg-transparent border border-gray-300 text-red-500 py-2 rounded-lg font-bold hover:bg-gray-50 transition-all flex justify-center items-center gap-1.5 text-xs sm:text-sm cursor-pointer" (click)="ejecutarAccionOrden(reserva.id_reserva, 'cancelar')"><i class="fas fa-times"></i> Rechazar</button>
                                                 <button type="button" class="flex-1 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600 transition-all flex justify-center items-center gap-1.5 text-xs sm:text-sm cursor-pointer border-none" (click)="ejecutarAccionOrden(reserva.id_reserva, 'reportar', reserva.id_usuario)"><i class="fas fa-ban"></i> Reportar</button>
+                                            } @else if (reserva.estado === 'aceptado') {
+                                                <button type="button" class="flex-[1.5] bg-[var(--verde-oliva)] text-white py-2 rounded-lg font-bold hover:brightness-110 transition-all flex justify-center items-center gap-1.5 text-xs sm:text-sm cursor-pointer border-none" (click)="ejecutarAccionOrden(reserva.id_reserva, 'listo')">
+                                                    <i class="fas fa-bell"></i> {{ (reserva.tipo_consumo || reserva.tipoConsumo) === 'en_mesa' ? 'Listo para Servir' : 'Listo para Recojo' }}
+                                                </button>
+                                                <button type="button" class="flex-1 bg-transparent border border-gray-300 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-50 transition-all flex justify-center items-center gap-1.5 text-xs sm:text-sm cursor-pointer" (click)="abrirPDF(reserva.id_reserva)"><i class="fas fa-print"></i> Ver Ticket</button>
+                                                <button type="button" class="flex-1 bg-transparent border border-gray-300 text-red-500 py-2 rounded-lg font-bold hover:bg-gray-50 transition-all flex justify-center items-center gap-1.5 text-xs sm:text-sm cursor-pointer" (click)="ejecutarAccionOrden(reserva.id_reserva, 'cancelar')"><i class="fas fa-times"></i> Cancelar</button>
                                             } @else {
                                                 <button type="button" class="flex-1 bg-transparent border border-gray-300 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-50 transition-all flex justify-center items-center gap-1.5 text-xs sm:text-sm cursor-pointer" (click)="abrirPDF(reserva.id_reserva)"><i class="fas fa-print"></i> Ver Ticket</button>
                                                 @if (obtenerTelefonoOrden(reserva)) {
@@ -616,41 +666,41 @@
     </div>
 
     <!-- Footer Nav Discreto -->
-    <nav class="bg-[#dcd7cb] px-4 sm:px-7 py-2.5 flex flex-wrap justify-between items-center gap-2 border-t border-gray-300 w-full max-w-[1400px] mx-auto rounded-t-xl shrink-0">
+    <nav class="empleado-footer-nav bg-[#dcd7cb] px-4 sm:px-7 py-2.5 flex flex-wrap justify-between items-center gap-2 border-t border-gray-300 w-full max-w-[1400px] mx-auto rounded-t-xl shrink-0">
         <div class="flex flex-wrap gap-2">
-            <button type="button" class="bg-white/90 border border-gray-300 text-[var(--verde-pino)] px-3.5 py-1.5 rounded-full font-semibold hover:bg-[var(--verde-pino)] hover:text-white hover:border-[var(--verde-pino)] transition-colors flex items-center gap-1.5 text-xs cursor-pointer" (click)="irTienda()"><i class="fas fa-store"></i> Tienda</button>
+            <button type="button" class="bg-white border border-gray-300 text-[var(--verde-pino)] px-3.5 py-1.5 rounded-full font-semibold hover:bg-[var(--verde-oscuro)] hover:text-white hover:border-[var(--verde-oscuro)] transition-colors flex items-center gap-1.5 text-xs cursor-pointer" (click)="irTienda()"><i class="fas fa-store"></i> Tienda</button>
             @if (rolEmpleado === 'admin') {
-                <button type="button" class="bg-white/90 border border-gray-300 text-[var(--verde-pino)] px-3.5 py-1.5 rounded-full font-semibold hover:bg-[var(--verde-pino)] hover:text-white hover:border-[var(--verde-pino)] transition-colors flex items-center gap-1.5 text-xs cursor-pointer" (click)="irPanelAdmin()"><i class="fas fa-user-shield"></i> Panel Admin</button>
+                <button type="button" class="bg-white border border-gray-300 text-[var(--verde-pino)] px-3.5 py-1.5 rounded-full font-semibold hover:bg-[var(--verde-oscuro)] hover:text-white hover:border-[var(--verde-oscuro)] transition-colors flex items-center gap-1.5 text-xs cursor-pointer" (click)="irPanelAdmin()"><i class="fas fa-user-shield"></i> Panel Admin</button>
             }
         </div>
-        <button type="button" class="bg-white/90 border border-red-300 text-[var(--terracota)] px-3.5 py-1.5 rounded-full font-semibold hover:bg-[var(--terracota)] hover:text-white hover:border-[var(--terracota)] transition-colors flex items-center gap-1.5 text-xs cursor-pointer" (click)="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> Salir</button>
+        <button type="button" class="bg-white border border-red-300 text-[var(--terracota)] px-3.5 py-1.5 rounded-full font-semibold hover:bg-[var(--terracota)] hover:text-white hover:border-[var(--terracota)] transition-colors flex items-center gap-1.5 text-xs cursor-pointer" (click)="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> Salir</button>
     </nav>
+
+    <!-- Toast -->
+    @if (toastMsg) {
+        <div class="fixed bottom-8 right-8 bg-[var(--verde-oliva)] text-white px-6 py-4 rounded-xl font-bold shadow-xl flex items-center gap-3 z-[999999]">
+            <i class="fas fa-check-circle text-xl"></i> {{ toastMsg }}
+        </div>
+    }
+
+    <app-modales-empleado
+        [modalAbierto]="modalAbierto"
+        [itemEditando]="itemEditando"
+        [vistaInventario]="vistaInventario"
+        [cargando]="cargando"
+        [variantesDinamicas]="variantesDinamicas"
+        [tieneEstilos]="tieneEstilos"
+        [categorias]="categorias"
+        [verCategorias]="verCategorias"
+        [catEditando]="catEditando"
+        (cerrar)="cerrarModales()"
+        (guardar)="procesarFormulario($event.event, $event.accion)"
+        (accionEspecial)="ejecutarAccion($event.accion, $event.data)"
+        (toggleEstilos)="toggleEstilos($event)"
+        (agregarVariante)="agregarVariante()"
+        (eliminarVariante)="eliminarVariante($event)"
+        (gestionarCategorias)="abrirModalCategorias()"
+        (cerrarCat)="cerrarCategorias()"
+        (seleccionarCatParaEditar)="catEditando = $event">
+    </app-modales-empleado>
 </div>
-
-<!-- Toast -->
-@if (toastMsg) {
-    <div class="fixed bottom-8 right-8 bg-[var(--verde-oliva)] text-white px-6 py-4 rounded-xl font-bold shadow-xl flex items-center gap-3 z-[999999]">
-        <i class="fas fa-check-circle text-xl"></i> {{ toastMsg }}
-    </div>
-}
-
-<app-modales-empleado
-    [modalAbierto]="modalAbierto"
-    [itemEditando]="itemEditando"
-    [vistaInventario]="vistaInventario"
-    [cargando]="cargando"
-    [variantesDinamicas]="variantesDinamicas"
-    [tieneEstilos]="tieneEstilos"
-    [categorias]="categorias"
-    [verCategorias]="verCategorias"
-    [catEditando]="catEditando"
-    (cerrar)="cerrarModales()"
-    (guardar)="procesarFormulario($event.event, $event.accion)"
-    (accionEspecial)="ejecutarAccion($event.accion, $event.data)"
-    (toggleEstilos)="toggleEstilos($event)"
-    (agregarVariante)="agregarVariante()"
-    (eliminarVariante)="eliminarVariante($event)"
-    (gestionarCategorias)="abrirModalCategorias()"
-    (cerrarCat)="cerrarCategorias()"
-    (seleccionarCatParaEditar)="catEditando = $event">
-</app-modales-empleado>

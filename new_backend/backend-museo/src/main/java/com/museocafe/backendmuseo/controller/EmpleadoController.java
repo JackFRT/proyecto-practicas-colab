@@ -11,6 +11,7 @@ import com.museocafe.backendmuseo.repository.PedidoRepository;
 import com.museocafe.backendmuseo.repository.PremioRuletaRepository;
 import com.museocafe.backendmuseo.repository.ProductoRepository;
 import com.museocafe.backendmuseo.repository.UsuarioRepository;
+import com.museocafe.backendmuseo.service.LimpiezaAutomaticaService;
 import com.museocafe.backendmuseo.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ public class EmpleadoController {
     private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
     private final UsuarioService usuarioService;
+    private final LimpiezaAutomaticaService limpiezaAutomaticaService;
 
     public EmpleadoController(
             PedidoRepository pedidoRepository,
@@ -40,7 +42,8 @@ public class EmpleadoController {
             NoticiaRepository noticiaRepository,
             PremioRuletaRepository premioRuletaRepository,
             ProductoRepository productoRepository,
-            UsuarioService usuarioService
+            UsuarioService usuarioService,
+            LimpiezaAutomaticaService limpiezaAutomaticaService
     ) {
         this.pedidoRepository = pedidoRepository;
         this.usuarioRepository = usuarioRepository;
@@ -49,14 +52,17 @@ public class EmpleadoController {
         this.premioRuletaRepository = premioRuletaRepository;
         this.productoRepository = productoRepository;
         this.usuarioService = usuarioService;
+        this.limpiezaAutomaticaService = limpiezaAutomaticaService;
     }
 
     @GetMapping("/dashboard/{idEmpleado}")
     public ResponseEntity<?> obtenerDashboard(@PathVariable Long idEmpleado) {
         Map<String, Object> respuesta = new HashMap<>();
 
+        limpiezaAutomaticaService.marcarOrdenesDesatendidasPorTiempo();
+
         List<Pedido> ordenesActivas = pedidoRepository.findByEstadoInOrderByFechaPedidoAsc(
-                Arrays.asList("pendiente", "esperando_recojo", "preparando", "listo")
+                Arrays.asList("pendiente", "aceptado", "esperando_recojo", "preparando", "listo", "desatendida")
         );
 
         List<Pedido> todosPedidos = pedidoRepository.findAll();
@@ -134,9 +140,13 @@ public class EmpleadoController {
         String mensaje;
         switch (accion) {
             case "aprobar":
+            case "aceptar":
+                pedido.setEstado("aceptado");
+                mensaje = "Pedido aceptado y en preparación. Se notificó al cliente.";
+                break;
             case "listo":
                 pedido.setEstado("esperando_recojo");
-                mensaje = "Pago aprobado. La orden está lista para recojo.";
+                mensaje = "Pedido marcado como listo para recojo/servir. Se notificó al cliente.";
                 break;
             case "completar":
                 pedido.setEstado("recogido");

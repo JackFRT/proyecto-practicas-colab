@@ -4,6 +4,7 @@ import com.museocafe.backendmuseo.dto.LoginRequest;
 import com.museocafe.backendmuseo.model.Usuario;
 import com.museocafe.backendmuseo.repository.UsuarioRepository;
 import com.museocafe.backendmuseo.security.JwtUtil;
+import com.museocafe.backendmuseo.service.EmailService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class AuthController {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final EmailService emailService;
 
     // Protección Anti-Fuerza Bruta en memoria
     private static class IntentoLogin {
@@ -34,10 +36,11 @@ public class AuthController {
     private final Map<String, IntentoLogin> intentosPorCorreo = new ConcurrentHashMap<>();
     private static final int MAX_INTENTOS_FALLIDOS = 5;
 
-    public AuthController(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public AuthController(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, EmailService emailService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.emailService = emailService;
     }
 
     private String sanitizarTexto(String input) {
@@ -148,6 +151,10 @@ public class AuthController {
             nuevoUsuario.setPassword(passwordEncoder.encode(passwordPlano));
             nuevoUsuario.setDni(sanitizarTexto(payload.get("dni")));
             nuevoUsuario.setTelefono(sanitizarTexto(payload.get("telefono")));
+            String emailRec = sanitizarTexto(payload.get("email_recuperacion"));
+            if (!emailRec.isEmpty()) {
+                nuevoUsuario.setEmailRecuperacion(emailRec);
+            }
             nuevoUsuario.setRol("cliente");
 
             usuarioRepository.save(nuevoUsuario);
@@ -158,13 +165,30 @@ public class AuthController {
         }
     }
 
+    private Optional<Usuario> buscarPorEmailORecuperacion(String correoInput) {
+        if (correoInput == null || correoInput.isBlank()) return Optional.empty();
+        String limpio = correoInput.trim();
+        Optional<Usuario> opt = usuarioRepository.findByEmailIgnoreCase(limpio);
+        if (opt.isEmpty()) {
+            opt = usuarioRepository.findByEmailRecuperacionIgnoreCase(limpio);
+        }
+        return opt;
+    }
+
     @PostMapping("/recuperar/solicitar")
     public ResponseEntity<?> solicitarCodigo(@RequestBody Map<String, String> payload) {
-        String email = sanitizarTexto(payload.get("email"));
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        String emailInput = sanitizarTexto(payload.get("email"));
+        if (emailInput.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Ingresa un correo electrónico."));
+        }
+
+        Optional<Usuario> usuarioOpt = buscarPorEmailORecuperacion(emailInput);
 
         if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "El correo no existe."));
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "mensaje", "No encontramos ninguna cuenta asociada a ese correo principal o de recuperación."
+            ));
         }
 
         Usuario usuario = usuarioOpt.get();
@@ -175,43 +199,67 @@ public class AuthController {
 
         usuarioRepository.save(usuario);
 
-        System.out.println("=========================================");
-        System.out.println("CÓDIGO DE RECUPERACIÓN PARA " + email + ": " + codigo);
-        System.out.println("=========================================");
+        // Enviar al correo de recuperación asignado (si existe) y al correo principal de la cuenta
+        String correoPrincipal = usuario.getEmail() != null ? usuario.getEmail().trim() : "";
+        String correoRecup = usuario.getEmailRecuperacion() != null ? usuario.getEmailRecuperacion().trim() : "";
+
+        boolean enviadoSmtp = false;
+        String destinosLabel = emailInput;
+
+        if (!correoRecup.isEmpty()) {
+            enviadoSmtp = emailService.enviarCodigoRecuperacion(correoRecup, usuario.getNombre(), codigo);
+            if (!correoPrincipal.isEmpty() && !correoPrincipal.equalsIgnoreCase(correoRecup)) {
+                emailService.enviarCodigoRecuperacion(correoPrincipal, usuario.getNombre(), codigo);
+                destinosLabel = correoRecup + " y " + correoPrincipal;
+            } else {
+                destinosLabel = correoRecup;
+            }
+        } else {
+            enviadoSmtp = emailService.enviarCodigoRecuperacion(correoPrincipal, usuario.getNombre(), codigo);
+            destinosLabel = correoPrincipal;
+        }
+
+        String msg = enviadoSmtp
+                ? "Hemos enviado el código de 6 dígitos a: " + destinosLabel + ". Revisa tu bandeja de entrada o spam."
+                : "Código de 6 dígitos enviado a: " + destinosLabel + ". (Modo Local sin SMTP configurado: revisa la consola de Spring Boot).";
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "mensaje", "Código enviado a tu correo. (En entorno local revisa la consola o usa el código mostrado)."
+                "mensaje", msg
         ));
     }
 
     @PostMapping("/recuperar/cambiar")
     public ResponseEntity<?> cambiarPassword(@RequestBody Map<String, String> payload) {
-        String email = sanitizarTexto(payload.get("email"));
+        String emailInput = sanitizarTexto(payload.get("email"));
         String codigo = sanitizarTexto(payload.get("codigo"));
         String nuevaPassword = payload.get("nueva_password");
 
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        if (nuevaPassword == null || nuevaPassword.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Ingresa la nueva contraseña."));
+        }
+
+        Optional<Usuario> usuarioOpt = buscarPorEmailORecuperacion(emailInput);
 
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
 
             if (usuario.getCodigoRecuperacion() == null || !usuario.getCodigoRecuperacion().equals(codigo)) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Código inválido."));
+                return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "El código de 6 dígitos ingresado no es válido."));
             }
 
             if (usuario.getExpiracionCodigo() != null && LocalDateTime.now().isAfter(usuario.getExpiracionCodigo())) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "El código ha expirado. Solicita uno nuevo."));
             }
 
-            usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+            usuario.setPassword(passwordEncoder.encode(nuevaPassword.trim()));
             usuario.setCodigoRecuperacion(null);
             usuario.setExpiracionCodigo(null);
 
             usuarioRepository.save(usuario);
-            return ResponseEntity.ok(Map.of("success", true, "mensaje", "Contraseña actualizada con éxito."));
+            return ResponseEntity.ok(Map.of("success", true, "mensaje", "Contraseña restablecida con éxito."));
         }
 
-        return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "Correo incorrecto."));
+        return ResponseEntity.badRequest().body(Map.of("success", false, "mensaje", "No se encontró la cuenta asociada al correo."));
     }
 }

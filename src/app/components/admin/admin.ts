@@ -453,7 +453,7 @@ export class AdminPanel implements OnInit {
       <body>
         <table>
           <tr><td colspan="7" class="titulo">REPORTE DE VENTAS - CAFÉ AYACUCHANO &amp; CACTUS MUSEUM</td></tr>
-          <tr><td colspan="2"><strong>Sede:</strong></td><td colspan="5">Local Único Principal Ayacucho (https://maps.app.goo.gl/j9zGEJaTW7UxszBk9)</td></tr>
+          <tr><td colspan="2"><strong>Local:</strong></td><td colspan="5">Local del Museo y la Cafetería (https://maps.app.goo.gl/LChss4pEFzeCFT4P7)</td></tr>
           <tr><td colspan="2"><strong>Periodo:</strong></td><td colspan="5">${periodo}</td></tr>
           <tr><td colspan="2"><strong>Generado por:</strong></td><td colspan="5">${this.adminActual?.nombre || 'Administrador'} (${new Date().toLocaleString('es-PE')})</td></tr>
           <tr><td colspan="2"><strong>Órdenes en el periodo:</strong></td><td colspan="5">${this.ventasFiltradas.length}</td></tr>
@@ -597,7 +597,7 @@ export class AdminPanel implements OnInit {
         <div class="header">
           <div>
             <h1>Café Ayacuchano &amp; Cactus Museum</h1>
-            <p>Sede Única Principal: Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho</p>
+            <p>Local del Museo y la Cafetería: Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho</p>
             <p><strong>Reporte Ejecutivo de Ventas (Tickets Simples de Compra)</strong></p>
           </div>
           <div style="text-align:right;">

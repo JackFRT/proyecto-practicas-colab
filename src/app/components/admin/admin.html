@@ -1,4 +1,4 @@
-<div class="admin-dashboard-shell">
+<div class="admin-dashboard-shell" [class.light-mode]="!themeService.isDarkMode()">
     <!-- Encabezado Superior Ejecutivo con Botones Discretos -->
     <header class="admin-topbar">
         <div class="topbar-left">
@@ -14,7 +14,7 @@
                 <span class="brand-icon"><i class="fas fa-chess-king"></i></span>
                 <div>
                     <h1>Centro de Control Administrativo</h1>
-                    <small>Café Ayacuchano &amp; Cactus Museum • Sede Única Principal</small>
+                    <small>Café Ayacuchano &amp; Cactus Museum • Local del Museo y la Cafetería</small>
                 </div>
             </div>
         </div>
@@ -24,6 +24,11 @@
                 <i class="fas fa-shield-alt text-emerald"></i>
                 <span>{{ adminActual?.nombre || 'Administrador' }}</span>
             </span>
+
+            <button type="button" class="btn-discreet" (click)="themeService.toggleTheme()" title="Alternar modo claro u oscuro">
+                <i class="fas" [ngClass]="themeService.isDarkMode() ? 'fa-sun text-amber' : 'fa-moon'"></i>
+                <span class="hide-sm">{{ themeService.isDarkMode() ? 'Claro' : 'Oscuro' }}</span>
+            </button>
 
             <button type="button" class="btn-discreet" (click)="cargarDatos()" title="Actualizar métricas">
                 <i class="fas fa-sync-alt" [class.fa-spin]="cargando"></i>
@@ -95,9 +100,9 @@
                 </div>
 
                 <div class="sidebar-location-box">
-                    <div class="loc-header"><i class="fas fa-map-marker-alt"></i> Sede Habilitada</div>
-                    <p>Todas las compras y tickets corresponden al local único de Ayacucho.</p>
-                    <a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank" rel="noopener noreferrer">
+                    <div class="loc-header"><i class="fas fa-map-marker-alt"></i> Local del Museo y la Cafetería</div>
+                    <p>Todas las compras y tickets corresponden al local del museo y la cafetería.</p>
+                    <a href="https://maps.app.goo.gl/LChss4pEFzeCFT4P7" target="_blank" rel="noopener noreferrer">
                         Ver ubicación en Maps <i class="fas fa-external-link-alt"></i>
                     </a>
                 </div>
@@ -411,7 +416,7 @@
                         <div class="toolbar-header">
                             <div>
                                 <h2><i class="fas fa-file-invoice-dollar text-amber"></i> Historial de Ventas &amp; Tickets Simples</h2>
-                                <p>Todas las órdenes corresponden a la sede principal (<a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank" class="link-gold">Google Maps</a>)</p>
+                                <p>Todas las órdenes corresponden al local del museo y la cafetería (<a href="https://maps.app.goo.gl/LChss4pEFzeCFT4P7" target="_blank" class="link-gold">Google Maps</a>). Tickets simples de control interno (no SUNAT).</p>
                             </div>
 
                             <div class="toolbar-controls">

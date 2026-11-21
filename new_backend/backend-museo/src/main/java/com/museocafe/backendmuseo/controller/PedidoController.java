@@ -56,6 +56,39 @@ public class PedidoController {
         }
     }
 
+    @GetMapping("/notificaciones/{idUsuario}")
+    public ResponseEntity<?> obtenerNotificacionesCliente(@PathVariable Long idUsuario) {
+        List<Pedido> pedidos = pedidoRepository.findByUsuarioIdUsuarioOrderByFechaPedidoDesc(idUsuario);
+        List<Map<String, Object>> notificaciones = new ArrayList<>();
+
+        for (Pedido p : pedidos) {
+            String est = p.getEstado() != null ? p.getEstado().toLowerCase() : "";
+            if ("aceptado".equals(est) || "esperando_recojo".equals(est) || "listo".equals(est)) {
+                Map<String, Object> notif = new HashMap<>();
+                notif.put("id_reserva", p.getIdPedido());
+                notif.put("estado", est);
+                notif.put("fecha", p.getFechaPedido());
+                boolean esMesa = "en_mesa".equalsIgnoreCase(p.getTipoConsumo());
+
+                if ("aceptado".equals(est)) {
+                    notif.put("tipo", "aceptado");
+                    notif.put("titulo", "Pedido #" + p.getIdPedido() + " Aceptado");
+                    notif.put("mensaje", "Tu pago fue verificado y tu pedido fue aceptado. Ya lo estamos preparando en el local.");
+                } else {
+                    notif.put("tipo", "listo");
+                    notif.put("titulo", esMesa
+                            ? "¡Pedido #" + p.getIdPedido() + " Listo para Servir!"
+                            : "¡Pedido #" + p.getIdPedido() + " Listo para Recojo!");
+                    notif.put("mensaje", esMesa
+                            ? "Tu pedido está listo para servir en mesa en el local del museo y la cafetería."
+                            : "Tu pedido ya está listo para recoger en el local del museo y la cafetería.");
+                }
+                notificaciones.add(notif);
+            }
+        }
+        return ResponseEntity.ok(Map.of("success", true, "notificaciones", notificaciones));
+    }
+
     @GetMapping("/detalle/{idOrCodigo}")
     public ResponseEntity<?> obtenerTicketJson(@PathVariable String idOrCodigo) {
         Optional<Pedido> pedidoOpt = buscarPedidoPorIdOCodigo(idOrCodigo);
@@ -142,6 +175,16 @@ public class PedidoController {
         }
         if (!telCensurado.isEmpty()) {
             datosClienteHtml.append("<div class='row'><span>Teléfono (Protegido):</span><strong>").append(telCensurado).append("</strong></div>");
+        }
+        if (p.getTipoConsumo() != null && !p.getTipoConsumo().isBlank()) {
+            String etiquetaConsumo = "en_mesa".equalsIgnoreCase(p.getTipoConsumo()) ? "Para Mesa (En el local)" : "Para Llevar / Recojo";
+            datosClienteHtml.append("<div class='row'><span>Modalidad:</span><strong>").append(etiquetaConsumo).append("</strong></div>");
+        }
+        if (p.getTiempoLlegada() != null && !p.getTiempoLlegada().isBlank()) {
+            datosClienteHtml.append("<div class='row'><span>Plazo de llegada:</span><strong>").append(p.getTiempoLlegada()).append("</strong></div>");
+        }
+        if (p.getMensajeCafeteria() != null && !p.getMensajeCafeteria().isBlank()) {
+            datosClienteHtml.append("<div class='row'><span>Nota Cafetería:</span><strong>").append(p.getMensajeCafeteria()).append("</strong></div>");
         }
         datosClienteHtml.append("<div class='row'><span>Fecha:</span><strong>").append(fecha).append("</strong></div>");
         datosClienteHtml.append("<div class='row'><span>Estado:</span><strong class='badge'>")
@@ -250,8 +293,11 @@ public class PedidoController {
 
                             <div class="footer">
                                 <strong>¡Gracias por tu preferencia!</strong><br>
-                                Presenta este ticket simple para recoger tu pedido en nuestro local principal
-                                (<a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank">Ver ubicación en Google Maps</a>).
+                                Presenta este ticket simple para el seguimiento y verificación de tu compra en el local del museo y la cafetería
+                                (<a href="https://maps.app.goo.gl/LChss4pEFzeCFT4P7" target="_blank">Ver ubicación en Google Maps</a>).<br>
+                                <span style="display:block;margin-top:6px;font-size:10.5px;color:#8c583a;">
+                                    * Este documento es únicamente un ticket simple de control interno y seguimiento de pedido. No es una boleta ni factura asociada con la SUNAT.
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -363,6 +409,8 @@ public class PedidoController {
             @RequestParam(value = "dni_opcional", defaultValue = "") String dniOpcional,
             @RequestParam(value = "telefono_cliente", defaultValue = "") String telefonoCliente,
             @RequestParam(value = "notas_cliente", defaultValue = "") String notasCliente,
+            @RequestParam(value = "tiempo_llegada", defaultValue = "") String tiempoLlegada,
+            @RequestParam(value = "mensaje_cafeteria", defaultValue = "") String mensajeCafeteria,
             @RequestParam("carrito") String carritoJson,
             @RequestParam(value = "comprobante", required = false) MultipartFile archivoComprobante
     ) {
@@ -412,6 +460,8 @@ public class PedidoController {
             nuevoPedido.setTipoComprobante(tipoComprobante);
             nuevoPedido.setDniOpcional(dniOpcional != null && !dniOpcional.isBlank() ? dniOpcional.trim() : usuario.getDni());
             nuevoPedido.setNotasCliente(notasCliente);
+            nuevoPedido.setTiempoLlegada(tiempoLlegada != null ? tiempoLlegada.trim() : "");
+            nuevoPedido.setMensajeCafeteria(mensajeCafeteria != null ? mensajeCafeteria.trim() : "");
             nuevoPedido.setComprobantePago(nombreArchivo);
             nuevoPedido.setRecompensaProcesada(false);
 

@@ -47,7 +47,7 @@
                ? 'bg-gradient-to-br from-[#2a1b12]/90 to-[#0a0503]/90 border-[#d1b88e]/30 shadow-[0_20px_50px_rgba(0,0,0,0.7)] text-white'
                : 'bg-gradient-to-br from-[#fffdf9] to-[#f1e8d6] border-[#8c583a]/30 shadow-[0_20px_50px_rgba(140,88,58,0.15)] text-[#1a281f]'">
         <div class="w-full max-w-[300px] md:max-w-none md:w-[38%] relative shrink-0">
-            <img src="/assets/images/decoracion/henryAy.jpg" alt="Ing. Henry Ayala" class="w-full aspect-square object-cover rounded-2xl border-4 border-[#d1b88e]/40 shadow-2xl transition-all duration-500">
+            <img src="/assets/images/decoracion/henryAy.jpg" alt="Ing. Henry Ayala" loading="lazy" decoding="async" class="w-full aspect-square object-cover rounded-2xl border-4 border-[#d1b88e]/40 shadow-2xl transition-all duration-500">
             <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-[#d1b88e] text-black py-2 px-6 rounded-full font-black tracking-[2px] uppercase text-xs shadow-lg whitespace-nowrap">
                 FUNDADOR
             </div>
@@ -73,6 +73,7 @@
             <div class="relative rounded-[2rem] overflow-hidden group aspect-[4/5] border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] cursor-pointer"
                  (click)="toggleTarjeta(1)">
                 <img src="/assets/images/decoracion/cactusWaris.jpg" alt="Herencia Wari"
+                     loading="lazy" decoding="async"
                      class="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                      [ngClass]="tarjetaActiva === 1 ? 'scale-110 blur-md brightness-50' : 'grayscale-[25%] group-hover:grayscale-0'">
                 <div class="absolute inset-0 transition-all duration-500"
@@ -97,6 +98,7 @@
             <div class="relative rounded-[2rem] overflow-hidden group aspect-[4/5] border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] cursor-pointer"
                  (click)="toggleTarjeta(2)">
                 <img src="/assets/images/decoracion/agroproductos.jpg" alt="Insumos"
+                     loading="lazy" decoding="async"
                      class="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                      [ngClass]="tarjetaActiva === 2 ? 'scale-110 blur-md brightness-50' : 'grayscale-[25%] group-hover:grayscale-0'">
                 <div class="absolute inset-0 transition-all duration-500"
@@ -121,6 +123,7 @@
             <div class="relative rounded-[2rem] overflow-hidden group aspect-[4/5] border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] cursor-pointer sm:col-span-2 lg:col-span-1"
                  (click)="toggleTarjeta(3)">
                 <img src="/assets/images/decoracion/artesanias.jpg" alt="Arte Local"
+                     loading="lazy" decoding="async"
                      class="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                      [ngClass]="tarjetaActiva === 3 ? 'scale-110 blur-md brightness-50' : 'grayscale-[25%] group-hover:grayscale-0'">
                 <div class="absolute inset-0 transition-all duration-500"
@@ -173,7 +176,7 @@
 
                         <div class="flex-1 p-6 sm:p-8 md:p-12 flex flex-col justify-center text-center md:text-left h-full z-20">
                             <h3 class="text-xl sm:text-2xl md:text-[1.9rem] font-black text-white m-0 mb-3 leading-tight uppercase drop-shadow-md">{{ noticia.titulo }}</h3>
-                            <p class="text-sm sm:text-base text-white/80 m-0 mb-6 leading-[1.6]">{{ noticia.descripcion }}</p>
+                            <p class="text-sm sm:text-base text-white/80 m-0 mb-6 leading-[1.6] whitespace-pre-line">{{ noticia.descripcion }}</p>
                             @if (noticia.link_destino) {
                                 <a [href]="noticia.link_destino" target="_blank" class="inline-flex justify-center md:justify-start items-center gap-3 bg-[#d1b88e] text-black w-max mx-auto md:mx-0 py-3 px-6 rounded-full font-bold no-underline uppercase text-xs sm:text-sm tracking-[1px] hover:scale-105 hover:bg-white transition-all shadow-lg">
                                     Ver Más <i class="fas fa-arrow-right"></i>
@@ -184,6 +187,8 @@
                             <img
                                 [src]="getRutaImagen(noticia.imagen_url, 'news')"
                                 [alt]="noticia.titulo"
+                                loading="lazy"
+                                decoding="async"
                                 class="block w-full h-auto object-contain"
                             >
                         </div>
@@ -195,7 +200,7 @@
                 <div class="flex justify-center gap-2.5 mt-6">
                     @for (noticia of noticias; track noticia.id_noticia; let i = $index) {
                         <div class="relative w-[50px] sm:w-[60px] h-[6px] bg-gray-500/30 rounded-full cursor-pointer overflow-hidden" (click)="cambiarNoticia(i)">
-                            <div class="absolute top-0 left-0 h-full bg-[#d1b88e] rounded-full transition-[width] duration-50 ease-linear" [style.width.%]="i === noticiaActualIndex ? currentProgress() : 0"></div>
+                            <div class="absolute top-0 left-0 h-full bg-[#d1b88e] rounded-full transition-[width] duration-500 ease-linear" [style.width.%]="i === noticiaActualIndex ? currentProgress() : 0"></div>
                         </div>
                     }
                 </div>

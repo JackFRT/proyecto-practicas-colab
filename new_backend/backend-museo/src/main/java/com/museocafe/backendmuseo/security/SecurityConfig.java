@@ -40,6 +40,7 @@ public class SecurityConfig {
                         "/api/publico/**",
                         "/api/pedidos/ticket/**",
                         "/api/pedidos/comprobante/**",
+                        "/api/pedidos/notificaciones/**",
                         "/api/ruleta/premios",
                         "/api/ruleta/cargar/**",
                         "/images/**",
@@ -63,12 +64,19 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost:80,https://*.pages.dev,https://*.up.railway.app}")
+    private String allowedOriginsConfig;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:80"));
+        java.util.List<String> patrones = Arrays.stream(allowedOriginsConfig.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.toList());
+        configuration.setAllowedOriginPatterns(patrones);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

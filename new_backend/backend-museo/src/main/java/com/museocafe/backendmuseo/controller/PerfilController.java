@@ -135,6 +135,9 @@ public class PerfilController {
             if (payload.get("telefono") != null) {
                 usuario.setTelefono(payload.get("telefono").toString().trim());
             }
+            if (payload.get("email_recuperacion") != null) {
+                usuario.setEmailRecuperacion(payload.get("email_recuperacion").toString().trim());
+            }
 
             Object passObj = payload.get("nueva_password") != null ? payload.get("nueva_password") : payload.get("password");
             if (passObj != null && !passObj.toString().trim().isEmpty()) {

@@ -823,6 +823,95 @@
 .fade-in { animation: fadeIn 0.25s ease forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
+/* MODO CLARO PARA PANEL DE ADMINISTRADOR */
+.admin-dashboard-shell.light-mode {
+    background: #efeae1;
+    color: #1e261f;
+}
+.admin-dashboard-shell.light-mode .admin-topbar,
+.admin-dashboard-shell.light-mode .admin-sidebar,
+.admin-dashboard-shell.light-mode .kpi-card,
+.admin-dashboard-shell.light-mode .panel-card,
+.admin-dashboard-shell.light-mode .period-stat,
+.admin-dashboard-shell.light-mode .quick-link-btn {
+    background: #fffdf9;
+    border-color: #dcd3c2;
+    color: #1e261f;
+    box-shadow: 0 4px 14px rgba(45, 66, 52, 0.05);
+}
+.admin-dashboard-shell.light-mode .brand-title h1,
+.admin-dashboard-shell.light-mode .kpi-value,
+.admin-dashboard-shell.light-mode .panel-card-header h3,
+.admin-dashboard-shell.light-mode .toolbar-header h2,
+.admin-dashboard-shell.light-mode .user-cell-name,
+.admin-dashboard-shell.light-mode .status-val,
+.admin-dashboard-shell.light-mode .bar-metric,
+.admin-dashboard-shell.light-mode .period-stat strong {
+    color: #1a281f;
+}
+.admin-dashboard-shell.light-mode .brand-title small,
+.admin-dashboard-shell.light-mode .kpi-label,
+.admin-dashboard-shell.light-mode .kpi-sub,
+.admin-dashboard-shell.light-mode .panel-card-header p,
+.admin-dashboard-shell.light-mode .toolbar-header p,
+.admin-dashboard-shell.light-mode .status-label,
+.admin-dashboard-shell.light-mode .bar-name,
+.admin-dashboard-shell.light-mode .user-cell-sub,
+.admin-dashboard-shell.light-mode .chip-subtle,
+.admin-dashboard-shell.light-mode .period-stat span,
+.admin-dashboard-shell.light-mode .sidebar-group-title,
+.admin-dashboard-shell.light-mode .quick-link-btn small {
+    color: #5c5346;
+}
+.admin-dashboard-shell.light-mode .btn-discreet,
+.admin-dashboard-shell.light-mode .btn-discreet-xs {
+    background: #f4efe6;
+    border-color: #d4c8b4;
+    color: #2b3a2f;
+}
+.admin-dashboard-shell.light-mode .btn-discreet:hover,
+.admin-dashboard-shell.light-mode .btn-discreet-xs:hover {
+    background: #2b3a2f;
+    color: #fff;
+}
+.admin-dashboard-shell.light-mode .sidebar-menu button {
+    color: #4a3f35;
+}
+.admin-dashboard-shell.light-mode .sidebar-menu button.active {
+    background: #2b3a2f;
+    color: #fff;
+}
+.admin-dashboard-shell.light-mode .clean-table th {
+    background: #f2ece1;
+    color: #4a3f35;
+}
+.admin-dashboard-shell.light-mode .clean-table td {
+    border-bottom-color: #ebe4d8;
+    color: #1e261f;
+}
+.admin-dashboard-shell.light-mode .compact-search input,
+.admin-dashboard-shell.light-mode .compact-select {
+    background: #f8f4ec;
+    border-color: #d4c8b4;
+    color: #1a281f;
+}
+.admin-dashboard-shell.light-mode .stacked-bar,
+.admin-dashboard-shell.light-mode .status-bar-wrap,
+.admin-dashboard-shell.light-mode .bar-track {
+    background: #e6dfd3;
+}
+.admin-dashboard-shell.light-mode .text-emerald,
+.admin-dashboard-shell.light-mode .amount-cell { color: #2d5a3c; }
+.admin-dashboard-shell.light-mode .text-amber,
+.admin-dashboard-shell.light-mode .link-gold,
+.admin-dashboard-shell.light-mode .loc-header,
+.admin-dashboard-shell.light-mode .sidebar-location-box a { color: #9c6b19; }
+.admin-dashboard-shell.light-mode .admin-badge {
+    background: #e3eed8;
+    border-color: #a3b18a;
+    color: #1e2d23;
+}
+
 /* RESPONSIVO */
 @media (max-width: 1100px) {
     .kpi-row { grid-template-columns: repeat(2, 1fr); }

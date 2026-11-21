@@ -60,6 +60,9 @@ public class Usuario {
     @Column(length = 20)
     private String telefono;
 
+    @Column(name = "email_recuperacion", length = 100)
+    private String emailRecuperacion;
+
     // LÓGICA DE RECUPERACIÓN (Lombok genera get/set automáticamente)
     @JsonIgnore // Tampoco queremos que el código viaje en consultas públicas
     @Column(name = "codigo_recuperacion", length = 6)
@@ -107,5 +110,10 @@ public class Usuario {
     @JsonProperty("bloqueado_hasta")
     public LocalDateTime getBloqueadoHastaSnake() {
         return bloqueadoHasta;
+    }
+
+    @JsonProperty("email_recuperacion")
+    public String getEmailRecuperacionSnake() {
+        return emailRecuperacion != null ? emailRecuperacion : "";
     }
 }

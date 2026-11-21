@@ -1,4 +1,4 @@
-<div class="perfil-glass-wrapper">
+<div class="perfil-glass-wrapper" [class.light-mode]="!themeService.isDarkMode()">
     <header class="perfil-header">
         <div class="header-left-group">
             <button type="button" class="btn-glass-discreet" (click)="menuLateralAbierto = !menuLateralAbierto" [title]="menuLateralAbierto ? 'Ocultar menú lateral' : 'Desplegar menú lateral'">
@@ -99,47 +99,111 @@
                 @if (tabActivo === 'info') {
                     <section class="fade-in">
                         <h2 class="section-title"><i class="fas fa-cog"></i> Configuración de Cuenta</h2>
-                        <div class="glass-card form-container">
-                            <div class="form-group">
-                                <label>Nombre Completo</label>
-                                <input type="text" class="glass-input" [(ngModel)]="editNombre">
-                            </div>
-                            <div class="form-group">
-                                <label>Correo Electrónico</label>
-                                <input type="email" class="glass-input" [(ngModel)]="editEmail" disabled title="El correo electrónico es el identificador principal de tu cuenta.">
-                            </div>
-                            <div class="grid-2">
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 20px; align-items: start;">
+                            <!-- TARJETA 1: DATOS PERSONALES Y CORREO DE RECUPERACIÓN -->
+                            <div class="glass-card" style="padding: 24px;">
+                                <h3 style="margin: 0 0 6px 0; color: #A3B18A; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-user-edit"></i> Datos Personales
+                                </h3>
+                                <p style="margin: 0 0 18px 0; font-size: 0.8rem; color: rgba(255,255,255,0.55);">
+                                    Mantén actualizados tus datos y tu correo de recuperación.
+                                </p>
+
                                 <div class="form-group">
-                                    <label>DNI <small>(Opcional - Para mejor reconocimiento, máx. 8 dígitos)</small></label>
-                                    <input type="text" inputmode="numeric" class="glass-input" [(ngModel)]="editDni" placeholder="Opcional (8 dígitos)">
-                                    @if (alertaDni) {
-                                        <div style="margin-top: 6px; padding: 8px 12px; border-radius: 10px; background: rgba(255, 71, 87, 0.15); border-left: 4px solid #ff4757; color: #ff6b81; font-size: 0.78rem; font-weight: 700;">
-                                            <i class="fas fa-exclamation-circle"></i> {{ alertaDni }}
-                                        </div>
-                                    }
+                                    <label>Nombre Completo</label>
+                                    <input type="text" class="glass-input" [(ngModel)]="editNombre" placeholder="Tu nombre">
                                 </div>
+
                                 <div class="form-group">
-                                    <label>Celular / WhatsApp <small>(Máx. 9 dígitos)</small></label>
-                                    <input type="text" inputmode="numeric" class="glass-input" [(ngModel)]="editTelefono" placeholder="Ej: 999888777">
-                                    @if (alertaTelefono) {
-                                        <div style="margin-top: 6px; padding: 8px 12px; border-radius: 10px; background: rgba(255, 71, 87, 0.15); border-left: 4px solid #ff4757; color: #ff6b81; font-size: 0.78rem; font-weight: 700;">
-                                            <i class="fas fa-exclamation-circle"></i> {{ alertaTelefono }}
-                                        </div>
-                                    }
+                                    <label>Correo Principal de la Cuenta</label>
+                                    <input type="email" class="glass-input" [(ngModel)]="editEmail" disabled style="opacity: 0.65; cursor: not-allowed;" title="El correo principal es el identificador de tu cuenta.">
                                 </div>
+
+                                <div class="form-group">
+                                    <label>Correo de Recuperación <small>(Por si olvidas tu contraseña)</small></label>
+                                    <input type="email" class="glass-input" [(ngModel)]="editEmailRecuperacion" placeholder="ejemplo_respaldo@correo.com">
+                                </div>
+
+                                <div class="grid-2" style="align-items: start;">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label style="white-space: nowrap;">DNI <small>(Opcional, máx. 8)</small></label>
+                                        <input type="text" inputmode="numeric" class="glass-input" [(ngModel)]="editDni" placeholder="Opcional (8 dígitos)">
+                                        @if (alertaDni) {
+                                            <div style="margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 71, 87, 0.15); border-left: 3px solid #ff4757; color: #ff6b81; font-size: 0.75rem; font-weight: 700;">
+                                                <i class="fas fa-exclamation-circle"></i> {{ alertaDni }}
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label style="white-space: nowrap;">Celular / WhatsApp <small>(Máx. 9)</small></label>
+                                        <input type="text" inputmode="numeric" class="glass-input" [(ngModel)]="editTelefono" placeholder="Ej: 999888777">
+                                        @if (alertaTelefono) {
+                                            <div style="margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 71, 87, 0.15); border-left: 3px solid #ff4757; color: #ff6b81; font-size: 0.75rem; font-weight: 700;">
+                                                <i class="fas fa-exclamation-circle"></i> {{ alertaTelefono }}
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn-glass-solid" style="margin-top: 20px;" (click)="actualizarPerfil()" [disabled]="cargando">
+                                    <i class="fas fa-save"></i> {{ cargando ? 'Guardando...' : 'Guardar Datos Personales' }}
+                                </button>
                             </div>
-                            <div class="form-group">
-                                <label>Nueva Contraseña <small>(Deja en blanco si no quieres cambiarla)</small></label>
-                                <input type="password" class="glass-input" [(ngModel)]="editPass" placeholder="••••••••">
-                                @if (alertaPassword) {
-                                    <div style="margin-top: 6px; padding: 10px 14px; border-radius: 10px; background: rgba(243, 156, 18, 0.18); border-left: 4px solid #f39c12; color: #f8c291; font-size: 0.8rem; font-weight: 700;">
-                                        <i class="fas fa-shield-alt"></i> {{ alertaPassword }}
+
+                            <!-- TARJETA 2: RESTABLECER CONTRASEÑA MEDIANTE CÓDIGO AL CORREO -->
+                            <div class="glass-card" style="padding: 24px;">
+                                <h3 style="margin: 0 0 6px 0; color: #FFE066; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-key"></i> Restablecer Contraseña por Correo
+                                </h3>
+                                <p style="margin: 0 0 18px 0; font-size: 0.8rem; color: rgba(255,255,255,0.55);">
+                                    Ingresa tu correo principal o de recuperación para enviarte un código de verificación de 6 dígitos.
+                                </p>
+
+                                @if (mensajeCambioPass) {
+                                    <div style="margin-bottom: 14px; padding: 10px 12px; border-radius: 10px; font-size: 0.78rem; font-weight: 700;"
+                                         [ngStyle]="mensajeCambioPass.tipo === 'exito'
+                                            ? {'background': 'rgba(46, 204, 113, 0.15)', 'border-left': '3px solid #2ecc71', 'color': '#7bed9f'}
+                                            : {'background': 'rgba(255, 71, 87, 0.15)', 'border-left': '3px solid #ff4757', 'color': '#ff6b81'}">
+                                        <i class="fas" [ngClass]="mensajeCambioPass.tipo === 'exito' ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
+                                        {{ mensajeCambioPass.texto }}
+                                    </div>
+                                }
+
+                                <div class="form-group">
+                                    <label>Correo donde recibirás el código</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="email" class="glass-input" [(ngModel)]="correoParaCodigo" placeholder="Tu correo registrado o de recuperación">
+                                        <button type="button" class="btn-glass-outline" (click)="solicitarCodigoCambioPassword()" [disabled]="enviandoCodigo">
+                                            <i class="fas fa-paper-plane"></i>
+                                            {{ enviandoCodigo ? 'Enviando...' : (pasoCambioPassword === 2 ? 'Reenviar' : 'Enviar Código') }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @if (pasoCambioPassword === 2) {
+                                    <div class="fade-in" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.12);">
+                                        <div class="form-group">
+                                            <label>Código de 6 dígitos recibido</label>
+                                            <input type="text" class="glass-input" [(ngModel)]="codigoVerificacionPass" placeholder="Ej: 123456">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Nueva Contraseña</label>
+                                            <input type="password" class="glass-input" [(ngModel)]="editPass" placeholder="Escribe tu nueva contraseña">
+                                            @if (alertaPassword) {
+                                                <div style="margin-top: 6px; padding: 9px 12px; border-radius: 10px; background: rgba(243, 156, 18, 0.18); border-left: 3px solid #f39c12; color: #f8c291; font-size: 0.76rem; font-weight: 700;">
+                                                    <i class="fas fa-shield-alt"></i> {{ alertaPassword }}
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <button type="button" class="btn-glass-solid" (click)="confirmarCambioPasswordConCodigo()" [disabled]="enviandoCodigo">
+                                            <i class="fas fa-check-circle"></i> Confirmar Nueva Contraseña
+                                        </button>
                                     </div>
                                 }
                             </div>
-                            <button type="button" class="btn-glass-solid mt-15" (click)="actualizarPerfil()" [disabled]="cargando">
-                                <i class="fas fa-save"></i> {{ cargando ? 'Guardando...' : 'Guardar Cambios' }}
-                            </button>
                         </div>
                     </section>
                 }
@@ -164,7 +228,9 @@
                                                 <p><i class="far fa-calendar-alt"></i> {{ reserva.fecha_reserva | date:'short' }} | Total: <strong>S/ {{ reserva.total_pagado | number:'1.2-2' }}</strong></p>
                                             </div>
                                             <div class="order-status-badge" [ngClass]="'status-' + reserva.estado">
-                                                {{ reserva.estado === 'esperando_recojo' ? 'LISTO PARA RECOJO' : (reserva.estado | uppercase) }}
+                                                {{ reserva.estado === 'esperando_recojo'
+                                                    ? ((reserva.tipo_consumo || reserva.tipoConsumo) === 'en_mesa' ? 'LISTO PARA SERVIR' : 'LISTO PARA RECOJO')
+                                                    : (reserva.estado === 'aceptado' ? 'PEDIDO ACEPTADO' : (reserva.estado | uppercase)) }}
                                             </div>
                                         </div>
 
@@ -187,8 +253,8 @@
                                                 </div>
                                                 <div class="order-footer-actions">
                                                     <span class="comprobante-text">
-                                                        <i class="fas fa-receipt"></i> Ticket Simple de Compra •
-                                                        <a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank" rel="noopener noreferrer" style="color: #A3B18A; text-decoration: underline;">Recojo en Local Único (Maps)</a>
+                                                        <i class="fas fa-receipt"></i> Ticket Simple (Solo seguimiento y verificación de compra, no boleta/factura SUNAT) •
+                                                        <a href="https://maps.app.goo.gl/LChss4pEFzeCFT4P7" target="_blank" rel="noopener noreferrer" style="color: #A3B18A; text-decoration: underline;">Recojo en el Local del Museo y la Cafetería (Maps)</a>
                                                     </span>
 
                                                     @if (reserva.estado !== 'cancelado') {

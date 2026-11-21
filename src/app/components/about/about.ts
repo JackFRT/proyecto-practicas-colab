@@ -78,14 +78,17 @@ export class About implements OnInit, OnDestroy {
 
     if (this.noticias.length > 1) {
       this.intervaloPase = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
         this.moverNoticia(1);
       }, this.finalDuration);
 
-      const step = 100 / (this.finalDuration / 50);
+      // Actualización optimizada cada 500ms en lugar de 50ms para reducir consumo de CPU
+      const step = 100 / (this.finalDuration / 500);
 
       this.intervaloProgreso = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
         this.currentProgress.update(prev => Math.min(100, prev + step));
-      }, 50);
+      }, 500);
     }
   }
 

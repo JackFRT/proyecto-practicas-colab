@@ -201,11 +201,28 @@
         &times;
       </button>
 
-      <h3 class="text-[#d1b88e] font-black text-lg mb-3 m-0 uppercase tracking-[1px] text-center">NUESTRA UBICACIÓN OFICIAL</h3>
+      <h3 class="text-[#d1b88e] font-black text-lg mb-3 m-0 uppercase tracking-[1px] text-center">LOCAL DEL MUSEO Y LA CAFETERÍA</h3>
 
-      <a href="https://maps.app.goo.gl/JSJCbbUuHKqSc34X7" target="_blank" rel="noopener noreferrer" class="block relative w-full h-[210px] overflow-hidden rounded-xl border border-white/10">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31061.04285149372!2d-74.23862214482729!3d-13.15414002766023!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91127d75df0709b1%3A0xcb065ec016b8d41a!2sAyacucho!5e0!3m2!1ses!2spe!4v1713835000000!5m2!1ses!2spe" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-      </a>
+      <div class="relative w-full h-[215px] overflow-hidden rounded-xl border border-white/15 group">
+        @if (mapaActivo) {
+          <iframe src="https://maps.google.com/maps?q=-13.1564479,-74.2018571&amp;hl=es&amp;z=18&amp;output=embed"
+                  width="100%"
+                  height="100%"
+                  style="border:0;"
+                  loading="lazy"
+                  class="pointer-events-none"></iframe>
+        }
+        <!-- Capa clicable que lleva directamente a la ubicación exacta del local en Google Maps -->
+        <a href="https://maps.app.goo.gl/LChss4pEFzeCFT4P7"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="absolute inset-0 z-20 flex items-end justify-center p-3 bg-gradient-to-t from-black/60 via-transparent to-transparent no-underline cursor-pointer"
+           title="Haz clic para abrir la ubicación exacta del local en Google Maps">
+          <span class="bg-black/80 text-[#d1b88e] group-hover:bg-[#d1b88e] group-hover:text-black border border-[#d1b88e]/50 px-3.5 py-1.5 rounded-full text-[11px] font-black tracking-[1px] transition-all shadow-lg flex items-center gap-1.5">
+            <i class="fas fa-map-marked-alt"></i> TOCA EL MAPA PARA IR AL LOCAL
+          </span>
+        </a>
+      </div>
 
       <div class="text-center mt-3.5 text-xs font-bold tracking-[1.5px] uppercase opacity-85">
         Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho
@@ -214,11 +231,11 @@
       <div class="mt-3 p-3 rounded-xl bg-[#d1b88e]/15 border border-[#d1b88e]/40 text-center">
         <p class="m-0 text-[11px] font-bold leading-snug opacity-90">
           <i class="fas fa-store text-[#d1b88e] mr-1"></i>
-          Todas las compras y recojos web son exclusivos para este local hasta que se habilite soporte para demás sedes.
+          Todas las compras y recojos web son exclusivos para el local del museo y la cafetería hasta que se habilite soporte para demás locales.
         </p>
-        <a href="https://maps.app.goo.gl/JSJCbbUuHKqSc34X7" target="_blank" rel="noopener noreferrer"
+        <a href="https://maps.app.goo.gl/LChss4pEFzeCFT4P7" target="_blank" rel="noopener noreferrer"
            class="mt-2 inline-flex items-center gap-1.5 bg-[#d1b88e] text-black hover:bg-white font-black text-[11px] px-4 py-1.5 rounded-full no-underline transition-all">
-          <i class="fas fa-external-link-alt"></i> Abrir en Google Maps
+          <i class="fas fa-external-link-alt"></i> Abrir Ubicación del Local en Maps
         </a>
       </div>
     </div>

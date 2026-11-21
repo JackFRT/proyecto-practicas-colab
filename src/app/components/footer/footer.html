@@ -12,8 +12,8 @@
             <div class="mt-4 p-3 rounded-xl border text-xs font-semibold max-w-md leading-relaxed"
                  [ngClass]="themeService.isDarkMode() ? 'bg-white/5 border-white/10 text-white/80' : 'bg-white/60 border-[#8c583a]/20 text-[#2c241b]'">
                 <i class="fas fa-store text-[#d1b88e] mr-1.5"></i>
-                <strong>Atención y Recojo en Local Único:</strong> Todas las compras web aplican exclusivamente para nuestra sede principal
-                (<a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank" rel="noopener noreferrer" class="underline font-bold" [ngClass]="themeService.isDarkMode() ? 'text-[#d1b88e]' : 'text-[#8c583a]'">ver en Google Maps</a>)
+                <strong>Atención y Recojo en el Local del Museo y la Cafetería:</strong> Todas las compras web aplican exclusivamente para el local del museo y la cafetería
+                (<a href="https://maps.app.goo.gl/LChss4pEFzeCFT4P7" target="_blank" rel="noopener noreferrer" class="underline font-bold" [ngClass]="themeService.isDarkMode() ? 'text-[#d1b88e]' : 'text-[#8c583a]'">ver en Google Maps</a>)
                 hasta que se anuncie soporte oficial para los demás locales.
             </div>
         </div>
@@ -30,7 +30,7 @@
                 <p class="m-0 flex items-center justify-center md:justify-start gap-3">
                     <i class="fab fa-whatsapp w-5 text-center text-[#d1b88e]"></i> +51 981 851 430
                 </p>
-                <a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank" rel="noopener noreferrer"
+                <a href="https://maps.app.goo.gl/LChss4pEFzeCFT4P7" target="_blank" rel="noopener noreferrer"
                    class="m-0 flex items-center justify-center md:justify-start gap-3 no-underline hover:text-[#d1b88e] transition-colors"
                    [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
                     <i class="fas fa-map-marker-alt w-5 text-center text-[#d1b88e]"></i>
@@ -64,81 +64,79 @@
         </div>
     </div>
 
-    <!-- Desplegable Discreto pero a Simple Vista: Promoción de los Desarrolladores del Sistema Web -->
-    <div class="max-w-[1400px] mx-auto mb-8">
-        <div class="flex flex-col items-center">
-            <button type="button"
-                    (click)="togglePromoDesarrolladores()"
-                    class="px-4 py-2 rounded-full border text-xs font-bold tracking-[0.8px] transition-all duration-300 flex items-center gap-2.5 cursor-pointer shadow-xs"
-                    [ngClass]="themeService.isDarkMode()
-                      ? 'bg-white/5 border-white/15 text-white/80 hover:border-[#d1b88e] hover:text-[#d1b88e]'
-                      : 'bg-white/75 border-[#8c583a]/25 text-[#3b2618] hover:border-[#8c583a] hover:bg-white'">
-                <i class="fas fa-laptop-code text-[#d1b88e]"></i>
-                <span>¿Deseas un sistema web a medida como este? Contáctanos (Equipo de Desarrollo)</span>
-                <i class="fas text-[10px] transition-transform duration-300" [ngClass]="promoDesarrolladoresAbierta ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-            </button>
+    <!-- Tarjeta Flotante Discreta sobre el Botón de Detalles: Promoción de los Desarrolladores -->
+    <div class="max-w-[1400px] mx-auto mb-6 flex justify-center">
+        <div class="relative inline-flex flex-col items-center">
 
             @if (promoDesarrolladoresAbierta) {
-                <div class="mt-3 w-full max-w-2xl rounded-2xl border p-4 sm:p-5 shadow-lg transition-all animate-[fadeIn_0.25s]"
+                <div class="absolute bottom-[calc(100%+12px)] left-1/2 -translate-x-1/2 w-[310px] sm:w-[450px] max-w-[92vw] rounded-2xl border p-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)] backdrop-blur-xl z-50 animate-[fadeIn_0.2s]"
                      [ngClass]="themeService.isDarkMode()
-                       ? 'bg-[#0e100d] border-[#d1b88e]/30 text-white'
-                       : 'bg-[#fdfbf7] border-[#8c583a]/30 text-[#1a281f]'">
-                    <div class="text-center mb-3.5">
-                        <span class="text-[10px] font-black uppercase tracking-[2px] px-3 py-1 rounded-full"
+                       ? 'bg-[#0e100d]/95 border-[#d1b88e]/40 text-white'
+                       : 'bg-[#fdfbf7]/98 border-[#8c583a]/35 text-[#1a281f]'">
+                    <button type="button"
+                            (click)="togglePromoDesarrolladores()"
+                            class="absolute top-2.5 right-3 bg-transparent border-none cursor-pointer text-base font-black opacity-60 hover:opacity-100"
+                            [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'"
+                            title="Cerrar">
+                        &times;
+                    </button>
+
+                    <div class="text-center mb-3">
+                        <span class="text-[9px] font-black uppercase tracking-[1.8px] px-2.5 py-1 rounded-full"
                               [ngClass]="themeService.isDarkMode() ? 'bg-[#d1b88e]/15 text-[#d1b88e]' : 'bg-[#8c583a]/15 text-[#8c583a]'">
-                            Desarrollo de Sistemas Web &amp; Software a Medida
+                            ¿Buscas un Sistema Web? Contáctanos
                         </span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left">
                         <!-- Desarrollador 1 -->
-                        <div class="p-3.5 rounded-xl border flex flex-col justify-between gap-2"
-                             [ngClass]="themeService.isDarkMode() ? 'bg-white/5 border-white/10' : 'bg-[#f4eee1]/70 border-[#8c583a]/20'">
-                            <div>
-                                <div class="text-xs font-black uppercase tracking-[0.8px] flex items-center gap-2">
-                                    <i class="fas fa-code text-[#d1b88e]"></i> Jack Farid Ramos Torre
-                                </div>
-                                <p class="text-[11px] opacity-70 m-0 mt-0.5">Desarrollador de Sistemas Web</p>
+                        <div class="p-3 rounded-xl border flex flex-col justify-between gap-1.5"
+                             [ngClass]="themeService.isDarkMode() ? 'bg-white/5 border-white/10' : 'bg-[#f4eee1]/80 border-[#8c583a]/20'">
+                            <div class="text-[11px] font-black uppercase tracking-[0.5px] flex items-center gap-1.5">
+                                <i class="fas fa-code text-[#d1b88e]"></i> Jack Ramos
                             </div>
-                            <div class="flex flex-col gap-1.5 text-xs font-bold mt-1">
+                            <div class="flex flex-col gap-1 text-[11px] font-bold">
                                 <a href="https://wa.me/51931159716" target="_blank" rel="noopener noreferrer"
-                                   class="no-underline flex items-center gap-2 hover:text-[#2ecc71] transition-colors"
+                                   class="no-underline flex items-center gap-1.5 hover:text-[#2ecc71] transition-colors"
                                    [ngClass]="themeService.isDarkMode() ? 'text-white/90' : 'text-[#1a281f]'">
-                                    <i class="fab fa-whatsapp text-[#2ecc71] w-4 text-center"></i> 931 159 716
+                                    <i class="fab fa-whatsapp text-[#2ecc71] w-3.5 text-center"></i> 931 159 716
                                 </a>
                                 <a href="mailto:jackfaridramostorre05@gmail.com"
-                                   class="no-underline flex items-center gap-2 hover:text-[#d1b88e] transition-colors break-all text-[11px]"
-                                   [ngClass]="themeService.isDarkMode() ? 'text-white/85' : 'text-[#3b2618]'">
-                                    <i class="fas fa-envelope text-[#d1b88e] w-4 text-center shrink-0"></i> jackfaridramostorre05&#64;gmail.com
+                                   class="no-underline flex items-center gap-1.5 hover:text-[#d1b88e] transition-colors break-all text-[10px]"
+                                   [ngClass]="themeService.isDarkMode() ? 'text-white/80' : 'text-[#3b2618]'">
+                                    <i class="fas fa-envelope text-[#d1b88e] w-3.5 text-center shrink-0"></i> jackfaridramostorre05&#64;gmail.com
                                 </a>
                             </div>
                         </div>
 
                         <!-- Desarrolladora 2 -->
-                        <div class="p-3.5 rounded-xl border flex flex-col justify-between gap-2"
-                             [ngClass]="themeService.isDarkMode() ? 'bg-white/5 border-white/10' : 'bg-[#f4eee1]/70 border-[#8c583a]/20'">
-                            <div>
-                                <div class="text-xs font-black uppercase tracking-[0.8px] flex items-center gap-2">
-                                    <i class="fas fa-laptop-code text-[#d1b88e]"></i> Yasmin Mendoza Gutierrez
-                                </div>
-                                <p class="text-[11px] opacity-70 m-0 mt-0.5">Desarrollo &amp; Diseño de Sistemas Web</p>
+                        <div class="p-3 rounded-xl border flex flex-col justify-between gap-1.5"
+                             [ngClass]="themeService.isDarkMode() ? 'bg-white/5 border-white/10' : 'bg-[#f4eee1]/80 border-[#8c583a]/20'">
+                            <div class="text-[11px] font-black uppercase tracking-[0.5px] flex items-center gap-1.5">
+                                <i class="fas fa-laptop-code text-[#d1b88e]"></i> Yasmin Mendoza
                             </div>
-                            <div class="flex flex-col gap-1.5 text-xs font-bold mt-1">
+                            <div class="flex flex-col gap-1 text-[11px] font-bold">
                                 <a href="https://wa.me/51947864902" target="_blank" rel="noopener noreferrer"
-                                   class="no-underline flex items-center gap-2 hover:text-[#2ecc71] transition-colors"
+                                   class="no-underline flex items-center gap-1.5 hover:text-[#2ecc71] transition-colors"
                                    [ngClass]="themeService.isDarkMode() ? 'text-white/90' : 'text-[#1a281f]'">
-                                    <i class="fab fa-whatsapp text-[#2ecc71] w-4 text-center"></i> 947 864 902
+                                    <i class="fab fa-whatsapp text-[#2ecc71] w-3.5 text-center"></i> 947 864 902
                                 </a>
-                                <a href="tel:947864902"
-                                   class="no-underline flex items-center gap-2 hover:text-[#d1b88e] transition-colors text-[11px]"
-                                   [ngClass]="themeService.isDarkMode() ? 'text-white/85' : 'text-[#3b2618]'">
-                                    <i class="fas fa-phone-alt text-[#d1b88e] w-4 text-center"></i> Llamar al 947 864 902
-                                </a>
+                                <span class="text-[10px] opacity-70">Sistemas Web a Medida</span>
                             </div>
                         </div>
                     </div>
                 </div>
             }
+
+            <button type="button"
+                    (click)="togglePromoDesarrolladores()"
+                    class="px-3.5 py-1.5 rounded-full border text-[11px] font-bold tracking-[0.5px] transition-all duration-300 flex items-center gap-2 cursor-pointer opacity-80 hover:opacity-100"
+                    [ngClass]="themeService.isDarkMode()
+                      ? 'bg-white/5 border-white/15 text-white/75 hover:border-[#d1b88e] hover:text-[#d1b88e]'
+                      : 'bg-white/70 border-[#8c583a]/25 text-[#3b2618] hover:border-[#8c583a] hover:bg-white'">
+                <i class="fas fa-laptop-code text-[#d1b88e] text-[10px]"></i>
+                <span>Detalles • Desarrolladores del Sitio</span>
+            </button>
         </div>
     </div>
 
@@ -182,12 +180,12 @@
                             <strong>Nota:</strong> El presente texto constituye una versión preliminar (placeholder) de los Términos y Condiciones de <strong>Café Ayacuchano &amp; Cactus Museum</strong> mientras se formaliza el documento legal definitivo.
                         </p>
                         <div>
-                            <h4 class="font-extrabold m-0 mb-1 text-[#d1b88e]">1. Alcance y Local Único de Atención</h4>
-                            <p class="m-0">Todas las órdenes, reservas y compras realizadas a través de esta plataforma web son válidas exclusivamente para recojo o atención en nuestro local ubicado en <strong>Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho</strong> (<a href="https://maps.app.goo.gl/j9zGEJaTW7UxszBk9" target="_blank" class="text-[#d1b88e] underline">Ver en Google Maps</a>), hasta que se comunique oficialmente la habilitación de otros locales.</p>
+                            <h4 class="font-extrabold m-0 mb-1 text-[#d1b88e]">1. Alcance y Local del Museo y la Cafetería</h4>
+                            <p class="m-0">Todas las órdenes, reservas y compras realizadas a través de esta plataforma web son válidas exclusivamente para recojo o atención en el local del museo y la cafetería ubicado en <strong>Jr. Asamblea 245 / Jr. San Cristóbal, Ayacucho</strong> (<a href="https://maps.app.goo.gl/LChss4pEFzeCFT4P7" target="_blank" class="text-[#d1b88e] underline">Ver en Google Maps</a>), hasta que se comunique oficialmente la habilitación de otros locales.</p>
                         </div>
                         <div>
-                            <h4 class="font-extrabold m-0 mb-1 text-[#d1b88e]">2. Ticket Simple de Compra</h4>
-                            <p class="m-0">La plataforma emite un <strong>Ticket Simple de Compra</strong> de control interno para validar la entrega de productos en tienda. El registro del número de DNI es opcional y se utiliza únicamente para un mejor reconocimiento del cliente al momento de entregar su pedido o registrar sus beneficios de fidelidad.</p>
+                            <h4 class="font-extrabold m-0 mb-1 text-[#d1b88e]">2. Ticket Simple de Compra (No SUNAT)</h4>
+                            <p class="m-0">La plataforma emite únicamente un <strong>Ticket Simple de Compra</strong> para control interno, seguimiento y verificación de la orden en tienda. <strong>No constituye una boleta de venta ni factura electrónica asociada con la SUNAT.</strong> El registro del número de DNI es opcional y se utiliza únicamente para un mejor reconocimiento del cliente al momento de entregar su pedido o registrar sus beneficios de fidelidad.</p>
                         </div>
                         <div>
                             <h4 class="font-extrabold m-0 mb-1 text-[#d1b88e]">3. Verificación de Pagos y Bebidas con Alcohol (+18)</h4>

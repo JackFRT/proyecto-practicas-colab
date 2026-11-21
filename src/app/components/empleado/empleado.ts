@@ -4,6 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalesEmpleadoComponent } from '../../modales-empleado/modales-empleado';
+import { ThemeService } from '../../services/theme';
+import { CartService } from '../../services/cart';
 
 @Component({
   selector: 'app-empleado',
@@ -16,6 +18,8 @@ export class Empleado implements OnInit {
   router = inject(Router);
   http = inject(HttpClient);
   cdr = inject(ChangeDetectorRef);
+  themeService = inject(ThemeService);
+  cartService = inject(CartService);
 
   nombreEmpleado: string = 'Empleado';
   idEmpleado: number = 0;
@@ -29,7 +33,7 @@ export class Empleado implements OnInit {
   categoriaFiltro: string = 'todas';
 
   terminoBusquedaOrden: string = '';
-  filtroEstadoOrden: 'todos' | 'pendiente' | 'esperando_recojo' = 'todos';
+  filtroEstadoOrden: 'todos' | 'pendiente' | 'aceptado' | 'esperando_recojo' | 'desatendida' = 'todos';
 
   reservas_activas: any[] = [];
   historial_atendidas: any[] = [];
@@ -108,6 +112,7 @@ export class Empleado implements OnInit {
   cerrarSesion() {
     localStorage.removeItem('usuario_cactus');
     localStorage.removeItem('token_cactus');
+    this.cartService.desconectarSesion();
     this.router.navigate(['/login']);
   }
 
@@ -128,7 +133,9 @@ export class Empleado implements OnInit {
     return (this.reservas_activas || []).filter(r => {
       if (this.filtroEstadoOrden !== 'todos') {
         if (this.filtroEstadoOrden === 'pendiente' && r.estado !== 'pendiente') return false;
+        if (this.filtroEstadoOrden === 'aceptado' && r.estado !== 'aceptado') return false;
         if (this.filtroEstadoOrden === 'esperando_recojo' && r.estado !== 'esperando_recojo') return false;
+        if (this.filtroEstadoOrden === 'desatendida' && r.estado !== 'desatendida') return false;
       }
       if (!q) return true;
 

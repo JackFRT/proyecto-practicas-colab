@@ -1,6 +1,7 @@
 import { Component, HostListener, ElementRef, inject, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Ruleta } from './components/ruleta/ruleta';
 import { CartService } from './services/cart';
 import { Moka } from './services/moka';
@@ -16,6 +17,7 @@ import { ThemeService } from './services/theme';
 export class AppComponent implements OnInit, OnDestroy {
   elementRef = inject(ElementRef);
   router = inject(Router);
+  http = inject(HttpClient);
   cartService = inject(CartService);
   mokaService = inject(Moka);
   themeService = inject(ThemeService);
@@ -26,6 +28,9 @@ export class AppComponent implements OnInit, OnDestroy {
   menuPerfilAbierto: boolean = false;
   panelAccesosAbierto: boolean = true;
 
+  notificacionesPedidos: any[] = [];
+  alertaPedidoFlotante: any | null = null;
+
   mokaSilenciada: boolean = false;
   imagenMoka: string = '/assets/images/barista/barista_saludando.png';
   mensajeMoka: string | null = '¡Hola! Soy Moka, haz clic en mí para conversar o conocer datos curiosos.';
@@ -33,6 +38,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private mokaTimeout: any = null;
   private mokaPeriodicInterval: any = null;
+  private notificacionesInterval: any = null;
+  private alertaPedidoTimeout: any = null;
 
   ngOnInit() {
     this.evaluarScroll();
@@ -54,9 +61,10 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Habla periódica de Moka cada 22 segundos (datos curiosos / comentarios)
+    // Habla periódica de Moka cada 25 segundos (solo si la pestaña está activa para ahorrar recursos)
     if (typeof window !== 'undefined') {
       this.mokaPeriodicInterval = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
         if (this.mokaSilenciada || !this.mostrarMokaGlobal() || this.mensajeMoka || this.mokaService.passwordVisible) {
           return;
         }
@@ -68,13 +76,88 @@ export class AppComponent implements OnInit, OnDestroy {
         this.imagenMoka = '/assets/images/barista/' + charla.imagen;
         this.cdr.detectChanges();
         this.programarOcultarMensaje(5500);
-      }, 22000);
+      }, 25000);
+
+      // Verificación periódica ligera de notificaciones de estado de pedido para el cliente
+      this.verificarNotificacionesPedidos();
+      this.notificacionesInterval = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
+        this.verificarNotificacionesPedidos();
+      }, 18000);
     }
   }
 
   ngOnDestroy() {
     if (this.mokaTimeout) clearTimeout(this.mokaTimeout);
     if (this.mokaPeriodicInterval) clearInterval(this.mokaPeriodicInterval);
+    if (this.notificacionesInterval) clearInterval(this.notificacionesInterval);
+    if (this.alertaPedidoTimeout) clearTimeout(this.alertaPedidoTimeout);
+  }
+
+  verificarNotificacionesPedidos() {
+    if (typeof localStorage === 'undefined') return;
+    const rawUser = localStorage.getItem('usuario_cactus');
+    if (!rawUser) {
+      this.notificacionesPedidos = [];
+      return;
+    }
+
+    try {
+      const user = JSON.parse(rawUser);
+      const idUsuario = user?.idUsuario || user?.id_usuario || user?.id;
+      if (!idUsuario) return;
+
+      this.http.get<any>(`http://localhost:8080/api/pedidos/notificaciones/${idUsuario}`).subscribe({
+        next: (res) => {
+          if (res && res.success && Array.isArray(res.notificaciones)) {
+            this.notificacionesPedidos = res.notificaciones;
+
+            const vistosRaw = localStorage.getItem(`notif_pedidos_vistos_${idUsuario}`);
+            const vistos: Record<string, string> = vistosRaw ? JSON.parse(vistosRaw) : {};
+            let huboCambio = false;
+
+            for (const notif of this.notificacionesPedidos) {
+              const key = String(notif.id_reserva || notif.id_pedido);
+              const estadoActual = String(notif.estado);
+              if (vistos[key] !== estadoActual) {
+                vistos[key] = estadoActual;
+                huboCambio = true;
+                this.mostrarAlertaPedido(notif);
+              }
+            }
+
+            if (huboCambio) {
+              localStorage.setItem(`notif_pedidos_vistos_${idUsuario}`, JSON.stringify(vistos));
+            }
+            this.cdr.detectChanges();
+          }
+        },
+        error: () => {}
+      });
+    } catch {
+      // Ignorar errores de parseo
+    }
+  }
+
+  mostrarAlertaPedido(notif: any) {
+    this.alertaPedidoFlotante = notif;
+    if (!this.mokaSilenciada) {
+      this.mensajeMoka = `${notif.titulo}: ${notif.mensaje}`;
+      this.imagenMoka = '/assets/images/barista/barista_feliz.png';
+      this.programarOcultarMensaje(7000);
+    }
+    if (this.alertaPedidoTimeout) clearTimeout(this.alertaPedidoTimeout);
+    this.alertaPedidoTimeout = setTimeout(() => {
+      this.alertaPedidoFlotante = null;
+      this.cdr.detectChanges();
+    }, 9000);
+    this.cdr.detectChanges();
+  }
+
+  cerrarAlertaPedido(event?: Event) {
+    if (event) event.stopPropagation();
+    this.alertaPedidoFlotante = null;
+    this.cdr.detectChanges();
   }
 
   private programarOcultarMensaje(ms: number) {
@@ -194,6 +277,9 @@ export class AppComponent implements OnInit, OnDestroy {
   toggleProfileMenu(event: Event) {
     event.stopPropagation();
     this.menuPerfilAbierto = !this.menuPerfilAbierto;
+    if (this.menuPerfilAbierto) {
+      this.verificarNotificacionesPedidos();
+    }
     this.cdr.detectChanges();
   }
 
@@ -201,6 +287,9 @@ export class AppComponent implements OnInit, OnDestroy {
     event.preventDefault();
     localStorage.removeItem('usuario_cactus');
     localStorage.removeItem('token_cactus');
+    this.cartService.desconectarSesion();
+    this.notificacionesPedidos = [];
+    this.alertaPedidoFlotante = null;
     this.menuPerfilAbierto = false;
     this.router.navigate(['/']);
     this.cdr.detectChanges();

@@ -50,6 +50,31 @@
                         <i class="fas fa-id-card w-6 text-center opacity-80"></i> MI PERFIL
                     </a>
                 </div>
+
+                @if (notificacionesPedidos.length > 0) {
+                    <div class="mt-2.5 p-2.5 rounded-xl border text-[11px]"
+                         [ngClass]="themeService.isDarkMode() ? 'bg-[#d1b88e]/10 border-[#d1b88e]/30 text-white' : 'bg-[#fff8ea] border-[#8c583a]/30 text-[#1a281f]'">
+                        <div class="font-black uppercase tracking-[1px] text-[#d1b88e] mb-1.5 flex items-center justify-between">
+                            <span><i class="fas fa-bell mr-1"></i> Estado de Pedidos</span>
+                            <span class="bg-[#d1b88e] text-black px-1.5 py-0.5 rounded-full text-[9px]">{{ notificacionesPedidos.length }}</span>
+                        </div>
+                        <div class="flex flex-col gap-1.5 max-h-36 overflow-y-auto pr-0.5">
+                            @for (notif of notificacionesPedidos; track (notif.id_reserva || notif.id_pedido)) {
+                                <a routerLink="/cliente/perfil"
+                                   (click)="menuPerfilAbierto = false"
+                                   class="block no-underline p-2 rounded-lg transition-colors border"
+                                   [ngClass]="themeService.isDarkMode() ? 'bg-black/40 border-white/10 hover:border-[#d1b88e] text-white' : 'bg-white border-[#8c583a]/20 hover:border-[#8c583a] text-[#1a281f]'">
+                                    <div class="font-extrabold flex items-center gap-1.5"
+                                         [ngClass]="notif.estado === 'esperando_recojo' ? 'text-[#2ecc71]' : 'text-[#38bdf8]'">
+                                        <i class="fas" [ngClass]="notif.estado === 'esperando_recojo' ? 'fa-bell' : 'fa-check-circle'"></i>
+                                        <span>{{ notif.titulo }}</span>
+                                    </div>
+                                    <p class="m-0 mt-0.5 opacity-80 leading-snug text-[10px]">{{ notif.mensaje }}</p>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
                 <div class="h-[1px] my-2.5" [ngClass]="themeService.isDarkMode() ? 'bg-white/10' : 'bg-[#8c583a]/20'"></div>
             } @else {
                 <div class="flex flex-col gap-1.5">
@@ -112,9 +137,43 @@
                 ? 'bg-black/70 border-white/20 text-white'
                 : 'bg-[#f8f5ee]/95 border-[#8c583a]/30 text-[#4a2c18]'"
             (click)="toggleProfileMenu($event)"
-            title="Menú de usuario y preferencias">
+            title="Menú de usuario, notificaciones y preferencias">
             <i class="fas fa-user-astronaut"></i>
+            @if (isLoggedIn && notificacionesPedidos.length > 0) {
+                <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e74c3c] text-white text-[10px] font-black flex items-center justify-center border border-black shadow">
+                    {{ notificacionesPedidos.length }}
+                </span>
+            }
         </button>
+    </div>
+}
+
+<!-- Notificación Flotante en Vivo para el Cliente (Pedido Aceptado / Listo para Recojo o Servir) -->
+@if (alertaPedidoFlotante && isLoggedIn) {
+    <div class="fixed top-20 right-4 sm:right-6 z-[1600] max-w-[330px] sm:max-w-[360px] rounded-2xl border p-4 shadow-[0_18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl font-['Montserrat'] animate-[fadeIn_0.3s]"
+         [ngClass]="themeService.isDarkMode() ? 'bg-[#0e1410]/95 border-[#d1b88e]/50 text-white' : 'bg-[#fffdf9]/98 border-[#8c583a]/40 text-[#1a281f]'">
+        <button type="button"
+                (click)="cerrarAlertaPedido($event)"
+                class="absolute top-2.5 right-3 bg-transparent border-none text-base font-black opacity-60 hover:opacity-100 cursor-pointer"
+                [ngClass]="themeService.isDarkMode() ? 'text-white' : 'text-[#1a281f]'">
+            &times;
+        </button>
+        <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white shadow"
+                 [ngClass]="alertaPedidoFlotante.estado === 'esperando_recojo' ? 'bg-[#2ecc71]' : 'bg-[#0284c7]'">
+                <i class="fas" [ngClass]="alertaPedidoFlotante.estado === 'esperando_recojo' ? 'fa-bell' : 'fa-check'"></i>
+            </div>
+            <div class="pr-4">
+                <div class="text-[10px] font-black uppercase tracking-[1.5px] text-[#d1b88e] mb-0.5">Actualización de tu Pedido</div>
+                <h4 class="m-0 text-sm font-black">{{ alertaPedidoFlotante.titulo }}</h4>
+                <p class="m-0 mt-1 text-xs opacity-85 leading-snug">{{ alertaPedidoFlotante.mensaje }}</p>
+                <a routerLink="/cliente/perfil"
+                   (click)="cerrarAlertaPedido()"
+                   class="inline-flex items-center gap-1 mt-2 text-[11px] font-black text-[#d1b88e] underline">
+                    Ver en Mis Compras <i class="fas fa-arrow-right text-[9px]"></i>
+                </a>
+            </div>
+        </div>
     </div>
 }
 

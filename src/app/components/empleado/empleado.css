@@ -1,6 +1,7 @@
 :host {
     --bg-main: #e8e4d9; 
     --bg-card: #fdfbf7; 
+    --bg-header: #2b3a2f;
     --verde-pino: #2b3a2f;
     --verde-oscuro: #344e41;
     --verde-oliva: #A3B18A;
@@ -8,6 +9,84 @@
     --cafe-oscuro: #4a3f35;
     --border-light: #dcd7cb;
 }
+
+/* MODO OSCURO PARA PANEL DE EMPLEADO CON ALTO CONTRASTE EN TEXTOS */
+.dark-theme-empleado {
+    --bg-main: #0f1310;
+    --bg-card: #181e19;
+    --bg-header: #1d2b21;
+    --verde-pino: #b8d8be;
+    --verde-oscuro: #3b5a49;
+    --verde-oliva: #84a96c;
+    --terracota: #e07a5f;
+    --cafe-oscuro: #eef4ee;
+    --border-light: #2b352d;
+    background-color: #0f1310 !important;
+    color: #eef4ee !important;
+}
+
+.dark-theme-empleado ::ng-deep h1,
+.dark-theme-empleado ::ng-deep h2,
+.dark-theme-empleado ::ng-deep h3,
+.dark-theme-empleado ::ng-deep h4,
+.dark-theme-empleado ::ng-deep strong,
+.dark-theme-empleado ::ng-deep label {
+    color: #eef4ee;
+}
+
+.dark-theme-empleado ::ng-deep .bg-white,
+.dark-theme-empleado ::ng-deep .bg-\[\#fdfbf7\],
+.dark-theme-empleado ::ng-deep .bg-gray-50,
+.dark-theme-empleado ::ng-deep .bg-gray-100 {
+    background-color: #1f2721 !important;
+    color: #eef4ee !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.dark-theme-empleado ::ng-deep .bg-\[\#dcd7cb\],
+.dark-theme-empleado ::ng-deep .empleado-filter-bar,
+.dark-theme-empleado ::ng-deep .empleado-footer-nav {
+    background-color: #151b16 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #e6ebe6 !important;
+}
+
+.dark-theme-empleado ::ng-deep .text-gray-700,
+.dark-theme-empleado ::ng-deep .text-gray-600,
+.dark-theme-empleado ::ng-deep .text-gray-900 {
+    color: #dce6dd !important;
+}
+
+.dark-theme-empleado ::ng-deep .text-gray-500,
+.dark-theme-empleado ::ng-deep .text-gray-400 {
+    color: #a8b8aa !important;
+}
+
+.dark-theme-empleado ::ng-deep thead.bg-\[var\(--verde-pino\)\] {
+    background-color: #243528 !important;
+    color: #ffffff !important;
+}
+
+.dark-theme-empleado ::ng-deep input,
+.dark-theme-empleado ::ng-deep select,
+.dark-theme-empleado ::ng-deep textarea {
+    color: #f4f8f4 !important;
+    background-color: #141a15 !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.dark-theme-empleado ::ng-deep input::placeholder,
+.dark-theme-empleado ::ng-deep textarea::placeholder {
+    color: #8fa192 !important;
+}
+
+.dark-theme-empleado ::ng-deep tr:hover,
+.dark-theme-empleado ::ng-deep .hover\:bg-\[\#fdfbf7\]:hover,
+.dark-theme-empleado ::ng-deep .hover\:bg-gray-50:hover,
+.dark-theme-empleado ::ng-deep .hover\:bg-\[\#f6f4ee\]:hover {
+    background-color: rgba(163, 177, 138, 0.12) !important;
+}
+
 .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .animate-bounce-short { animation: slideInUp 0.3s ease forwards, slideOutDown 0.3s ease 2.7s forwards; }

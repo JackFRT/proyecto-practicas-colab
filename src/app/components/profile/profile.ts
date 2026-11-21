@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme';
+import { CartService } from '../../services/cart';
 
 @Component({
   selector: 'app-profile',
@@ -17,6 +18,7 @@ export class Profile implements OnInit {
   http = inject(HttpClient);
   cdr = inject(ChangeDetectorRef);
   themeService = inject(ThemeService);
+  cartService = inject(CartService);
 
   tabActivo: string = 'socio';
   cargando: boolean = true;
@@ -31,9 +33,16 @@ export class Profile implements OnInit {
 
   editNombre: string = '';
   editEmail: string = '';
+  editEmailRecuperacion: string = '';
   editPass: string = '';
   editDni: string = '';
   editTelefono: string = '';
+
+  correoParaCodigo: string = '';
+  codigoVerificacionPass: string = '';
+  pasoCambioPassword: number = 1;
+  enviandoCodigo: boolean = false;
+  mensajeCambioPass: { tipo: 'exito' | 'error'; texto: string } | null = null;
 
   ngOnInit() {
     const guardado = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario_cactus') : null;
@@ -71,8 +80,10 @@ export class Profile implements OnInit {
 
           this.editNombre = this.usuario.nombre || '';
           this.editEmail = this.usuario.email || '';
+          this.editEmailRecuperacion = this.usuario.email_recuperacion || this.usuario.emailRecuperacion || '';
           this.editDni = this.usuario.dni || '';
           this.editTelefono = this.usuario.telefono || '';
+          this.correoParaCodigo = this.editEmailRecuperacion || this.editEmail || '';
 
           localStorage.setItem('usuario_cactus', JSON.stringify(this.usuario));
         }
@@ -224,7 +235,7 @@ export class Profile implements OnInit {
       id_usuario: idUsuario,
       nombre: this.editNombre,
       email: this.editEmail,
-      nueva_password: this.editPass,
+      email_recuperacion: this.editEmailRecuperacion,
       dni: this.editDni,
       telefono: this.editTelefono
     };
@@ -236,8 +247,11 @@ export class Profile implements OnInit {
           this.usuario.nombre = this.editNombre;
           this.usuario.dni = this.editDni;
           this.usuario.telefono = this.editTelefono;
+          this.usuario.email_recuperacion = this.editEmailRecuperacion;
+          if (!this.correoParaCodigo) {
+            this.correoParaCodigo = this.editEmailRecuperacion || this.editEmail;
+          }
           localStorage.setItem('usuario_cactus', JSON.stringify(this.usuario));
-          this.editPass = '';
         } else {
           this.mostrarToast(res.mensaje || 'No se pudo actualizar el perfil.');
         }
@@ -247,6 +261,79 @@ export class Profile implements OnInit {
       error: (err) => {
         this.mostrarToast(err.error?.mensaje || 'Error al actualizar el perfil.');
         this.cargando = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  solicitarCodigoCambioPassword() {
+    const correo = (this.correoParaCodigo || '').trim();
+    if (!correo || !correo.includes('@')) {
+      this.mensajeCambioPass = { tipo: 'error', texto: 'Ingresa un correo válido para recibir el código.' };
+      return;
+    }
+
+    this.enviandoCodigo = true;
+    this.mensajeCambioPass = null;
+
+    this.http.post<any>('http://localhost:8080/api/auth/recuperar/solicitar', { email: correo }).subscribe({
+      next: (res) => {
+        this.enviandoCodigo = false;
+        if (res.success) {
+          this.pasoCambioPassword = 2;
+          this.mensajeCambioPass = {
+            tipo: 'exito',
+            texto: res.mensaje || `Se envió un código de 6 dígitos a ${correo}.`
+          };
+        } else {
+          this.mensajeCambioPass = { tipo: 'error', texto: res.mensaje || 'No se pudo enviar el código.' };
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.enviandoCodigo = false;
+        this.mensajeCambioPass = {
+          tipo: 'error',
+          texto: err.error?.mensaje || 'No se encontró una cuenta asociada a ese correo.'
+        };
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  confirmarCambioPasswordConCodigo() {
+    if (!this.codigoVerificacionPass.trim() || !this.editPass.trim()) {
+      this.mensajeCambioPass = { tipo: 'error', texto: 'Ingresa el código de 6 dígitos y tu nueva contraseña.' };
+      return;
+    }
+
+    this.enviandoCodigo = true;
+    this.mensajeCambioPass = null;
+
+    this.http.post<any>('http://localhost:8080/api/auth/recuperar/cambiar', {
+      email: this.correoParaCodigo.trim(),
+      codigo: this.codigoVerificacionPass.trim(),
+      nueva_password: this.editPass.trim()
+    }).subscribe({
+      next: (res) => {
+        this.enviandoCodigo = false;
+        if (res.success) {
+          this.mostrarToast('¡Contraseña restablecida con éxito!');
+          this.mensajeCambioPass = { tipo: 'exito', texto: '¡Tu contraseña ha sido actualizada correctamente!' };
+          this.editPass = '';
+          this.codigoVerificacionPass = '';
+          this.pasoCambioPassword = 1;
+        } else {
+          this.mensajeCambioPass = { tipo: 'error', texto: res.mensaje || 'Código inválido o expirado.' };
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.enviandoCodigo = false;
+        this.mensajeCambioPass = {
+          tipo: 'error',
+          texto: err.error?.mensaje || 'Código inválido o expirado.'
+        };
         this.cdr.detectChanges();
       }
     });
@@ -283,6 +370,7 @@ export class Profile implements OnInit {
   cerrarSesion() {
     localStorage.removeItem('usuario_cactus');
     localStorage.removeItem('token_cactus');
+    this.cartService.desconectarSesion();
     this.router.navigate(['/login']);
   }
 
