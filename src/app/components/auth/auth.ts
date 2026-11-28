@@ -39,7 +39,7 @@ export class Auth implements OnInit, OnDestroy {
   cargando: boolean = false;
 
   mokaTexto: string = '';
-  mokaImg: string = 'barista_saludando.png';
+  mokaImg: string = 'barista_saludando.webp';
 
   ngOnInit() {
       const saludo = this.mokaService.interactuarAuth();
@@ -59,7 +59,7 @@ export class Auth implements OnInit, OnDestroy {
     this.limpiarMensajes();
     
     this.mokaTexto = this.isLoginMode ? "¿De vuelta al Oasis? ¡Qué alegría!" : "¡Genial! Una nueva cuenta. Te prometo muchos beneficios.";
-    this.mokaImg = "barista_feliz.png";
+    this.mokaImg = "barista_feliz.webp";
     this.mokaService.dispararEvento(this.mokaTexto, this.mokaImg, false);
   }
 
@@ -71,7 +71,7 @@ export class Auth implements OnInit, OnDestroy {
     this.limpiarMensajes();
     
     this.mokaTexto = "Uy... ¿olvidaste la llave? No te preocupes, yo te ayudo a recuperarla.";
-    this.mokaImg = "barista_emocionada.png";
+    this.mokaImg = "barista_emocionada.webp";
     this.mokaService.dispararEvento(this.mokaTexto, this.mokaImg, false);
   }
 
@@ -207,14 +207,14 @@ export class Auth implements OnInit, OnDestroy {
             }
           } else {
             this.mensajeError = res.mensaje || "Correo o contraseña incorrectos.";
-            this.mokaService.dispararEvento("Uy, parece que hubo un error con tus datos. ¡Inténtalo de nuevo!", "barista_sad.png", true);
+            this.mokaService.dispararEvento("Uy, parece que hubo un error con tus datos. ¡Inténtalo de nuevo!", "barista_sad.webp", true);
           }
           this.cdr.detectChanges();
         },
         error: (err) => {
           this.cargando = false;
           this.mensajeError = "Error de servidor.";
-          this.mokaService.dispararEvento("Ay... no me pude conectar con la base de datos.", "barista_asustada.png", true);
+          this.mokaService.dispararEvento("Ay... no me pude conectar con la base de datos.", "barista_asustada.webp", true);
           this.cdr.detectChanges();
         }
       });
@@ -237,17 +237,17 @@ export class Auth implements OnInit, OnDestroy {
             this.mensajeExito = "¡Cuenta creada con éxito! Por favor inicia sesión.";
             this.isLoginMode = true; 
             this.password = ''; 
-            this.mokaService.dispararEvento("¡Registro exitoso! Ahora pon tu correo y entremos.", "barista_emocionada.png", true);
+            this.mokaService.dispararEvento("¡Registro exitoso! Ahora pon tu correo y entremos.", "barista_emocionada.webp", true);
           } else {
             this.mensajeError = res.mensaje || "Error al registrar.";
-            this.mokaService.dispararEvento("Ese correo ya parece tener dueño. ¡Intenta con otro!", "barista_sad.png", true);
+            this.mokaService.dispararEvento("Ese correo ya parece tener dueño. ¡Intenta con otro!", "barista_sad.webp", true);
           }
           this.cdr.detectChanges();
         },
         error: (err) => {
           this.cargando = false;
           this.mensajeError = "Error de servidor.";
-          this.mokaService.dispararEvento("Ay... no me pude conectar con la base de datos.", "barista_asustada.png", true);
+          this.mokaService.dispararEvento("Ay... no me pude conectar con la base de datos.", "barista_asustada.webp", true);
           this.cdr.detectChanges();
         }
       });

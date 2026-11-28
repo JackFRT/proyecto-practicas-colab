@@ -32,7 +32,7 @@ export class AppComponent implements OnInit, OnDestroy {
   alertaPedidoFlotante: any | null = null;
 
   mokaSilenciada: boolean = false;
-  imagenMoka: string = '/assets/images/barista/barista_saludando.png';
+  imagenMoka: string = '/assets/images/barista/barista_saludando.webp';
   mensajeMoka: string | null = '¡Hola! Soy Moka, haz clic en mí para conversar o conocer datos curiosos.';
   colorBurbujaMoka: string = '#ffffff';
 
@@ -143,7 +143,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.alertaPedidoFlotante = notif;
     if (!this.mokaSilenciada) {
       this.mensajeMoka = `${notif.titulo}: ${notif.mensaje}`;
-      this.imagenMoka = '/assets/images/barista/barista_feliz.png';
+      this.imagenMoka = '/assets/images/barista/barista_feliz.webp';
       this.programarOcultarMensaje(7000);
     }
     if (this.alertaPedidoTimeout) clearTimeout(this.alertaPedidoTimeout);
@@ -165,7 +165,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.mokaTimeout = setTimeout(() => {
       this.mensajeMoka = null;
       if (!this.mokaSilenciada && !this.mokaService.passwordVisible) {
-        this.imagenMoka = '/assets/images/barista/barista_saludando.png';
+        this.imagenMoka = '/assets/images/barista/barista_saludando.webp';
       }
       this.cdr.detectChanges();
     }, ms);
@@ -229,7 +229,7 @@ export class AppComponent implements OnInit, OnDestroy {
   interactuarMoka() {
     if (this.mokaSilenciada) {
       this.mensajeMoka = 'Tengo la voz silenciada en tu menú de perfil.';
-      this.imagenMoka = '/assets/images/barista/barista_sad.png';
+      this.imagenMoka = '/assets/images/barista/barista_sad.webp';
       this.cdr.detectChanges();
       this.programarOcultarMensaje(3000);
       return;
@@ -241,7 +241,7 @@ export class AppComponent implements OnInit, OnDestroy {
     } else {
       respuesta = this.mokaService.interactuar();
       if (this.mokaService.passwordVisible) {
-        respuesta.imagen = 'barista_cara_cubierta.png';
+        respuesta.imagen = 'barista_cara_cubierta.webp';
         respuesta.texto = '¡Sigo sin mirar! Promesa de barista.';
       }
     }
@@ -267,7 +267,7 @@ export class AppComponent implements OnInit, OnDestroy {
       if (this.mokaTimeout) clearTimeout(this.mokaTimeout);
       this.mensajeMoka = null;
     } else {
-      this.imagenMoka = '/assets/images/barista/barista_saludando.png';
+      this.imagenMoka = '/assets/images/barista/barista_saludando.webp';
       this.mensajeMoka = '¡Genial! Volveré a contarte datos curiosos.';
       this.programarOcultarMensaje(3500);
     }

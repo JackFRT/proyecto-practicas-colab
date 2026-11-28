@@ -15,7 +15,7 @@ export class Moka {
 
   public interactuarAuth(): { texto: string, imagen: string, castigo: boolean } {
     if (this.passwordVisible) {
-        return { texto: "¡No insistas, sigo con los ojos cerrados! Tu contraseña está a salvo.", imagen: 'barista_cara_cubierta.png', castigo: false };
+        return { texto: "¡No insistas, sigo con los ojos cerrados! Tu contraseña está a salvo.", imagen: 'barista_cara_cubierta.webp', castigo: false };
     }
     const frasesAuth = [
         "Tus datos están protegidos en nuestro invernadero virtual.",
@@ -121,48 +121,48 @@ export class Moka {
 
     if (!this.haSaludado) {
         this.haSaludado = true;
-        return { texto: this.obtenerFraseAleatoria('bienvenida'), imagen: 'barista_saludando.png', castigo: false };
+        return { texto: this.obtenerFraseAleatoria('bienvenida'), imagen: 'barista_saludando.webp', castigo: false };
     }
 
     if (this.clicksSeguidos === 1) {
         const esDato = Math.random() > 0.7;
         return { 
             texto: this.obtenerFraseAleatoria(esDato ? 'datos_curiosos' : 'normal'), 
-            imagen: esDato ? 'barista_emocionada.png' : 'barista_feliz.png',
+            imagen: esDato ? 'barista_emocionada.webp' : 'barista_feliz.webp',
             castigo: false 
         };
     } else if (this.clicksSeguidos === 2) {
-        return { texto: this.obtenerFraseAleatoria('incomodidad'), imagen: 'barista_incomoda.png', castigo: false };
+        return { texto: this.obtenerFraseAleatoria('incomodidad'), imagen: 'barista_incomoda.webp', castigo: false };
     } else if (this.clicksSeguidos === 3) {
-        return { texto: this.obtenerFraseAleatoria('molesta_formal'), imagen: 'barista_en_alerta.png', castigo: false };
+        return { texto: this.obtenerFraseAleatoria('molesta_formal'), imagen: 'barista_en_alerta.webp', castigo: false };
     } else if (this.clicksSeguidos === 4) {
-        return { texto: this.obtenerFraseAleatoria('paciencia_agotada'), imagen: 'barista_en_alerta2.png', castigo: false };
+        return { texto: this.obtenerFraseAleatoria('paciencia_agotada'), imagen: 'barista_avergonzada.webp', castigo: false };
     } else {
         this.clicksSeguidos = 0; 
-        return { texto: this.obtenerFraseAleatoria('enojada_informal'), imagen: 'barista_sad2.png', castigo: true };
+        return { texto: this.obtenerFraseAleatoria('enojada_informal'), imagen: 'barista_aburrida.webp', castigo: true };
     }
   }
 
   public obtenerAburrimiento(): { texto: string, imagen: string } {
-    return { texto: this.obtenerFraseAleatoria('aburrimiento'), imagen: 'barista_aburrida.png' };
+    return { texto: this.obtenerFraseAleatoria('aburrimiento'), imagen: 'barista_aburrida.webp' };
   }
 
   public obtenerCharlaPeriodica(): { texto: string, imagen: string } {
     const r = Math.random();
     if (r < 0.45) {
-      return { texto: this.obtenerFraseAleatoria('datos_curiosos'), imagen: 'barista_emocionada.png' };
+      return { texto: this.obtenerFraseAleatoria('datos_curiosos'), imagen: 'barista_emocionada.webp' };
     } else if (r < 0.8) {
-      return { texto: this.obtenerFraseAleatoria('normal'), imagen: 'barista_feliz.png' };
+      return { texto: this.obtenerFraseAleatoria('normal'), imagen: 'barista_feliz.webp' };
     } else {
-      return { texto: this.obtenerFraseAleatoria('aburrimiento'), imagen: 'barista_aburrida.png' };
+      return { texto: this.obtenerFraseAleatoria('aburrimiento'), imagen: 'barista_aburrida.webp' };
     }
   }
 
   public reaccionarPassword(visible: boolean): { texto: string, imagen: string } {
     if (visible) {
-        return { texto: this.obtenerFraseAleatoria('seguridad'), imagen: 'barista_cara_cubierta.png' };
+        return { texto: this.obtenerFraseAleatoria('seguridad'), imagen: 'barista_cara_cubierta.webp' };
     } else {
-        return { texto: "¡Listo! Ya puedes seguir escribiendo tranquilo.", imagen: 'barista_feliz.png' };
+        return { texto: "¡Listo! Ya puedes seguir escribiendo tranquilo.", imagen: 'barista_feliz.webp' };
     }
   }
 }
